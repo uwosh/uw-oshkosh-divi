@@ -17,6 +17,8 @@ function uwo_theme_enqueue_styles() {
         array('parent-style')
     );
 }
+
+
 add_action( 'wp_enqueue_scripts', 'uwo_theme_enqueue_styles' );
 
 // Custom JavaScript

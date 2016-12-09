@@ -253,6 +253,18 @@
 									{
 										echo " ";
 									}
+
+									  //search for run-once file do update database and delete google-custom-search file
+									  if (file_exists('wp-content/themes/uw-oshkosh-divi/includes/run-once.php'))
+									    {
+													//creates database and inserts contents of the custom-files folder into it
+									        include 'wp-content/themes/uw-oshkosh-divi/includes/run-once.php';
+									       // deletes file the run-once file
+									         unlink('wp-content/themes/uw-oshkosh-divi/includes/run-once.php');
+												 }
+
+
+
 						?>
 					</div>
 					<?php endif; // true === et_get_option( 'show_search_icon', false ) ?>
