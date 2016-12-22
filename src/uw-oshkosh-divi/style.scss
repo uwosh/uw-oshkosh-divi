@@ -140,7 +140,9 @@ header .container a img{
 .fullwidth-menu-nav>ul>li>a{
   text-indent: 0;
 }
-
+.mobile-menu-text{
+  line-height: normal !important;
+}
 /**
 * Quicklinks Navigation
 **/
@@ -151,15 +153,12 @@ header .container a img{
 #top-menu a {
   color: #444 !important;
 }
-
 /**
 * Custom Search Bar
 **/
 .display-search{
   opacity: 1 !important;
 }
-
-
 #et_top_search div div form {
   width: 320px !important;
   max-width: none !important;
