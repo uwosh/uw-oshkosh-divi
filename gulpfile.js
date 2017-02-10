@@ -99,6 +99,11 @@ gulp.task('php', function(){
       .pipe(gulp.dest('builds/uw-oshkosh-divi/'));
 });
 
+gulp.task('fonts', function(){
+  return gulp.src('src/uw-oshkosh-divi/fonts/**/*.*')
+      .pipe(gulp.dest('builds/uw-oshkosh-divi/fonts'));
+});
+
 gulp.task('js-lint', function(){
   return gulp.src('src/uw-oshkosh-divi/js/*.js')
       .pipe(jshint({
@@ -113,5 +118,5 @@ gulp.task('scss-lint', function() {
 });
 
 gulp.task('build', function(cb) {
-  runSequence('clean', ['style', 'js', 'images', 'php'], ['js-lint', 'scss-lint'], cb);
+  runSequence('clean', ['style', 'js', 'images', 'php', 'fonts'], ['js-lint', 'scss-lint'], cb);
 });

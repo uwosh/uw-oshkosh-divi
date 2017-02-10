@@ -9,9 +9,12 @@ $blue: rgb(46, 163, 242);
 $box-shadow: rgba(0, 0, 0, .0980392);
 $black: #000;
 
+// Fonts
+$main: 'Avenir','Open Sans', Arial, sans-serif;
+
 // Defining Avenir web font
 @font-face {
-  font-family: 'avenir';
+  font-family: 'Avenir';
   src: url('fonts/Avenir/Avenir-Book.woff2') format('woff2'),
         url('fonts/Avenir/Avenir-Book.woff') format('woff'),
         url('fonts/Avenir/Avenir-Book.ttf') format('truetype');
@@ -21,6 +24,7 @@ $black: #000;
 body {
   color: $dark-grey !important;
   min-width: 320px;
+  font-family: $main;
 }
 
 // Built in styles
@@ -94,7 +98,6 @@ header {
   vertical-align: bottom;
 
   h1 {
-    font-family: 'Open Sans', Arial, sans-serif;
     font-size: 33px;
     font-weight: 600;
   }
@@ -344,20 +347,17 @@ form.gsc-search-box {
 }
 
 #uwo-footer {
-  font-family: Helvetica, Arial, Verdana, sans-serif;
   font-style: normal;
   text-align: left;
 
   a {
     color: $dark-grey;
-    font-family: Helvetica, Arial, Verdana, sans-serif;
     font-size: 13px;
     text-decoration: none;
   }
 
   h2 {
     color: $dark-grey;
-    font-family: Helvetica, Arial, Verdana,sans-serif;
     font-size: 25px;
     font-weight: normal;
     letter-spacing: .03em;
@@ -365,7 +365,6 @@ form.gsc-search-box {
 
     a {
       color: $dark-grey;
-      font-family: "gnuolane",sans-serif;
       font-size: 25px;
       font-weight: normal;
       margin-bottom: 10px;
