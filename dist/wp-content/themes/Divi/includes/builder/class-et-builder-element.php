@@ -495,6 +495,9 @@ class ET_Builder_Element {
 	private function _maybe_remove_default_atts_values() {
 		$fields = $this->fields_unprocessed;
 
+		// Non stylesheet attributes should've been passed
+		$must_print_fields = apply_filters( $this->slug . '_must_print_attributes', array( 'text_orientation' ) );
+
 		foreach ( $fields as $field_key => $field_settings ) {
 			$global_setting_name  = $this->get_global_setting_name( $field_key );
 			$global_setting_value = ET_Global_Settings::get_value( $global_setting_name );
@@ -507,7 +510,7 @@ class ET_Builder_Element {
 			}
 
 			// Delete shortcode attribute value if it equals to the default global value
-			if ( $global_setting_value === $shortcode_attr_value ) {
+			if ( ! in_array( $field_key, $must_print_fields ) && $global_setting_value === $shortcode_attr_value ) {
 				$this->shortcode_atts[ $field_key ] = '';
 			}
 		}
@@ -545,6 +548,11 @@ class ET_Builder_Element {
 
 	function _shortcode_passthru_callback( $atts, $content = null, $function_name, $parent_address = '', $global_parent = '', $global_parent_type = '' ) {
 		global $post;
+
+		// this is called during pageload, but we want to ignore that round, as this data will be built and returned on separate ajax request instead
+		if ( ! isset( $_POST['action'] ) ) {
+			return false;
+		}
 
 		$attrs = array();
 		$fields = $this->process_fields( $this->fields_unprocessed );
@@ -590,7 +598,11 @@ class ET_Builder_Element {
 			}
 		}
 
-		// TODO, cleanup this loop.
+		// Create secondary attribute for transparent_background in VB for precise comparison to avoid saving default value
+		if ( et_is_builder_plugin_active() && 'et_pb_section' === $this->slug && isset( $this->shortcode_atts['transparent_background'] ) && '' !== $this->shortcode_atts['transparent_background'] ) {
+			$attrs['transparent_background_fb'] = $this->shortcode_atts['transparent_background'];
+		}
+
 		foreach( $this->shortcode_atts as $shortcode_attr_key => $shortcode_attr_value ) {
 			if ( isset( $fields[ $shortcode_attr_key ]['type'] ) && 'computed' === $fields[ $shortcode_attr_key ]['type'] ) {
 
@@ -610,7 +622,38 @@ class ET_Builder_Element {
 				$value = $shortcode_attr_value;
 			}
 
-			$attrs[$shortcode_attr_key] = is_string($value) ? html_entity_decode($value) : $value;
+			// dont set the default, unless, lol, the value is literally 'default'
+			// NOTE: bypass shortcode trimming for section's transparent background attribute in plugin, to preserve BB behaviour in VB
+			// which is loading 'default' if no attribute found, then switch it accordinly to either on/off on settings modal saving process
+			$is_plugin_section_transparent_background = et_is_builder_plugin_active() && 'et_pb_section' === $this->slug && 'transparent_background' === $shortcode_attr_key;
+			if ( isset( $fields[ $shortcode_attr_key ]['default'] ) && $value === $fields[ $shortcode_attr_key ]['default'] && $value !== 'default' && ! $is_plugin_section_transparent_background ) {
+				$value = '';
+			}
+
+			// dont set the default, unless, lol, the value is literally 'default'
+			if ( isset( $fields[ $shortcode_attr_key ]['shortcode_default'] ) && $value === $fields[ $shortcode_attr_key ]['shortcode_default'] && $value !== 'default' ) {
+				$value = '';
+			}
+
+			// dont set the default, unless, lol, the value is literally 'default'
+			if ( isset( $this->fields_defaults[ $shortcode_attr_key ] ) && $value === $this->fields_defaults[ $shortcode_attr_key ][0] && $value !== 'default' ) {
+				$value = '';
+			}
+
+			// generic override, disabled=off is an unspoken default
+			if ( $shortcode_attr_key === 'disabled' && $shortcode_attr_value === 'off' ) {
+				$value = '';
+			}
+
+			// this override is necessary becuase et_pb_column and et_pb_column_inner type default is 4_4 and will get stomped
+			// above since its default, but we need it explicitly set anyways, so we force set it
+			if ( in_array( $function_name, array( 'et_pb_column', 'et_pb_column_inner' ) ) && $shortcode_attr_key === 'type' ) {
+				$value = $shortcode_attr_value;
+			}
+
+			if ( '' !== $value ) {
+				$attrs[$shortcode_attr_key] = is_string($value) ? html_entity_decode($value) : $value;
+			}
 		}
 
 		// Format FB component path
@@ -618,41 +661,6 @@ class ET_Builder_Element {
 		$component_path = str_replace( 'et_pb_' , '', $function_name_processed );
 		$component_path = str_replace( '_', '-', $component_path );
 		$component_path = $component_path;
-
-		// Prepare modules.
-		$modules = 'child' === $this->type ? self::$child_modules : self::$parent_modules;
-
-		if ( isset( $post->post_type, $modules[$post->post_type][$function_name_processed] ) ) {
-			$modules = $modules[$post->post_type][$function_name_processed];
-		} else {
-			$modules = array();
-		}
-
-		// Build custom CSS.
-		$custom_css = array();
-
-		if ( isset( $modules->custom_css_options ) ) {
-			foreach ( $modules->custom_css_options as $custom_css_key => $custom_css_option ) {
-				$custom_css_option['key'] = "custom_css_{$custom_css_key}";
-				$custom_css[] = $custom_css_option;
-			}
-		}
-
-		// Build advanced options and defaults.
-		$advanced_options = array();
-		$advanced_defaults = array();
-
-		if ( ! empty( $modules->advanced_options ) ) {
-			$advanced_options = $modules->advanced_options;
-		}
-
-		if ( isset( $modules->fields_unprocessed ) ) {
-			foreach ( $modules->fields_unprocessed as $fields_unprocessed_key => $field_unprocessed ) {
-				if ( isset( $field_unprocessed['default'], $field_unprocessed['tab_slug'] ) && 'advanced' === $field_unprocessed['tab_slug'] ) {
-					$advanced_defaults[$fields_unprocessed_key] = $field_unprocessed['default'];
-				}
-			}
-		}
 
 		$_i = isset( $atts['_i'] ) ? $atts['_i'] : 0;
 		$address = isset( $atts['_address'] ) ? $atts['_address'] : '0';
@@ -690,6 +698,37 @@ class ET_Builder_Element {
 			}
 		}
 
+		if ( empty( $attrs ) ) {
+			// Visual Builder expects $attrs to be an object.
+			// Associative array converted to an object by json_encode correctly, but empty array is not and it causes issues.
+			$attrs = new stdClass();
+		}
+
+		$module_type = $this->type;
+
+		// Ensuring that module which uses another module's template (i.e. accordion item uses toggle's
+		// component) has correct $this->type value. This is covered on front-end, but it causes inheriting
+		// module uses its template's value on _shortcode_passthru_callback()
+		if ( $this->slug !== $function_name && isset( $_POST ) && isset( $_POST['et_post_type'] ) ) {
+			$et_post_type = $_POST['et_post_type'];
+			$parent_modules = self::get_parent_modules( $et_post_type);
+			$function_module = false;
+
+			if ( isset( $parent_modules[ $function_name ] ) ) {
+				$function_module = $parent_modules[ $function_name ];
+			} else {
+				$child_modules = self::get_child_modules( $et_post_type );
+
+				if ( isset( $child_modules[ $function_name] ) ) {
+					$function_module = $child_modules[ $function_name ];
+				}
+			}
+
+			if ( $function_module && isset( $function_module->type ) ) {
+				$module_type = $function_module->type;
+			}
+		}
+
 		// Build object.
 		$object = array(
 			'_i'                => $_i,
@@ -703,13 +742,8 @@ class ET_Builder_Element {
 			'type'              => $function_name,
 			'component_path'    => $component_path,
 			'attrs'             => $attrs,
-			'advanced_options'  => $advanced_options,
-			'advanced_defaults' => $advanced_defaults,
-			'defaults'          => isset( $this->defaults ) ? $this->defaults : '',
-			'fields_defaults'   => isset( $this->fields_defaults ) ? $this->fields_defaults : '',
-			'custom_css'        => $custom_css,
 			'content'           => $prepared_content,
-			'is_module_child'   => 'child' === $this->type,
+			'is_module_child'   => 'child' === $module_type,
 			'prepared_styles'   => ! $this->fb_support ? ET_Builder_Element::get_style() : '',
 		);
 
@@ -861,7 +895,7 @@ class ET_Builder_Element {
 
 				// add reference to the obsolete "all caps" option if needed
 				if ( isset( $option_settings['use_all_caps'] ) && $option_settings['use_all_caps'] ) {
-					$additional_options["{$option_name}_font"]['attributes'] = array( 'data-all-caps-ref' => "{$option_name}_all_caps" );
+					$additional_options["{$option_name}_font"]['attributes'] = array( 'data-old-option-ref' => "{$option_name}_all_caps" );
 				}
 
 				// set the depends_show_if parameter if needed
@@ -920,6 +954,16 @@ class ET_Builder_Element {
 					'custom_color'    => true,
 					'tab_slug'        => 'advanced',
 				);
+
+				// add reference to the obsolete color option if needed
+				if ( isset( $option_settings['text_color'] ) && isset( $option_settings['text_color']['old_option_ref'] ) ) {
+					$additional_options["{$option_name}_text_color"]['attributes'] = array( 'data-old-option-ref' => "{$option_settings['text_color']['old_option_ref']}" );
+				}
+
+				// set default value if defined
+				if ( isset( $option_settings['text_color'] ) && isset( $option_settings['text_color']['default'] ) ) {
+					$additional_options["{$option_name}_text_color"]['default'] = $option_settings['text_color']['default'];
+				}
 
 				// set the depends_show_if parameter if needed
 				if ( isset( $option_settings['depends_show_if'] ) ) {
@@ -1065,20 +1109,21 @@ class ET_Builder_Element {
 		$color_type = isset( $this->advanced_options['border']['settings']['color'] ) && 'alpha' === $this->advanced_options['border']['settings']['color'] ? 'color-alpha' : 'color';
 
 		$additional_options['use_border_color'] = array(
-			'label'           => esc_html__( 'Use Border', 'et_builder' ),
-			'type'            => 'yes_no_button',
-			'option_category' => 'layout',
-			'options'         => array(
+			'label'             => esc_html__( 'Use Border', 'et_builder' ),
+			'type'              => 'yes_no_button',
+			'option_category'   => 'layout',
+			'options'           => array(
 				'off' => esc_html__( 'No', 'et_builder' ),
 				'on'  => esc_html__( 'Yes', 'et_builder' ),
 			),
+			'default'           => 'off',
 			'affects' => array(
 				'border_color',
 				'border_width',
 				'border_style',
 			),
 			'shortcode_default' => 'off',
-			'tab_slug'	       	=> 'advanced',
+			'tab_slug'          => 'advanced',
 		);
 
 		$additional_options['border_color'] = array(
@@ -1215,14 +1260,14 @@ class ET_Builder_Element {
 
 		foreach ( $this->advanced_options['button'] as $option_name => $option_settings ) {
 			$additional_options["custom_{$option_name}"] = array(
-				'label'           => sprintf( esc_html__( 'Use Custom Styles for %1$s ', 'et_builder' ), $option_settings['label'] ),
-				'type'            => 'yes_no_button',
-				'option_category' => 'button',
-				'options'         => array(
+				'label'             => sprintf( esc_html__( 'Use Custom Styles for %1$s ', 'et_builder' ), $option_settings['label'] ),
+				'type'              => 'yes_no_button',
+				'option_category'   => 'button',
+				'options'           => array(
 					'off' => esc_html__( 'No', 'et_builder' ),
 					'on'  => esc_html__( 'Yes', 'et_builder' ),
 				),
-				'affects' => array(
+				'affects'           => array(
 					"{$option_name}_text_color",
 					"{$option_name}_text_size",
 					"{$option_name}_border_width",
@@ -1240,7 +1285,7 @@ class ET_Builder_Element {
 					"{$option_name}_letter_spacing_hover",
 				),
 				'shortcode_default' => 'off',
-				'tab_slug'	       	=> 'advanced',
+				'tab_slug'          => 'advanced',
 			);
 
 			$additional_options["{$option_name}_text_size"] = array(
@@ -1346,7 +1391,7 @@ class ET_Builder_Element {
 					"{$option_name}_on_hover",
 					"{$option_name}_icon",
 				),
-				'shortcode_default' => 'on',
+				'shortcode_default' => 'default',
 				'tab_slug'	       	=> 'advanced',
 				'depends_default'   => true,
 			);
@@ -1919,7 +1964,7 @@ class ET_Builder_Element {
 					$button_options = isset( $field['button_options'] ) ? $field['button_options'] : array();
 				}
 
-				$field_el = $this->render_select( $field_name, $field['options'], $field['id'], $field['class'], $attributes, $field['type'], $button_options );
+				$field_el = $this->render_select( $field_name, $field['options'], $field['id'], $field['class'], $attributes, $field['type'], $button_options, $default );
 
 				if ( 'font' === $field['type'] ) {
 					$font_style_button_html = sprintf(
@@ -1971,14 +2016,15 @@ class ET_Builder_Element {
 						'<span class="et-pb-custom-color-button et-pb-choose-custom-color-button"><span>%1$s</span></span>
 						<div class="et-pb-custom-color-container et_pb_hidden">
 							%2$s
-							<input%3$s class="et-pb-main-setting et-pb-custom-color-picker" type="hidden" value="%4$s" />
+							<input%3$s class="et-pb-main-setting et-pb-custom-color-picker" type="hidden" value="%4$s" %6$s />
 							%5$s
 						</div> <!-- .et-pb-custom-color-container -->',
 						esc_html__( 'Choose Custom Color', 'et_builder' ),
 						$field_el,
 						$color_id,
 						$hidden_color_value,
-						$reset_button_html
+						$reset_button_html,
+						$attributes
 					);
 				}
 				break;
@@ -2242,6 +2288,7 @@ class ET_Builder_Element {
 						esc_attr( sprintf( 'parseFloat( %1$s )', $field_name ) ),
 						( '' !== $default ? floatval( $default ) : '' )
 					);
+					$fixed_range = isset($field['fixed_range']) && $field['fixed_range'];
 
 					$range_settings_html = '';
 					$range_properties = apply_filters( 'et_builder_range_properties', array( 'min', 'max', 'step' ) );
@@ -2255,12 +2302,13 @@ class ET_Builder_Element {
 					}
 
 					$range_el = sprintf(
-						'<input type="range" class="et-pb-main-setting et-pb-range%4$s" data-default="%2$s"%1$s%3$s%5$s />',
+						'<input type="range" class="et-pb-main-setting et-pb-range%4$s%6$s" data-default="%2$s"%1$s%3$s%5$s />',
 						$value,
 						esc_attr( $default ),
 						$range_settings_html,
 						$need_mobile_options ? ' et_pb_setting_mobile et_pb_setting_mobile_desktop et_pb_setting_mobile_active' : '',
-						$need_mobile_options ? ' data-device="desktop"' : ''
+						$need_mobile_options ? ' data-device="desktop"' : '',
+						$fixed_range ? ' et-pb-fixed-range' : ''
 					);
 
 					if ( $need_mobile_options ) {
@@ -2276,12 +2324,13 @@ class ET_Builder_Element {
 								( '' !== $default ? floatval( $default ) : '' )
 							);
 							$range_el .= sprintf(
-								'<input type="range" class="et-pb-main-setting et-pb-range et_pb_setting_mobile et_pb_setting_mobile_%3$s" data-default="%1$s"%4$s%2$s data-device="%3$s"%5$s/>',
+								'<input type="range" class="et-pb-main-setting et-pb-range et_pb_setting_mobile et_pb_setting_mobile_%3$s%6$s" data-default="%1$s"%4$s%2$s data-device="%3$s"%5$s/>',
 								esc_attr( $default ),
 								$range_settings_html,
 								esc_attr( $device_type ),
 								$value_mobile_range,
-								$has_saved_value
+								$has_saved_value,
+								$fixed_range ? ' et-pb-fixed-range' : ''
 							);
 						}
 					}
@@ -2308,7 +2357,7 @@ class ET_Builder_Element {
 		return "\t" . $field_el;
 	}
 
-	function render_select( $name, $options, $id = '', $class = '', $attributes = '', $field_type = '', $button_options = array() ) {
+	function render_select( $name, $options, $id = '', $class = '', $attributes = '', $field_type = '', $button_options = array(), $default = '' ) {
 		$options_output = '';
 
 		if ( 'font' === $field_type ) {
@@ -2327,7 +2376,7 @@ class ET_Builder_Element {
 					}
 					$option_label = $option_label['value'];
 				}
-				$selected_attr = '<%- typeof( ' . esc_attr( $name ) . ' ) !== \'undefined\' && \'' . esc_attr( $option_value ) . '\' === ' . esc_attr( $name ) . ' ?  \' selected="selected"\' : \'\' %>';
+				$selected_attr = '<%- ( typeof( ' . esc_attr( $name ) . ' ) !== \'undefined\' && \'' . esc_attr( $option_value ) . '\' === ' . esc_attr( $name ) . ' ) || ( typeof( ' . esc_attr( $name ) . ' ) === \'undefined\' && \'' . $default . '\' !== \'\' && \'' . esc_attr( $option_value ) . '\' === \'' . $default .'\' ) ?  \' selected="selected"\' : \'\' %>';
 				$options_output .= sprintf(
 					'%4$s<option%5$s value="%1$s"%2$s>%3$s</option>',
 					esc_attr( $option_value ),
@@ -2892,24 +2941,30 @@ class ET_Builder_Element {
 			$text_color_option_name = "{$option_name}_{$slugs[2]}";
 
 			if ( isset( $font_options[ $text_color_option_name ] ) && '' !== $font_options[ $text_color_option_name ] ) {
+				// handle the value from old option
+				$old_option_ref = isset( $option_settings['text_color'] ) && isset( $option_settings['text_color']['old_option_ref'] ) ? $option_settings['text_color']['old_option_ref'] : '';
+				$old_option_val = '' !== $old_option_ref && isset( $this->shortcode_atts[ $old_option_ref ] ) ? $this->shortcode_atts[ $old_option_ref ] : '';
+				$default_value = '' !== $old_option_val && isset( $option_settings['text_color'] ) && isset( $option_settings['text_color']['default'] ) ? $option_settings['text_color']['default'] : '';
 				$important = ' !important';
 
-				if ( isset( $option_settings['css']['color'] ) ) {
-					self::set_style( $function_name, array(
-						'selector'    => $option_settings['css']['color'],
-						'declaration' => sprintf(
-							'color: %1$s%2$s;',
+				if ( $default_value !== $font_options[ $text_color_option_name ] ) {
+					if ( isset( $option_settings['css']['color'] ) ) {
+						self::set_style( $function_name, array(
+							'selector'    => $option_settings['css']['color'],
+							'declaration' => sprintf(
+								'color: %1$s%2$s;',
+								esc_html( $font_options[ $text_color_option_name ] ),
+								esc_html( $important )
+							),
+							'priority'    => $this->_style_priority,
+						) );
+					} else {
+						$style .= sprintf(
+							'color: %1$s%2$s; ',
 							esc_html( $font_options[ $text_color_option_name ] ),
 							esc_html( $important )
-						),
-						'priority'    => $this->_style_priority,
-					) );
-				} else {
-					$style .= sprintf(
-						'color: %1$s%2$s; ',
-						esc_html( $font_options[ $text_color_option_name ] ),
-						esc_html( $important )
-					);
+						);
+					}
 				}
 			}
 
@@ -3050,21 +3105,24 @@ class ET_Builder_Element {
 						$selector = $this->main_css_element;
 					}
 
-					self::set_style( $function_name, array(
-						'selector'    => $selector,
-						'declaration' => sprintf(
-							'%1$s: %2$s%3$s;',
-							esc_html( $css_property ),
-							esc_html( et_builder_process_range_value( $font_options[ $current_option_name ] ) ),
-							esc_html( $important )
-						),
-						'priority'    => $this->_style_priority,
-						'media_query' => ET_Builder_Element::get_media_query( $current_media_query ),
-					) );
-
-					if ( $is_placeholder ) {
+					// $selector might be an array, for example to apply the css for placeholders
+					if ( is_array( $selector ) ) {
+						foreach( $selector as $selector_item ) {
+							self::set_style( $function_name, array(
+								'selector'    => $selector_item,
+								'declaration' => sprintf(
+									'%1$s: %2$s%3$s;',
+									esc_html( $css_property ),
+									esc_html( et_builder_process_range_value( $font_options[ $current_option_name ] ) ),
+									esc_html( $important )
+								),
+								'priority'    => $this->_style_priority,
+								'media_query' => ET_Builder_Element::get_media_query( $current_media_query ),
+							) );
+						}
+					} else {
 						self::set_style( $function_name, array(
-							'selector'    => $selector . '::-webkit-input-placeholder',
+							'selector'    => $selector,
 							'declaration' => sprintf(
 								'%1$s: %2$s%3$s;',
 								esc_html( $css_property ),
@@ -3075,29 +3133,43 @@ class ET_Builder_Element {
 							'media_query' => ET_Builder_Element::get_media_query( $current_media_query ),
 						) );
 
-						self::set_style( $function_name, array(
-							'selector'    => $selector . '::-moz-placeholder',
-							'declaration' => sprintf(
-								'%1$s: %2$s%3$s;',
-								esc_html( $css_property ),
-								esc_html( et_builder_process_range_value( $font_options[ $current_option_name ] ) ),
-								esc_html( $important )
-							),
-							'priority'    => $this->_style_priority,
-							'media_query' => ET_Builder_Element::get_media_query( $current_media_query ),
-						) );
+						if ( $is_placeholder ) {
+							self::set_style( $function_name, array(
+								'selector'    => $selector . '::-webkit-input-placeholder',
+								'declaration' => sprintf(
+									'%1$s: %2$s%3$s;',
+									esc_html( $css_property ),
+									esc_html( et_builder_process_range_value( $font_options[ $current_option_name ] ) ),
+									esc_html( $important )
+								),
+								'priority'    => $this->_style_priority,
+								'media_query' => ET_Builder_Element::get_media_query( $current_media_query ),
+							) );
 
-						self::set_style( $function_name, array(
-							'selector'    => $selector . '::-ms-input-placeholder',
-							'declaration' => sprintf(
-								'%1$s: %2$s%3$s;',
-								esc_html( $css_property ),
-								esc_html( et_builder_process_range_value( $font_options[ $current_option_name ] ) ),
-								esc_html( $important )
-							),
-							'priority'    => $this->_style_priority,
-							'media_query' => ET_Builder_Element::get_media_query( $current_media_query ),
-						) );
+							self::set_style( $function_name, array(
+								'selector'    => $selector . '::-moz-placeholder',
+								'declaration' => sprintf(
+									'%1$s: %2$s%3$s;',
+									esc_html( $css_property ),
+									esc_html( et_builder_process_range_value( $font_options[ $current_option_name ] ) ),
+									esc_html( $important )
+								),
+								'priority'    => $this->_style_priority,
+								'media_query' => ET_Builder_Element::get_media_query( $current_media_query ),
+							) );
+
+							self::set_style( $function_name, array(
+								'selector'    => $selector . '::-ms-input-placeholder',
+								'declaration' => sprintf(
+									'%1$s: %2$s%3$s;',
+									esc_html( $css_property ),
+									esc_html( et_builder_process_range_value( $font_options[ $current_option_name ] ) ),
+									esc_html( $important )
+								),
+								'priority'    => $this->_style_priority,
+								'media_query' => ET_Builder_Element::get_media_query( $current_media_query ),
+							) );
+						}
 					}
 				}
 			}
@@ -3349,6 +3421,7 @@ class ET_Builder_Element {
 				$button_text_size = '' !== $button_text_size && false === strpos( $button_text_size, 'px' ) ? $button_text_size . 'px' : $button_text_size;
 				$button_border_radius_processed = '' !== $button_border_radius && 'px' !== $button_border_radius ? et_builder_process_range_value( $button_border_radius ) : '';
 				$button_border_radius_hover_processed = '' !== $button_border_radius_hover && 'px' !== $button_border_radius_hover ? et_builder_process_range_value( $button_border_radius_hover ) : '';
+				$button_use_icon = '' === $button_use_icon ? 'default' : $button_use_icon;
 
 				$css_element = ! empty( $option_settings['css']['main'] ) ? $option_settings['css']['main'] : $this->main_css_element . ' .et_pb_button';
 
@@ -3409,7 +3482,7 @@ class ET_Builder_Element {
 					'' !== $button_bg_color_hover ? sprintf( 'background:%1$s !important;', $button_bg_color_hover ) : '',
 					'' !== $button_border_color_hover ? sprintf( 'border-color:%1$s !important;', $button_border_color_hover ) : '',
 					'' !== $button_border_radius_hover_processed ? sprintf( 'border-radius:%1$s;', $button_border_radius_hover_processed ) : '',
-					'' !== $button_letter_spacing_hover ? sprintf( 'letter-spacing:%1$s;', $button_letter_spacing_hover ) : '',
+					'' !== $button_letter_spacing_hover && 'px' !== $button_letter_spacing_hover ? sprintf( 'letter-spacing:%1$s;', et_builder_process_range_value( $button_letter_spacing_hover ) ) : '',
 					'off' === $button_on_hover ?
 						''
 						:
@@ -3949,6 +4022,70 @@ class ET_Builder_Element {
 		return apply_filters( 'et_builder_get_child_modules', $child_modules, $post_type );
 	}
 
+	static function get_fields_defaults( $post_type = '', $mode = 'all' ) {
+		$parent_modules = self::get_parent_modules( $post_type );
+		$child_modules  = self::get_child_modules( $post_type );
+
+		switch ( $mode ) {
+			case 'parent':
+				$_modules = $parent_modules;
+				break;
+
+			case 'child':
+				$_modules = $child_modules;
+				break;
+
+			default:
+				$_modules = array_merge( $parent_modules, $child_modules );
+				break;
+		}
+
+		$module_fields_defaults = array();
+		foreach( $_modules as $_module_slug => $_module ) {
+
+			// skip modules without fb support
+			if ( ! $_module->fb_support ) {
+				continue;
+			}
+
+			$module_fields_defaults[ $_module_slug ] = isset( $_module->fields_defaults ) ? $_module->fields_defaults : array();
+		}
+
+		return $module_fields_defaults;
+	}
+
+	static function get_defaults( $post_type = '', $mode = 'all' ) {
+		$parent_modules = self::get_parent_modules( $post_type );
+		$child_modules  = self::get_child_modules( $post_type );
+
+		switch ( $mode ) {
+			case 'parent':
+				$_modules = $parent_modules;
+				break;
+
+			case 'child':
+				$_modules = $child_modules;
+				break;
+
+			default:
+				$_modules = array_merge( $parent_modules, $child_modules );
+				break;
+		}
+
+		$module_defaults = array();
+		foreach( $_modules as $_module_slug => $_module ) {
+
+			// skip modules without fb support
+			if ( ! $_module->fb_support ) {
+				continue;
+			}
+
+			$module_defaults[ $_module_slug ] = isset( $_module->defaults ) ? $_module->defaults : array();
+		}
+
+		return $module_defaults;
+	}
+
 	static function get_general_fields( $post_type = '', $mode = 'all' ) {
 		$parent_modules = self::get_parent_modules( $post_type );
 		$child_modules  = self::get_child_modules( $post_type );
@@ -3994,6 +4131,11 @@ class ET_Builder_Element {
 			if ( ! empty( $dependables ) ) {
 				foreach ( $dependables as $dependable_field => $affects ) {
 					foreach ( $affects as $affect ) {
+						// Avoid pushing depends_to attributte to non-existent module field data
+						if ( ! isset( $module_fields[ $_module_slug ][ $affect ] ) ) {
+							continue;
+						}
+
 						$module_fields[ $_module_slug ][ $affect ]['depends_to'][] = $dependable_field;
 					}
 				}
@@ -4135,35 +4277,6 @@ class ET_Builder_Element {
 			return $fields[ $field ];
 		}
 		return false;
-	}
-
-	static function get_all_modules_default_fields( $post_type ) {
-		$_modules = array_merge( self::get_parent_modules( $post_type ), self::get_child_modules( $post_type ) );
-		$all_fields = array();
-
-		foreach( $_modules as $_module_slug => $_module ) {
-			$module_fields = 'child' === $_module->type ? self::get_child_module_fields( $post_type, $_module_slug ) : self::get_parent_module_fields( $post_type, $_module_slug );
-			$all_fields[ $_module_slug ]['attrs'] = array_flip( array_keys( $module_fields ) );
-
-			foreach( $module_fields as $field_name => $value ) {
-				if ( isset( $_module->fields_defaults ) && isset( $_module->fields_defaults[ $field_name ] ) ) {
-					$all_fields[ $_module_slug ]['attrs'][ $field_name ] = $_module->fields_defaults[ $field_name ][0];
-				} else {
-					$all_fields[ $_module_slug ]['attrs'][ $field_name ] = '';
-				}
-			}
-
-			if ( isset( $_module->fields_defaults ) ) {
-				$all_fields[ $_module_slug ]['fields_defaults'] = $_module->fields_defaults;
-			}
-
-			if ( isset( $_module->defaults ) ) {
-				$all_fields[ $_module_slug ]['defaults'] = $_module->defaults;
-			}
-
-		}
-
-		return $all_fields;
 	}
 
 	static function get_font_icon_fields( $post_type = '' ) {

@@ -335,6 +335,11 @@ if ( ! function_exists( 'et_first_image' ) ) {
 	function et_first_image() {
 		global $post;
 		$img = '';
+
+		if ( empty( $post->ID ) ) {
+			return $img;
+		}
+
 		$unprocessed_content = $post->post_content;
 
 		// truncate Post based shortcodes if Divi Builder enabled to avoid infinite loops

@@ -12,7 +12,6 @@
 
 // Colors
 $white: #fff;
-$black: #241e1b;
 $dark-grey: #444;
 $light-grey: #b0b0b0;
 $yellow: #fec424;
@@ -285,8 +284,8 @@ form.gsc-search-box {
 }
 
 #footer-top {
-  background-color: $dark-grey;
-  color: $light-grey;
+  background-color: $yellow;
+  color: $dark-grey;
   text-align: center;
   font-weight: bold;
   font-size: 17px;
@@ -397,12 +396,12 @@ form.gsc-search-box {
 
 #footer-bottom{
   overflow: hidden;
-  background-color: $black;
+  background-color: $dark-grey;
   padding: 0px;
 
   #footer-copy{
     float: left;
-    color: #666766;
+    color: $light-grey;
     font-size: 15px;
     padding: 19px;
   }
@@ -411,7 +410,7 @@ form.gsc-search-box {
     a{
       display: table-cell;
       text-align: center;
-      color: #666766;
+      color: $light-grey;
       padding: 15px;
     }
 

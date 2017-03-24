@@ -190,5 +190,52 @@
 				}
 			});
 		}, 1 ); // need this timeout to make sure all the css applied before calculating sizes
+	};
+
+	window.et_pb_set_tabs_height = function( $tabs_module ) {
+		if ( typeof $tabs_module === 'undefined' ) {
+			$tabs_module = $( '.et_pb_tabs' );
+		}
+
+		if ( ! $tabs_module.length ) {
+			return;
+		}
+
+		$tabs_module.each( function() {
+			var $tab_controls = $( this ).find( '.et_pb_tabs_controls' );
+			var $all_tabs = $tab_controls.find( 'li' );
+			var max_height = 0;
+			var small_columns      = '.et_pb_column_1_3, .et_pb_column_1_4, .et_pb_column_3_8';
+			var in_small_column    = $( this ).parents( small_columns ).length > 0;
+			var on_small_screen    = parseFloat( $( window ).width() ) < 768;
+			var vertically_stacked = in_small_column || on_small_screen;
+
+			if ( vertically_stacked ) {
+				$( this ).addClass( 'et_pb_tabs_vertically_stacked' );
+			}
+
+			// determine the height of the tallest tab
+			if ( $all_tabs.length ) {
+				// remove the height attribute if it was added to calculate the height correctly
+				$tab_controls.removeAttr( 'style' );
+
+				$all_tabs.each( function() {
+					var tab_height = $( this ).outerHeight();
+
+					if ( vertically_stacked ) {
+						return;
+					}
+
+					if ( tab_height > max_height ) {
+						max_height = tab_height;
+					}
+				});
+			}
+
+			if ( 0 !== max_height ) {
+				// set the height of tabs container based on the height of the tallest tab
+				$tab_controls.height( max_height );
+			}
+		});
 	}
-})(jQuery)
+})(jQuery);

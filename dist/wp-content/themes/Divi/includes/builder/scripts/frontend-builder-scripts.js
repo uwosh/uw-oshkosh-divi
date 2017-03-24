@@ -1366,7 +1366,7 @@
 
 			if ( $et_pb_fullwidth_portfolio.length || is_frontend_builder ) {
 
-			 	window.et_fullwidth_portfolio_init = function( $the_portfolio ) {
+				window.et_fullwidth_portfolio_init = function( $the_portfolio ) {
 					var $portfolio_items = $the_portfolio.find('.et_pb_portfolio_items');
 
 						$portfolio_items.data('items', $portfolio_items.find('.et_pb_portfolio_item').toArray() );
@@ -1413,10 +1413,10 @@
 						// setup fullwidth portfolio grid
 						set_fullwidth_portfolio_columns( $the_portfolio, false );
 					}
-			 	}
+				}
 
-			 	function fullwidth_portfolio_carousel_slide( $arrow ) {
-			 		var $the_portfolio = $arrow.parents('.et_pb_fullwidth_portfolio'),
+				function fullwidth_portfolio_carousel_slide( $arrow ) {
+					var $the_portfolio = $arrow.parents('.et_pb_fullwidth_portfolio'),
 						$portfolio_items = $the_portfolio.find('.et_pb_portfolio_items'),
 						$the_portfolio_items = $portfolio_items.find('.et_pb_portfolio_item'),
 						$active_carousel_group = $portfolio_items.find('.et_pb_carousel_group.active'),
@@ -1666,7 +1666,7 @@
 							}
 						} );
 					}
-			 	}
+				}
 
 				function set_fullwidth_portfolio_columns( $the_portfolio, carousel_mode ) {
 					var columns,
@@ -1796,9 +1796,10 @@
 				$time_slider.removeAttr( 'style' );
 
 				var $count_timer = $this_player.find( 'div.mejs-currenttime-container' ),
+					$count_timer_width_container = $this_player.find( '.mejs-duration-container' ).length ? $this_player.find( '.mejs-duration-container' ) : $this_player.find( '.mejs-currenttime-container' ),
 					player_width = $this_player.width(),
 					controls_play_width = $this_player.find( '.mejs-play' ).outerWidth(),
-					time_width = $this_player.find( '.mejs-currenttime-container' ).outerWidth(),
+					time_width = $count_timer_width_container.outerWidth(),
 					volume_icon_width = $this_player.find( '.mejs-volume-button' ).outerWidth(),
 					volume_bar_width = $this_player.find( '.mejs-horizontal-volume-slider' ).outerWidth(),
 					new_time_rail_width;
@@ -2385,6 +2386,8 @@
 
 						return false;
 					} );
+
+					window.et_pb_set_tabs_height();
 				}
 				window.et_pb_tabs_init( $et_pb_tabs );
 			}
@@ -2537,6 +2540,12 @@
 
 			if ( $et_pb_number_counter.length || is_frontend_builder ) {
 				window.et_pb_reinit_number_counters = function( $et_pb_number_counter ) {
+
+					function et_format_number( number_value ) {
+						var separator = $et_pb_number_counter.data('number-separator');
+						return number_value.toString().replace( /\B(?=(\d{3})+(?!\d))/g, separator );
+					}
+
 					if ( $.fn.fitText ) {
 						$et_pb_number_counter.find( '.percent p' ).fitText( 0.3 );
 					}
@@ -2557,10 +2566,10 @@
 							},
 							onStep: function(from, to, percent) {
 								if ( percent != to )
-									$(this.el).find('.percent-value').text( Math.round( parseInt( percent ) ) );
+									$(this.el).find('.percent-value').text( et_format_number( Math.round( parseInt( percent ) ) ) );
 							},
 							onStop: function(from, to) {
-								$(this.el).find('.percent-value').text( $(this.el).data('number-value') );
+								$(this.el).find('.percent-value').text( et_format_number( $(this.el).data('number-value') ) );
 							}
 						});
 					});
@@ -2873,17 +2882,25 @@
 				$element = typeof $video !== 'undefined' ? $video.closest( '.et_pb_section_video_bg' ) : $( '.et_pb_section_video_bg' );
 
 				$element.each( function() {
-					var $this_el = $(this),
-						ratio = ( typeof $this_el.attr( 'data-ratio' ) !== 'undefined' ) && ! is_frontend_builder
-							? $this_el.attr( 'data-ratio' )
-							: $this_el.find('video').attr( 'width' ) / $this_el.find('video').attr( 'height' ),
-						$video_elements = $this_el.find( '.mejs-video, video, object' ).css( 'margin', 0 ),
-						$container = $this_el.closest( '.et_pb_section_video' ).length
+					var $this_el  = $(this);
+					var el_ratio  = parseFloat( $this_el.attr( 'data-ratio' ) );
+					var el_width  = parseInt( $this_el.find( 'video' ).attr( 'width' ) );
+					var el_height = parseInt( $this_el.find( 'video' ).attr( 'height' ) );
+
+					var ratio = ( ! isNaN( el_ratio ) ) ? el_ratio : ( el_width / el_height );
+
+					var $video_elements = $this_el.find( '.mejs-video, video, object' ).css( 'margin', 0 );
+
+					var  $container = $this_el.closest( '.et_pb_section_video' ).length
 							? $this_el.closest( '.et_pb_section_video' )
-							: $this_el.closest( '.et_pb_slides' ),
-						body_width = $container.innerWidth(),
-						container_height = $container.innerHeight(),
-						width, height;
+							: $this_el.closest( '.et_pb_slides' );
+
+					var body_width = $container.innerWidth();
+
+					var container_height = $container.innerHeight();
+
+					var width, height;
+
 					if ( typeof $this_el.attr( 'data-ratio' ) == 'undefined' && !isNaN(ratio) ) {
 						$this_el.attr( 'data-ratio', ratio );
 					}
@@ -2910,28 +2927,36 @@
 			window.et_pb_center_video = function( $video ) {
 				$element = typeof $video !== 'undefined' ? $video : $( '.et_pb_section_video_bg .mejs-video' );
 
-					$element.each( function() {
-						var $this_el = $(this);
-						var $video_width = $this_el.width() / 2;
-						var $video_width_negative = 0 - $video_width;
-						$this_el.css("margin-left",$video_width_negative );
+				if ( ! $element.length ) {
+					return;
+				}
 
-						// need to re-calculate the values in Frontend builder
-						if ( is_frontend_builder ) {
-							setTimeout( function() {
-								var $video_width = $this_el.width() / 2;
-								var $video_width_negative = 0 - $video_width;
-								$this_el.css("margin-left",$video_width_negative );
-							}, 0 );
-						}
+				$element.each( function() {
+					var $this_el = $(this);
 
-						if ( typeof $video !== 'undefined' ) {
-							if ( $video.closest( '.et_pb_slider' ).length && ! $video.closest( '.et_pb_first_video' ).length ) {
-								return false;
-							}
+					et_pb_adjust_video_margin( $this_el );
+
+					// need to re-calculate the values in Frontend builder
+					if ( is_frontend_builder ) {
+						setTimeout( function() {
+							et_pb_adjust_video_margin( $this_el );
+						}, 0 );
+					}
+
+					if ( typeof $video !== 'undefined' ) {
+						if ( $video.closest( '.et_pb_slider' ).length && ! $video.closest( '.et_pb_first_video' ).length ) {
+							return false;
 						}
-					} );
+					}
+				} );
 			};
+
+			window.et_pb_adjust_video_margin = function( $el ) {
+				var $video_width          = $el.width() / 2;
+				var $video_width_negative = 0 - $video_width;
+
+				$el.css("margin-left", $video_width_negative );
+			}
 
 			window.et_fix_slider_height = function( $slider ) {
 				var $this_slider = $slider || $et_pb_slider;
@@ -2960,7 +2985,9 @@
 					// make slides visible to calculate the height correctly
 					$slides.addClass( 'et_pb_temp_slide' );
 
-					$(this).data('et_pb_simple_slider').et_fix_slider_content_images();
+					if ( typeof $(this).data('et_pb_simple_slider') === 'object' ) {
+						$(this).data('et_pb_simple_slider').et_fix_slider_content_images();
+					}
 
 					$slides.each( function() {
 						var height = parseFloat( $(this).innerHeight() ),
@@ -3164,17 +3191,36 @@
 			window.et_fix_testimonial_inner_width();
 
 			window.et_pb_video_background_init = function( $this_video_background, this_video_background ) {
-				var $video_background_wrapper = $this_video_background.closest( '.et_pb_section_video_bg' ),
-					this_video_player = this_video_background.player;
+				var $video_background_wrapper = $this_video_background.closest( '.et_pb_section_video_bg' );
+
+				// Initializing video values
+				var onplaying = false;
+				var onpause   = true;
+
+				// On video playing toggle values
+				this_video_background.onplaying = function() {
+					onplaying = true;
+					onpause   = false;
+				};
+
+				// On video pause toggle values
+				this_video_background.onpause = function() {
+					onplaying = false;
+					onpause   = true;
+				};
 
 				// Entering video's top viewport
 				$video_background_wrapper.waypoint({
 					offset: '100%',
 					handler : function( direction ) {
 						if ( $this_video_background.is(':visible') && direction === 'down' ) {
-							this_video_player.play();
+							if ( this_video_background.paused && ! onplaying ) {
+								this_video_background.play();
+							}
 						} else if ( $this_video_background.is(':visible') && direction === 'up' ) {
-							this_video_player.pause();
+							if ( ! this_video_background.paused && ! onpause ) {
+								this_video_background.pause();
+							}
 						}
 					}
 				});
@@ -3193,9 +3239,13 @@
 					},
 					handler : function( direction ) {
 						if ( $this_video_background.is(':visible') && direction === 'up' ) {
-							this_video_player.play();
+							if ( this_video_background.paused && ! onplaying ) {
+								this_video_background.play();
+							}
 						} else if ( $this_video_background.is(':visible') && direction === 'down' ) {
-							this_video_player.pause();
+							if ( ! this_video_background.paused && ! onpause ) {
+								this_video_background.pause();
+							}
 						}
 					}
 				});
@@ -3231,7 +3281,7 @@
 							$this_counter.waypoint({
 								offset: '65%',
 								handler: function() {
-									if ( $this_counter.data( 'PieChartHasLoaded' ) ) {
+									if ( $this_counter.data( 'PieChartHasLoaded' ) || typeof $this_counter.data('easyPieChart') === 'undefined' ) {
 										return;
 									}
 
@@ -3245,7 +3295,7 @@
 							$this_counter.waypoint({
 								offset: 'bottom-in-view',
 								handler: function() {
-									if ( $this_counter.data( 'PieChartHasLoaded' ) ) {
+									if ( $this_counter.data( 'PieChartHasLoaded' ) || typeof $this_counter.data('easyPieChart') === 'undefined' ) {
 										return;
 									}
 

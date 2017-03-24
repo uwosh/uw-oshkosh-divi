@@ -1,7 +1,7 @@
 /*
 Theme Name: Divi
 Theme URI: http://www.elegantthemes.com/gallery/divi/
-Version: 3.0.34
+Version: 3.0.38
 Description: Smart. Flexible. Beautiful. Divi is the most powerful theme in our collection.
 Author: Elegant Themes
 Author URI: http://www.elegantthemes.com
@@ -1090,7 +1090,7 @@ body.et-pb-preview #main-content .container tr td {
 .entry-content ul,
 .comment-content ul,
 body.et-pb-preview #main-content .container ul {
-	padding: 0 0 23px 16px;
+	padding: 0 0 23px 1em;
 	line-height: 26px;
 	list-style-type: disc;
 }
@@ -4798,6 +4798,9 @@ ul.et_pb_side_nav .side_nav_item a.active {
 	.et_primary_nav_dropdown_animation_expand #et-top-navigation ul li:hover > ul,
 	.et_secondary_nav_dropdown_animation_expand #et-secondary-nav li:hover > ul {
 		-webkit-transform-origin: 0 0;
+		-moz-transform-origin: 0 0;
+		-ms-transform-origin: 0 0;
+		transform-origin: 0 0;
 		-webkit-animation: Grow 0.4s ease-in-out;
 		-moz-animation: Grow 0.8s ease-in-out;
 		-o-animation: Grow 0.4s ease-in-out;
@@ -7470,12 +7473,26 @@ ul.et_pb_tabs_controls {
 	background-color: #f4f4f4;
 }
 
+ul.et_pb_tabs_controls:after {
+	display: block;
+	visibility: visible;
+	position: relative;
+	z-index: 9;
+	top: -1px;
+	border-top: 1px solid #d9d9d9;
+	content: "";
+}
+
 .et_pb_tabs_controls li {
+	display: table;
 	float: left;
 	position: relative;
+	z-index: 11;
 	max-width: 100%;
+	height: 100%;
 	border-right: 1px solid #d9d9d9;
 	font-weight: 600;
+	line-height: 1.7em;
 	cursor: pointer;
 }
 
@@ -7484,20 +7501,16 @@ ul.et_pb_tabs_controls {
 }
 
 .et_pb_tabs_controls li a {
-	display: inline-block;
-	padding: 5px 30px 3px;
+	display: table-cell;
+	padding: 4px 30px 4px;
 	color: #666;
+	line-height: inherit;
+	vertical-align: middle;
 	text-decoration: none;
 }
 
 .et_pb_tabs_controls li.et_pb_tab_active {
-	bottom: -1px;
-	margin-top: -1px;
 	background-color: #fff;
-}
-
-.et_pb_tabs_controls .et_pb_tab_active a {
-	padding: 5px 30px 4px;
 }
 
 .et_pb_tab_active a {
@@ -7509,7 +7522,6 @@ ul.et_pb_tabs_controls {
 }
 
 .et_pb_all_tabs {
-	border-top: 1px solid #d9d9d9;
 	background: #fff;
 }
 
@@ -7538,6 +7550,12 @@ ul.et_pb_tabs_controls {
 	float: none;
 	border-right: none;
 	border-bottom: 1px solid #d9d9d9;
+}
+
+.et_pb_column_1_3 .et_pb_tabs_vertically_stacked .et_pb_tabs_controls li,
+.et_pb_column_1_4 .et_pb_tabs_vertically_stacked .et_pb_tabs_controls li,
+.et_pb_column_3_8 .et_pb_tabs_vertically_stacked .et_pb_tabs_controls li {
+	width: 100%;
 }
 
 /* Accordion + Toggle Modules*/
@@ -8622,10 +8640,6 @@ p.et_pb_contact_field {
 /* Column Adjustments */
 .et_pb_column_2_3 .et_pb_audio_cover_art {
 	width: 180px;
-}
-
-.et_pb_column_2_3 .et_pb_audio_module_content {
-	margin-left: 180px;
 }
 
 .et_pb_column_1_2 .et_pb_audio_cover_art,
@@ -14855,35 +14869,6 @@ span.comment_date {
 		line-height: 6rem;
 	}
 
-/* Tabs Module */
-	.et_pb_column_1_3 .et_pb_tabs_controls,
-	.et_pb_column_1_4 .et_pb_tabs_controls {
-		border-bottom: 1px solid #d9d9d9;
-	}
-
-	.et_pb_column_1_3 .et_pb_tabs_controls li,
-	.et_pb_column_1_4 .et_pb_tabs_controls li {
-		float: left;
-		border-right: 1px solid #d9d9d9;
-		border-bottom: none;
-	}
-
-	.et_pb_column_1_3 .et_pb_tabs_controls,
-	.et_pb_column_1_4 .et_pb_tabs_controls,
-	.et_pb_column_3_8 .et_pb_tabs_controls {
-		border-bottom: 1px solid #d9d9d9;
-	}
-
-	.et_pb_column_1_3 .et_pb_tabs_controls li,
-	.et_pb_column_1_4 .et_pb_tabs_controls li,
-	.et_pb_tabs_controls li,
-	.et_pb_tabs_controls li:last-child,
-	.et_pb_column_3_8 .et_pb_tabs_controls li {
-		float: left;
-		border-right: 1px solid #d9d9d9;
-		border-bottom: none;
-	}
-
 /* Testimonials Module */
 	.et_pb_column .et_pb_testimonial_portrait {
 		display: table-cell;
@@ -15296,10 +15281,12 @@ span.comment_date {
 
 /* Tabs Module */
 	.et_pb_tabs_controls {
+		height: auto !important;
 		border-bottom: none;
 	}
 
 	.et_pb_tabs_controls li {
+		display: block;
 		float: none;
 		border-right: none;
 		border-bottom: 1px solid #d9d9d9;

@@ -244,7 +244,7 @@
 			et_autocorrect_range_input_number( $(this), 0 );
 		});
 
-		$('input.et_font_style_checkbox[type=checkbox]').live('change', function(){
+		$('input.et_font_style_checkbox[type=checkbox]').on('change', function(){
 			var $this_el      = $(this),
 				$main_option  = $this_el.closest( 'span' ).siblings( 'input.et_font_styles' ),
 				value         = $this_el.val(),

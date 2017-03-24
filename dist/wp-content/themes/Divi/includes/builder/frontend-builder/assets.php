@@ -2,10 +2,8 @@
 
 // Register assets that need to be fired at head
 function et_fb_enqueue_assets_head() {
-	if ( et_fb_is_enabled() ) {
-		// Setup WP media.
-		wp_enqueue_media();
-	}
+	// Setup WP media.
+	wp_enqueue_media();
 }
 add_action( 'wp_enqueue_scripts', 'et_fb_enqueue_assets_head' );
 
@@ -113,7 +111,7 @@ function et_fb_enqueue_assets() {
 
 	wp_register_script( 'et_pb_admin_date_addon_js', "{$root}/scripts/ext/jquery-ui-timepicker-addon.js", array( 'et_pb_admin_date_js' ), $ver, true );
 
-	wp_register_script( 'wp-shortcode', includes_url() . '/js/shortcode.js', array(), $wp_version );
+	wp_register_script( 'wp-shortcode', includes_url() . 'js/shortcode.js', array(), $wp_version );
 
 	$fb_bundle_dependencies = apply_filters( 'et_fb_bundle_dependencies', array(
 		'jquery',
@@ -133,8 +131,17 @@ function et_fb_enqueue_assets() {
 		'salvattore',
 		'hashchange',
 		'wp-shortcode',
+		'heartbeat',
 		'wp-mediaelement',
 	) );
+
+	// enqueue the Avada script before 'et-frontend-builder' to make sure easypiechart ( and probably some others ) override the scripts from Avada.
+	if ( wp_script_is( 'avada' ) ) {
+		// dequeue Avada script
+		wp_dequeue_script( 'avada' );
+		// enqueue it before 'et-frontend-builder'
+		wp_enqueue_script( 'avada' );
+	}
 
 	// Enqueue scripts.
 	wp_enqueue_script( 'et-frontend-builder', "{$app}/bundle.js", $fb_bundle_dependencies, $ver, true );
@@ -148,5 +155,35 @@ function et_fb_enqueue_assets() {
 		'memory_limit_not_increased' => esc_html__( "Your memory limit can't be changed automatically", 'et_builder' ),
 	) );
 
+	// WP Auth Check (allows user to log in again when session expires).
+	wp_enqueue_style( 'wp-auth-check' );
+	wp_enqueue_script( 'wp-auth-check' );
+	add_action( 'wp_print_footer_scripts', 'et_fb_output_wp_auth_check_html', 5 );
+
 	do_action( 'et_fb_enqueue_assets' );
 }
+
+function et_fb_output_wp_auth_check_html() {
+	// A <button> element is used for the close button which looks ugly in Chrome. Use <a> element instead.
+	ob_start();
+	wp_auth_check_html();
+	$output = ob_get_contents();
+	ob_end_clean();
+
+	$output = str_replace(
+		array( '<button type="button"', '</button>' ),
+		array( '<a href="#"', '</a>' ),
+		$output
+	);
+
+	echo $output;
+}
+
+function et_fb_set_editor_available_cookie() {
+	global $post;
+	$post_id = isset( $post->ID ) ? $post->ID : false;
+	if ( ! headers_sent() && !empty( $post_id ) ) {
+		setcookie( 'et-editor-available-post-' . $post_id . '-fb', 'fb', time() + ( MINUTE_IN_SECONDS * 30 ), SITECOOKIEPATH, false, is_ssl() );
+	}
+}
+add_action( 'et_fb_framework_loaded', 'et_fb_set_editor_available_cookie' );
