@@ -12,21 +12,11 @@
 
 // Colors
 $white: #fff;
-$black: #241e1b;
 $dark-grey: #444;
 $light-grey: #b0b0b0;
 $yellow: #fec424;
 $blue: rgb(46, 163, 242);
 $box-shadow: rgba(0, 0, 0, .0980392);
-
-//social-icon colors
-$icon-facebook:  #3b5998;
-$icon-twitter: #1da1f2;
-$icon-instagram: #f56040;
-$icon-youtube: #cd201f;
-$icon-linkedin: #0077b5;
-$icon-pinterest: #bd081c;
-$icon-flickr: #8032B0;
 
 // Defaults
 body {
@@ -341,7 +331,7 @@ form.gsc-search-box {
 
 #footer-address{
   ul{
-    line-height: 1.75em;
+    line-height: 1.75;
   }
 }
 
@@ -406,7 +396,7 @@ form.gsc-search-box {
 
 #footer-bottom{
   overflow: hidden;
-  background-color: $black;
+  background-color: $dark-grey;
   padding: 0px;
 
   #footer-copy{
@@ -425,31 +415,31 @@ form.gsc-search-box {
     }
 
     .fa-facebook:hover{
-      color: $icon-facebook;
+      color: #3b5998;
     }
 
     .fa-twitter:hover{
-      color: $icon-twitter;
+      color: #1da1f2;
     }
 
     .fa-instagram:hover{
-      color: $icon-instagram;
+      color: #f56040;
     }
 
     .fa-youtube-play:hover{
-      color: $icon-youtube;
+      color: #cd201f;
     }
 
     .fa-linkedin:hover{
-      color: $icon-linkedin;
+      color: #0077b5;
     }
 
     .fa-pinterest-p:hover{
-      color: $icon-pinterest;
+      color: #bd081c;
     }
 
     .fa-flickr:hover{
-      color: $icon-flickr;
+      color: #8032B0;
     }
   }
 }

@@ -37,6 +37,7 @@ function et_get_allowed_localization_html_elements() {
 			'rel'    => array(),
 		),
 		'b'      => array(),
+		'br'     => array(),
 		'em'     => array(),
 		'p'      => array(),
 		'span'   => array(),
@@ -117,3 +118,10 @@ function et_core_browser_body_class( $classes ) {
 }
 endif;
 add_filter( 'body_class', 'et_core_browser_body_class' );
+
+if ( ! function_exists( 'et_force_edge_compatibility_mode' ) ) :
+function et_force_edge_compatibility_mode() {
+	echo '<meta http-equiv="X-UA-Compatible" content="IE=edge">';
+}
+endif;
+add_action( 'et_head_meta', 'et_force_edge_compatibility_mode' );

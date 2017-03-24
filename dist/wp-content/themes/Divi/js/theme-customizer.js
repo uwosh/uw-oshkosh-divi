@@ -1624,7 +1624,7 @@
 
 	wp.customize( 'et_divi[footer_widget_link_color]', function( value ) {
 		value.bind( function( to ) {
-			$( '#footer-widgets .footer-widget li a' ).css( 'color', to );
+			$( '#footer-widgets .footer-widget a' ).css( 'color', to );
 		} );
 	} );
 

@@ -6048,7 +6048,9 @@ function et_divi_add_customizer_css(){ ?>
 			#main-footer { background-color: <?php echo esc_html( $footer_bg ); ?>; }
 		<?php } ?>
 		<?php if ( $footer_widget_link_color !== '#fff' ) { ?>
-			#footer-widgets .footer-widget li a { color: <?php echo esc_html( $footer_widget_link_color ); ?>; }
+			#footer-widgets .footer-widget a,
+			#footer-widgets .footer-widget li a,
+			#footer-widgets .footer-widget li a:hover { color: <?php echo esc_html( $footer_widget_link_color ); ?>; }
 		<?php } ?>
 		<?php if ( $footer_widget_text_color !== '#fff' ) { ?>
 			.footer-widget { color: <?php echo esc_html( $footer_widget_text_color ); ?>; }
@@ -8565,7 +8567,7 @@ function et_modify_canonical_redirect( $redirect_url, $requested_url ) {
 
 	// Look for $allowed_shortcodes in content. Once detected, set $is_overwrite_canonical_redirect to true
 	foreach ( $allowed_shortcodes as $shortcode ) {
-		if ( has_shortcode( $post->post_content, $shortcode ) ) {
+		if ( !empty( $post ) && has_shortcode( $post->post_content, $shortcode ) ) {
 			$is_overwrite_canonical_redirect = true;
 			break;
 		}
