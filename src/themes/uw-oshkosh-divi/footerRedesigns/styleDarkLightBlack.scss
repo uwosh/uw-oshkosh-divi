@@ -19,6 +19,15 @@ $yellow: #fec424;
 $blue: rgb(46, 163, 242);
 $box-shadow: rgba(0, 0, 0, .0980392);
 
+//social-icon colors
+$icon-facebook:  #3b5998;
+$icon-twitter: #1da1f2;
+$icon-instagram: #f56040;
+$icon-youtube: #cd201f;
+$icon-linkedin: #0077b5;
+$icon-pinterest: #bd081c;
+$icon-flickr: #8032B0;
+
 // Defaults
 body {
   min-width: 320px;
@@ -322,17 +331,24 @@ form.gsc-search-box {
 }
 
 #footer-column-1{
-  p{
-    padding-left: 120px;
+  .wismap{
+    width: 40%;
   }
-  img{
-    padding-right: 10px;
+
+  p{
+    padding-left: 40%;
+    margin-left: 10px;
   }
 }
 
 #footer-address{
+  width: 60%;
+  float: right;
+  padding-left: 10px;
+
   ul{
     line-height: 1.75;
+    margin:0;
   }
 }
 
@@ -402,7 +418,7 @@ form.gsc-search-box {
 
   #footer-copy{
     float: left;
-    color: #666766;
+    color: $light-grey;
     font-size: 15px;
     padding: 19px;
   }
@@ -411,36 +427,36 @@ form.gsc-search-box {
     a{
       display: table-cell;
       text-align: center;
-      color: #666766;
+      color: $light-grey;
       padding: 15px;
     }
 
     .fa-facebook:hover{
-      color: #3b5998;
+      color: $icon-facebook;
     }
 
     .fa-twitter:hover{
-      color: #1da1f2;
+      color: $icon-twitter;
     }
 
     .fa-instagram:hover{
-      color: #f56040;
+      color: $icon-instagram;
     }
 
     .fa-youtube-play:hover{
-      color: #cd201f;
+      color: $icon-youtube;
     }
 
     .fa-linkedin:hover{
-      color: #0077b5;
+      color: $icon-linkedin;
     }
 
     .fa-pinterest-p:hover{
-      color: #bd081c;
+      color: $icon-pinterest;
     }
 
     .fa-flickr:hover{
-      color: #8032B0;
+      color: $icon-flickr;
     }
   }
 }
@@ -450,10 +466,16 @@ form.gsc-search-box {
   #footer-column-1{
     p{
       padding-left: 20px;
+      margin-left: 0px;
     }
 
     .wismap{
       display: none;
+    }
+
+    #footer-address{
+      padding-left: 20px;
+      width: 100%;
     }
   }
 
@@ -476,10 +498,7 @@ form.gsc-search-box {
     text-align: left;
     padding: 0 0 15px 0;
 
-    .wismap{
-      display: none;
-    }
-
+    #footer-address,
     p{
       padding-left: 0;
     }
