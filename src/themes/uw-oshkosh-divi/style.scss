@@ -331,17 +331,24 @@ form.gsc-search-box {
 }
 
 #footer-column-1{
-  p{
-    padding-left: 120px;
+  .wismap{
+    width: 40%;
   }
-  img{
-    padding-right: 10px;
+
+  p{
+    padding-left: 40%;
+    margin-left: 10px;
   }
 }
 
 #footer-address{
+  width: 60%;
+  float: right;
+  padding-left: 10px;
+
   ul{
     line-height: 1.75em;
+    margin: 0;
   }
 }
 
@@ -459,10 +466,16 @@ form.gsc-search-box {
   #footer-column-1{
     p{
       padding-left: 20px;
+      margin-left: 0px;
     }
 
     .wismap{
       display: none;
+    }
+
+    #footer-address{
+      padding-left: 20px;
+      width: 100%;
     }
   }
 
@@ -485,10 +498,7 @@ form.gsc-search-box {
     text-align: left;
     padding: 0 0 15px 0;
 
-    .wismap{
-      display: none;
-    }
-
+    #footer-address,
     p{
       padding-left: 0;
     }
