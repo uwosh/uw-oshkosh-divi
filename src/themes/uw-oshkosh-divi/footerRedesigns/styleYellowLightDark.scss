@@ -12,15 +12,29 @@
 
 // Colors
 $white: #fff;
+$black: #241e1b;
 $dark-grey: #444;
 $light-grey: #b0b0b0;
 $yellow: #fec424;
 $blue: rgb(46, 163, 242);
 $box-shadow: rgba(0, 0, 0, .0980392);
 
+// Social-icon colors
+$icon-facebook:  #3b5998;
+$icon-twitter: #1da1f2;
+$icon-instagram: #f56040;
+$icon-youtube: #cd201f;
+$icon-linkedin: #0077b5;
+$icon-pinterest: #bd081c;
+$icon-flickr: #8032B0;
+
+// Font Style
+$font: 'Open Sans', Arial, sans-serif !important;
+
 // Defaults
 body {
   min-width: 320px;
+  font-family: $font;
 }
 
 // Utility
@@ -48,7 +62,7 @@ header {
   vertical-align: bottom;
 
   h1 {
-    font-family: 'Open Sans', Arial, sans-serif;
+    font-family: $font;
     font-size: 33px;
     font-weight: 600;
   }
@@ -123,6 +137,12 @@ header {
 
 #et-secondary-nav li {
   text-align: left;
+  a {
+    padding-top: 0;
+    padding-left: 0;
+    padding-right: 0;
+  }
+  
 }
 
 .et_nav_text_color_light,
@@ -270,7 +290,7 @@ form.gsc-search-box {
   margin: 0 !important;
 }
 
-// FOOTER
+// Footer
 #main-footer {
   background-color: $white !important;
 }
@@ -288,8 +308,8 @@ form.gsc-search-box {
   color: $dark-grey;
   text-align: center;
   font-weight: bold;
-  font-size: 17px;
-  padding: 10px 0 10px 0;
+  font-size: 16px;
+  padding: 12px 0 12px 0;
   span{
     padding: 0 10px;
   }
@@ -321,17 +341,24 @@ form.gsc-search-box {
 }
 
 #footer-column-1{
-  p{
-    padding-left: 120px;
+  .wismap{
+    width: 40%;
   }
-  img{
-    padding-right: 10px;
+
+  p{
+    padding-left: 40%;
+    margin-left: 10px;
   }
 }
 
 #footer-address{
+  width: 60%;
+  float: right;
+  padding-left: 10px;
+
   ul{
-    line-height: 1.75;
+    line-height: 1.75em;
+    margin: 0;
   }
 }
 
@@ -350,6 +377,9 @@ form.gsc-search-box {
     float: left;
     width: 40px;
     text-align: center;
+  }
+  i:hover{
+      color: $yellow;
   }
   .fa-mobile{
     font-size: 60px;
@@ -415,31 +445,31 @@ form.gsc-search-box {
     }
 
     .fa-facebook:hover{
-      color: #3b5998;
+      color: $icon-facebook;
     }
 
     .fa-twitter:hover{
-      color: #1da1f2;
+      color: $icon-twitter;
     }
 
     .fa-instagram:hover{
-      color: #f56040;
+      color: $icon-instagram;
     }
 
     .fa-youtube-play:hover{
-      color: #cd201f;
+      color: $icon-youtube;
     }
 
     .fa-linkedin:hover{
-      color: #0077b5;
+      color: $icon-linkedin;
     }
 
     .fa-pinterest-p:hover{
-      color: #bd081c;
+      color: $icon-pinterest;
     }
 
     .fa-flickr:hover{
-      color: #8032B0;
+      color: $icon-flickr;
     }
   }
 }
@@ -449,10 +479,16 @@ form.gsc-search-box {
   #footer-column-1{
     p{
       padding-left: 20px;
+      margin-left: 0px;
     }
 
     .wismap{
       display: none;
+    }
+
+    #footer-address{
+      padding-left: 20px;
+      width: 100%;
     }
   }
 
@@ -475,10 +511,7 @@ form.gsc-search-box {
     text-align: left;
     padding: 0 0 15px 0;
 
-    .wismap{
-      display: none;
-    }
-
+    #footer-address,
     p{
       padding-left: 0;
     }
@@ -511,9 +544,16 @@ form.gsc-search-box {
   }
 
   #footer-bottom #footer-social a{
-      padding: 15px 10px;
-  }
+        padding: 15px 10px;
+    }
 }
+
+@media only screen and (max-width: 540px) {
+    #footer-bottom #footer-social{
+        float:left;
+    }
+}
+
 // END FOOTER
 
 // Ninja Forms

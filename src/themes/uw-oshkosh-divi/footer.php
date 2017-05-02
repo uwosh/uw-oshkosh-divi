@@ -65,13 +65,13 @@ if ( ! is_page_template( 'page-template-blank.php' ) ) : ?>
 								<div id="mobile-emergency">
 									<p>
 										<a href="http://www.uwosh.edu/go/mobile">
-											<i class="fa fa-mobile" aria-hidden="true"></i>
+											<i class="fa fa-mobile desaturate" aria-hidden="true"></i>
 											Download UW Oshkosh's Mobile App
 										</a>
 									</p>
 									<p>
 										<a href="http://emergency.uwosh.edu">
-											<i class="fa fa-exclamation-triangle" aria-hidden="true"></i>
+											<i class="fa fa-exclamation-triangle desaturate" aria-hidden="true"></i>
 											Emergency and Safety Information
 										</a>
 									</p>
