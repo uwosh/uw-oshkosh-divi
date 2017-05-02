@@ -19,7 +19,7 @@ $yellow: #fec424;
 $blue: rgb(46, 163, 242);
 $box-shadow: rgba(0, 0, 0, .0980392);
 
-//social-icon colors
+// Social-icon colors
 $icon-facebook:  #3b5998;
 $icon-twitter: #1da1f2;
 $icon-instagram: #f56040;
@@ -28,9 +28,13 @@ $icon-linkedin: #0077b5;
 $icon-pinterest: #bd081c;
 $icon-flickr: #8032B0;
 
+// Font Style
+$font: 'Open Sans', Arial, sans-serif !important;
+
 // Defaults
 body {
   min-width: 320px;
+  font-family: $font;
 }
 
 // Utility
@@ -58,7 +62,7 @@ header {
   vertical-align: bottom;
 
   h1 {
-    font-family: 'Open Sans', Arial, sans-serif;
+    font-family: $font;
     font-size: 33px;
     font-weight: 600;
   }
@@ -133,6 +137,12 @@ header {
 
 #et-secondary-nav li {
   text-align: left;
+  a {
+    padding-top: 0;
+    padding-left: 0;
+    padding-right: 0;
+  }
+  
 }
 
 .et_nav_text_color_light,
@@ -280,7 +290,7 @@ form.gsc-search-box {
   margin: 0 !important;
 }
 
-// FOOTER
+// Footer
 #main-footer {
   background-color: $white !important;
 }
@@ -298,8 +308,8 @@ form.gsc-search-box {
   color: $light-grey;
   text-align: center;
   font-weight: bold;
-  font-size: 17px;
-  padding: 10px 0 10px 0;
+  font-size: 16px;
+  padding: 12px 0 12px 0;
   span{
     padding: 0 10px;
   }
@@ -347,8 +357,8 @@ form.gsc-search-box {
   padding-left: 10px;
 
   ul{
-    line-height: 1.75;
-    margin:0;
+    line-height: 1.75em;
+    margin: 0;
   }
 }
 
@@ -367,6 +377,9 @@ form.gsc-search-box {
     float: left;
     width: 40px;
     text-align: center;
+  }
+  i:hover{
+      color: $yellow;
   }
   .fa-mobile{
     font-size: 60px;
@@ -531,9 +544,16 @@ form.gsc-search-box {
   }
 
   #footer-bottom #footer-social a{
-      padding: 15px 10px;
-  }
+        padding: 15px 10px;
+    }
 }
+
+@media only screen and (max-width: 540px) {
+    #footer-bottom #footer-social{
+        float:left;
+    }
+}
+
 // END FOOTER
 
 // Ninja Forms
