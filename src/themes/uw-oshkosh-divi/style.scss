@@ -12,15 +12,29 @@
 
 // Colors
 $white: #fff;
+$black: #241e1b;
 $dark-grey: #444;
 $light-grey: #b0b0b0;
 $yellow: #fec424;
 $blue: rgb(46, 163, 242);
 $box-shadow: rgba(0, 0, 0, .0980392);
 
+// Social-icon colors
+$icon-facebook:  #3b5998;
+$icon-twitter: #1da1f2;
+$icon-instagram: #f56040;
+$icon-youtube: #cd201f;
+$icon-linkedin: #0077b5;
+$icon-pinterest: #bd081c;
+$icon-flickr: #8032B0;
+
+// Font Style
+$font: 'Open Sans', Arial, sans-serif !important;
+
 // Defaults
 body {
   min-width: 320px;
+  font-family: $font;
 }
 
 // Utility
@@ -48,7 +62,7 @@ header {
   vertical-align: bottom;
 
   h1 {
-    font-family: 'Open Sans', Arial, sans-serif;
+    font-family: $font;
     font-size: 33px;
     font-weight: 600;
   }
@@ -123,6 +137,12 @@ header {
 
 #et-secondary-nav li {
   text-align: left;
+  a {
+    padding-top: 0;
+    padding-left: 0;
+    padding-right: 0;
+  }
+
 }
 
 .et_nav_text_color_light,
@@ -270,263 +290,270 @@ form.gsc-search-box {
   margin: 0 !important;
 }
 
-// FOOTER
+// Footer
 #main-footer {
   background-color: $white !important;
 }
 
-#portal-footer {
-  background-color: $dark-grey;
-  color: $white;
-  text-align: center;
-}
-
-#footer-bottom {
-  background-color: $light-grey;
-  padding-top: 0;
-}
-
-#footer {
+#uwo-footer {
+  text-align: left;
   background-color: $light-grey;
   clear: both;
   color: $dark-grey;
-  font-size: 13px;
-  height: 178px;
-  margin: auto;
-  padding-left: 30px;
-  padding-right: 30px;
+  font-size: 15px;
 }
 
-#uwo-footer {
-  font-family: Helvetica, Arial, Verdana, sans-serif;
-  font-style: normal;
-  text-align: left;
-
-  a {
-    color: $dark-grey;
-    font-family: Helvetica, Arial, Verdana, sans-serif;
-    font-size: 13px;
-    text-decoration: none;
+#footer-top {
+  background-color: $yellow;
+  color: $dark-grey;
+  text-align: center;
+  font-weight: bold;
+  font-size: 16px;
+  padding: 12px 0 12px 0;
+  span{
+    padding: 0 10px;
   }
+}
 
-  h2 {
+#footer-body {
+  background-color: $light-grey;
+  padding: 45px 5% 45px 5%;
+  a{
     color: $dark-grey;
-    font-family: Helvetica, Arial, Verdana,sans-serif;
-    font-size: 25px;
-    font-weight: normal;
-    letter-spacing: .03em;
-    margin-bottom: 10px;
-
-    a {
-      color: $dark-grey;
-      font-family: "gnuolane",sans-serif;
-      font-size: 25px;
-      font-weight: normal;
-      margin-bottom: 10px;
-    }
+    font-style: normal;
+  }
+  ul{
+    list-style-type: none;
   }
 }
 
 #footer-column-1,
 #footer-column-2,
-#footer-column-3 {
+#footer-column-3,
+#footer-column-4 {
   float: left;
-  margin: 20px 0 0;
+  height: 190px;
 }
 
-#footer-column-1 {
-  width: 30%;
+.footer-column-header{
+  margin-bottom: 5px;
+  font-weight: bold;
+}
 
-  ul {
+#footer-column-1{
+  .wismap{
+    width: 40%;
+  }
+
+  p{
+    padding-left: 40%;
+    margin-left: 10px;
+  }
+}
+
+#footer-address{
+  width: 60%;
+  float: right;
+  padding-left: 10px;
+
+  ul{
+    line-height: 1.75em;
+    margin: 0;
+  }
+}
+
+#column-2-header{
+    padding-left: 54px;
+}
+
+#footer-column-2,
+#footer-column-3{
+    padding-left: 60px;
+}
+
+#mobile-emergency {
+  i{
+    margin-right: 15px;
     float: left;
-    list-style-type: none;
-    margin-left: 0;
-    margin-top: 0;
-    padding-left: 0;
-    padding-right: 20px;
-
-    li {
-      display: block;
-      padding-bottom: 5px;
+    width: 40px;
+    text-align: center;
+  }
+  i:hover{
+      color: $yellow;
+  }
+  .fa-mobile{
+    font-size: 60px;
+  }
+  .fa-exclamation-triangle{
+    font-size: 40px;
+    padding-top: 10px;
+  }
+  p{
+    height: 65px;
+    margin-bottom: 15px;
+    a{
+      vertical-align: sub;
+      line-height: 1;
     }
   }
 }
 
-#footer-column-2 {
-  width: 35%;
+#sitemap{
+  ul{
+    margin: 0;
+    line-height: 1.75;
 
-  p {
-    bottom: 12px;
-    position: relative;
+    li:hover{
+      text-decoration: underline;
+    }
   }
 }
 
-#footer-column-3 {
-  width: 35%;
+#footer-column-4{
+  img{
+    height: 155px;
+    padding: 35px 8%;
+  }
 
-  a img {
-    margin-right: 3px;
+  #footer-accredited{
+    padding-left: 2%;
+  }
+
+  #footer-uw-logo{
+    padding-right: 0;
   }
 }
 
-address.vcard {
-  font-style: normal;
-  line-height: 18px;
-}
+#footer-bottom{
+  overflow: hidden;
+  background-color: $dark-grey;
+  padding: 0px;
 
-#uwo-everywhere {
-  margin-top: 15px;
-  padding: 0;
-
-  img {
-    margin: 0 !important;
-    position: relative;
-    right: 20px;
+  #footer-copy{
+    float: left;
+    color: $light-grey;
+    font-size: 15px;
+    padding: 19px;
   }
+  #footer-social{
+    float: right;
+    a{
+      display: table-cell;
+      text-align: center;
+      color: $light-grey;
+      padding: 15px;
+    }
 
-  h2 {
-    padding-bottom: 5px;
-  }
-}
+    .fa-facebook:hover{
+      color: $icon-facebook;
+    }
 
-#meet-uw-oshkosh {
-  padding-bottom: 5px;
-}
+    .fa-twitter:hover{
+      color: $icon-twitter;
+    }
 
-#uwo-footer-map {
-  margin-left: 40px;
-  text-align: center;
-}
+    .fa-instagram:hover{
+      color: $icon-instagram;
+    }
 
-.uwo-connect-icons {
-  margin-right: 18px;
-  margin-top: 10px;
-}
+    .fa-youtube-play:hover{
+      color: $icon-youtube;
+    }
 
-#footer-logos {
-  clear: both;
-  margin-bottom: 20px;
-  text-align: center;
-  white-space: nowrap;
-  width: 100%;
+    .fa-linkedin:hover{
+      color: $icon-linkedin;
+    }
 
-  img {
-    margin-right: 20px !important;
-    margin-top: 40px !important;
-  }
-}
+    .fa-pinterest-p:hover{
+      color: $icon-pinterest;
+    }
 
-#uwo-footer-mobile-icon {
-  display: inline-block;
-  float: right;
-  margin-right: 46px;
-  vertical-align: middle;
-}
-
-#uwo-tagline {
-  text-align: center;
-
-  p {
-    color: $white;
-    font-size: .7em;
-  }
-
-  h2 {
-    line-height: 130%;
-    margin-bottom: 0;
+    .fa-flickr:hover{
+      color: $icon-flickr;
+    }
   }
 }
 
-.pull-left {
-  float: left;
-}
+@media only screen and (max-width: 1025px) {
 
-.app-icon {
-  height: 32px;
-  width: 32px;
-}
+  #footer-column-1{
+    p{
+      padding-left: 20px;
+      margin-left: 0px;
+    }
 
-.wismap {
-  margin-right: 10px;
-  width: 124px;
-}
+    .wismap{
+      display: none;
+    }
 
-#address {
-  margin-top: 20px;
-}
+    #footer-address{
+      padding-left: 20px;
+      width: 100%;
+    }
+  }
 
-#sitemap {
-  margin-right: 25px;
-  margin-top: 20px;
-}
+  #footer-column-2{
+      padding-left: 10px;
+      padding-right: 30px;
+  }
 
-#mobile-emergency {
-  float: left;
-  margin-top: 30px;
-  width: 170px;
-}
-
-#college-portrait {
-  margin-top: 61px;
-}
-
-#footerSocialLinks {
-  margin-bottom: 20px;
-
-  li {
-    display: inline;
-    margin-right: 16px;
+  #footer-column-3{
+      padding-left: 20px;
   }
 }
 
-.social-icon {
-  height: 24px;
-}
-
-.list-block li {
-  display: block;
-}
-
-.img-block {
-  display: block;
-}
-
-@media only screen and (max-width: 1100px) {
-  // rules defined inside here are only applied to browsers that support CSS media queries and the browser window is 1100px or smaller
-  #footer-column-1,
-  #footer-column-2 {
-    width: 50%;
-  }
-
-  #footer-column-3 {
-    text-align: center;
-    width: 100%;
-  }
-}
-
-@media only screen and (max-width: 980px) {
-    // rules defined inside here are only applied to browsers that support CSS media queries and the browser window is 980px or smaller
+@media only screen and (max-width: 640px) {
+  // rules defined inside here are only applied to browsers that support CSS media queries and the browser window is 640px or smaller
   #footer-column-1,
   #footer-column-2,
-  #footer-column-3 {
+  #footer-column-3,
+  #footer-column-4{
     text-align: left;
-    width: 100%;
+    padding: 0 0 15px 0;
+
+    #footer-address,
+    p{
+      padding-left: 0;
+    }
+
+    ul{
+      margin: 0;
+    }
   }
+
+  #footer-body{
+    padding-bottom: 0;
+  }
+
+  #footer-column-1{
+    height: 160px;
+  }
+
+  #footer-column-2 p{
+      width: 205px;
+  }
+
+  #footer-column-4{
+    img{
+      padding: 35px 14% 35px 0;
+    }
+
+    #footer-accredited{
+      padding-left: 0;
+    }
+  }
+
+  #footer-bottom #footer-social a{
+        padding: 15px 10px;
+    }
 }
 
-@media only screen and (max-width: 480px) {
-  // rules defined inside here are only applied to browsers that support CSS media queries and the browser window is 480px or smaller
-  #footer-column-1,
-  #footer-column-2,
-  #footer-column-3 {
-    text-align: left;
-    width: 100%;
-  }
-
-  .wismap {
-    display: none;
-  }
+@media only screen and (max-width: 540px) {
+    #footer-bottom #footer-social{
+        float:left;
+    }
 }
+
 // END FOOTER
 
 // Ninja Forms

@@ -3,12 +3,15 @@
 require_once( ET_BUILDER_DIR . 'core.php' );
 
 if ( defined( 'DOING_AJAX' ) && DOING_AJAX && ! is_customize_preview() ) {
+	define( 'WPE_HEARTBEAT_INTERVAL', et_builder_heartbeat_interval() );
+
 	$builder_load_actions = array(
 		'et_pb_get_backbone_template',
 		'et_pb_get_backbone_templates',
 		'et_pb_process_computed_property',
 		'et_fb_ajax_render_shortcode',
 		'et_fb_ajax_save',
+		'et_fb_ajax_drop_autosave',
 		'et_fb_get_saved_layouts',
 		'et_fb_save_layout',
 		'et_fb_update_layout',
@@ -21,7 +24,7 @@ if ( defined( 'DOING_AJAX' ) && DOING_AJAX && ! is_customize_preview() ) {
 		'et_fb_prepare_shortcode',
 		'et_fb_process_imported_content',
 		'et_fb_get_saved_templates',
-		'et_fb_retrieve_builder_data'
+		'et_fb_retrieve_builder_data',
 	);
 
 	if ( class_exists( 'Easy_Digital_Downloads') ) {
@@ -30,7 +33,12 @@ if ( defined( 'DOING_AJAX' ) && DOING_AJAX && ! is_customize_preview() ) {
 
 	$force_builder_load = isset( $_POST['et_load_builder_modules'] ) && '1' === $_POST['et_load_builder_modules'];
 
-	if ( ! $force_builder_load && ( ! isset( $_REQUEST['action'] ) || ! in_array( $_REQUEST['action'], $builder_load_actions ) ) ) {
+	if ( isset( $_REQUEST['action'] ) && 'heartbeat' == $_REQUEST['action'] ) {
+		// if this is the heartbeat, and if its not packing our heartbeat data, then return
+		if ( !isset( $_REQUEST['data'] ) || !isset( $_REQUEST['data']['et'] ) ) {
+			return;
+		}
+	} else if ( ! $force_builder_load && ( ! isset( $_REQUEST['action'] ) || ! in_array( $_REQUEST['action'], $builder_load_actions ) ) ) {
 		return;
 	}
 
@@ -64,8 +72,8 @@ function et_builder_load_modules_styles() {
 		wp_enqueue_style( 'et-builder-modules-style', ET_BUILDER_URI . '/styles/frontend-builder-plugin-style.css', array(), ET_BUILDER_VERSION );
 	}
 
-	// Load visible.min.js only if AB testing active on current page
-	if ( et_is_ab_testing_active() ) {
+	// Load visible.min.js only if AB testing active on current page OR VB (because post settings is synced between VB and BB)
+	if ( et_is_ab_testing_active() || et_fb_enabled() ) {
 		wp_enqueue_script( 'et-jquery-visible-viewport', ET_BUILDER_URI . '/scripts/ext/jquery.visible.min.js', array( 'jquery', 'et-builder-modules-script' ), ET_BUILDER_VERSION, true );
 	}
 

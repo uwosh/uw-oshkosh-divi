@@ -2,7 +2,7 @@
 
 if ( ! defined( 'ET_BUILDER_PRODUCT_VERSION' ) ) {
 	// Note, when this is updated, you must also update corresponding version in builder.js: `window.et_builder_version`
-	define( 'ET_BUILDER_PRODUCT_VERSION', '3.0.34' );
+	define( 'ET_BUILDER_PRODUCT_VERSION', '3.0.38' );
 }
 
 if ( ! defined( 'ET_BUILDER_VERSION' ) ) {
@@ -578,6 +578,7 @@ function et_fb_current_page_params() {
 		'categories'               => isset( $post->ID ) ? et_pb_get_post_categories( $post->ID ) : array(),
 		'commentsPopup'            => esc_html( $comment_count_text ),
 		'paged'                    => is_front_page() ? $et_paged : $paged,
+		'post_modified'            => isset( $post->ID ) ? esc_attr( $post->post_modified ) : '',
 	);
 
 	return apply_filters( 'et_fb_current_page_params', $current_page );
@@ -589,6 +590,11 @@ function et_pb_process_computed_property() {
 	}
 
 	if ( ! current_user_can( 'edit_posts' ) ) {
+		die( -1 );
+	}
+
+	if ( ! isset( $_POST['depends_on'], $_POST['conditional_tags'], $_POST['current_page'] ) ) {
+		// Shouldn't even be a possibility, but...
 		die( -1 );
 	}
 
@@ -740,6 +746,11 @@ function et_fb_process_to_shortcode( $object, $options = array(), $library_item_
 			}
 		}
 
+		// prefix sections with a fb_built attr flag
+		if ( 'et_pb_section' == $type ) {
+			$attributes = ' fb_built="1"' . $attributes;
+		}
+
 		// build shortcode
 		// start the opening tag
 		$output .= '[' . $type . $attributes;
@@ -755,7 +766,7 @@ function et_fb_process_to_shortcode( $object, $options = array(), $library_item_
 
 		// if applicable, add inner content and close tag
 		if ( ! $open_tag_only ) {
-			if ( 'et_pb_section' === $type && 'on' !== $item['attrs']['fullwidth'] && 'on' !== $item['attrs']['specialty'] && ( ! isset( $item['content'] ) || ! is_array( $item['content'] ) ) ) {
+			if ( 'et_pb_section' === $type && isset( $item['attrs'] ) && isset( $item['attrs']['fullwidth'] ) && 'on' !== $item['attrs']['fullwidth'] && isset( $item['attrs']['specialty'] ) && 'on' !== $item['attrs']['specialty'] && ( ! isset( $item['content'] ) || ! is_array( $item['content'] ) ) ) {
 				// insert empty row if saving empty Regular section to make it work correctly in BB
 				$output .= '[et_pb_row admin_label="Row"][/et_pb_row]';
 			} else if ( isset( $item['content'] ) && is_array( $item['content'] ) ) {
@@ -813,6 +824,81 @@ function et_fb_ajax_render_shortcode() {
 }
 add_action( 'wp_ajax_et_fb_ajax_render_shortcode', 'et_fb_ajax_render_shortcode' );
 
+function et_fb_current_user_can_save( $post_id, $status = '' ) {
+	if ( is_page( $post_id ) ) {
+		if ( ! current_user_can( 'edit_pages' ) ) {
+			return false;
+		}
+
+		if ( ! current_user_can( 'publish_pages' ) && 'publish' === $status ) {
+			return false;
+		}
+
+		if ( ! current_user_can( 'edit_published_pages' ) && 'publish' === get_post_status( $post_id ) ) {
+			return false;
+		}
+
+		if ( ! current_user_can( 'edit_others_pages' ) && ! current_user_can( 'edit_page', $post_id ) ) {
+			return false;
+		}
+	} else {
+		if ( ! current_user_can( 'edit_posts' ) ) {
+			return false;
+		}
+
+		if ( ! current_user_can( 'publish_posts' ) && 'publish' === $status ) {
+			return false;
+		}
+
+		if ( ! current_user_can( 'edit_published_posts' ) && 'publish' === get_post_status( $post_id ) ) {
+			return false;
+		}
+
+		if ( ! current_user_can( 'edit_others_posts' ) && ! current_user_can( 'edit_post', $post_id ) ) {
+			return false;
+		}
+	}
+
+	return true;
+}
+
+function et_fb_ajax_drop_autosave() {
+	if ( !isset( $_POST['et_fb_drop_autosave_nonce'] ) || !wp_verify_nonce( $_POST['et_fb_drop_autosave_nonce'], 'et_fb_drop_autosave_nonce' ) ) {
+		wp_send_json_error();
+	}
+
+	$post_id = absint( $_POST['post_id'] );
+
+	if ( ! et_fb_current_user_can_save( $post_id ) ) {
+		wp_send_json_error();
+	}
+
+	$post_author = get_current_user_id();
+	$autosave = wp_get_post_autosave( $post_id, $post_author );
+
+	$autosave_deleted = false;
+
+	// delete builder settings autosave
+	delete_post_meta( $post_id, "_et_builder_settings_autosave_{$post_author}" );
+
+	if ( !empty( $autosave ) ) {
+		wp_delete_post_revision( $autosave->ID );
+		$autosave = wp_get_post_autosave( $post_id, $post_author );
+		if ( empty( $autosave ) ) {
+			$autosave_deleted = true;
+		}
+	} else {
+		$autosave_deleted = true;
+	}
+
+	if ( $autosave_deleted ) {
+		wp_send_json_success();
+	} else {
+		wp_send_json_error();
+	}
+}
+add_action( 'wp_ajax_et_fb_ajax_drop_autosave', 'et_fb_ajax_drop_autosave' );
+
 function et_fb_ajax_save() {
 	if ( !isset( $_POST['et_fb_save_nonce'] ) || !wp_verify_nonce( $_POST['et_fb_save_nonce'], 'et_fb_save_nonce' ) ) {
 		wp_send_json_error();
@@ -820,38 +906,8 @@ function et_fb_ajax_save() {
 
 	$post_id = absint( $_POST['post_id'] );
 
-	if ( is_page( $post_id ) ) {
-		if ( ! current_user_can( 'edit_pages' ) ) {
-			wp_send_json_error();
-		}
-
-		if ( ! current_user_can( 'publish_pages' ) && 'publish' === $_POST['options']['status'] ) {
-			wp_send_json_error();
-		}
-
-		if ( ! current_user_can( 'edit_published_pages' ) && 'publish' === get_post_status( $post_id ) ) {
-			wp_send_json_error();
-		}
-
-		if ( ! current_user_can( 'edit_others_pages' ) && ! current_user_can( 'edit_page', $post_id ) ) {
-			wp_send_json_error();
-		}
-	} else {
-		if ( ! current_user_can( 'edit_posts' ) ) {
-			wp_send_json_error();
-		}
-
-		if ( ! current_user_can( 'publish_posts' ) && 'publish' === $_POST['options']['status'] ) {
-			wp_send_json_error();
-		}
-
-		if ( ! current_user_can( 'edit_published_posts' ) && 'publish' === get_post_status( $post_id ) ) {
-			wp_send_json_error();
-		}
-
-		if ( ! current_user_can( 'edit_others_posts' ) && ! current_user_can( 'edit_post', $post_id ) ) {
-			wp_send_json_error();
-		}
+	if ( ! et_fb_current_user_can_save( $post_id, $_POST['options']['status'] ) ) {
+		wp_send_json_error();
 	}
 
 	$shortcode_data = json_decode( stripslashes( $_POST['modules'] ), true );
@@ -866,6 +922,15 @@ function et_fb_ajax_save() {
 		'post_content' => et_fb_process_to_shortcode( $shortcode_data, $_POST['options'], $layout_type ),
 		'post_status'  => esc_attr( $_POST['options']['status'] ),
 	) );
+
+	// check if there is an autosave that is newer
+	$post_author = get_current_user_id();
+	// Store one autosave per author. If there is already an autosave, overwrite it.
+	$autosave = wp_get_post_autosave( $post_id, $post_author );
+
+	if ( !empty( $autosave ) ) {
+		wp_delete_post_revision( $autosave->ID );
+	}
 
 	if ( isset($_POST['settings'] ) && is_array( $_POST['settings'] ) ) {
 		$update_post_meta = et_pb_update_page_settings( $post_id, $_POST['settings'] );
@@ -896,7 +961,13 @@ function et_fb_ajax_save() {
 	}
 
 	if ( $update ) {
-		wp_send_json_success( get_post_status( $update ) );
+		// Get saved post, verify its content against the one that is being sent
+		$saved_post = get_post( $update );
+
+		wp_send_json_success( array(
+			'status'            => get_post_status( $update ),
+			'save_verification' => $saved_post->post_content === et_fb_process_to_shortcode( $shortcode_data, $_POST['options'], $layout_type ),
+		) );
 	} else {
 		wp_send_json_error();
 	}
@@ -1338,34 +1409,40 @@ function et_pb_get_page_custom_css() {
 	$dark_text_color = '#666666' !== ( $saved_dark_color = get_post_meta( $page_id, '_et_pb_dark_text_color', true ) ) ? $saved_dark_color : false;
 	$content_area_bg = get_post_meta( $page_id, '_et_pb_content_area_background_color', true );
 	$section_bg = get_post_meta( $page_id, '_et_pb_section_background_color', true );
+	$selector_prefix = et_is_builder_plugin_active() ? ' .et_divi_builder #et_builder_outer_content' : '';
 
 	$output = get_post_meta( $page_id, '_et_pb_custom_css', true );
 
 	if ( $light_text_color ) {
 		$output .= sprintf(
-			' .et_pb_bg_layout_dark { color: %1$s !important; }',
-			esc_html( $light_text_color )
+			'%2$s .et_pb_bg_layout_dark { color: %1$s !important; }',
+			esc_html( $light_text_color ),
+			esc_html( $selector_prefix )
 		);
 	}
 
 	if ( $dark_text_color ) {
 		$output .= sprintf(
-			' .et_pb_bg_layout_light { color: %1$s !important; }',
-			esc_html( $dark_text_color )
+			'%2$s .et_pb_bg_layout_light { color: %1$s !important; }',
+			esc_html( $dark_text_color ),
+			esc_html( $selector_prefix )
 		);
 	}
 
 	if ( $content_area_bg ) {
+		$content_area_bg_selector = et_is_builder_plugin_active() ? $selector_prefix : ' .page.et_pb_pagebuilder_layout #main-content';
 		$output .= sprintf(
-			' .page.et_pb_pagebuilder_layout #main-content { background-color: %1$s; }',
+			'%1$s { background-color: %2$s; }',
+			esc_html( $content_area_bg_selector ),
 			esc_html( $content_area_bg )
 		);
 	}
 
 	if ( '#FFFFFF' !== $section_bg ) {
 		$output .= sprintf(
-			' .et_pb_section { background-color: %1$s; }',
-			esc_html( $section_bg )
+			'%2$s .et_pb_section { background-color: %1$s; }',
+			esc_html( $section_bg ),
+			esc_html( $selector_prefix )
 		);
 	}
 
@@ -1558,6 +1635,43 @@ function et_pb_setup_theme(){
 }
 add_action( 'init', 'et_pb_setup_theme', 11 );
 
+/**
+* The page builders require the WP Heartbeat script in order to function. We ensure the heartbeat
+* is loaded with the page builders by scheduling this callback to run right before scripts
+* are output to the footer. {@see 'admin_enqueue_scripts', 'wp_footer'}
+*/
+function et_builder_maybe_ensure_heartbeat_script() {
+	// Don't perform any actions on 'wp_footer' if VB is not active
+	if ( 'wp_footer' === current_filter() && empty( $_GET['et_fb'] ) ) {
+		return;
+	}
+
+	// We have to check both 'registered' AND 'enqueued' to cover cases where heartbeat has been
+	// de-registered because 'enqueued' will return `true` for a de-registered script at this stage.
+	$heartbeat_okay = wp_script_is( 'heartbeat', 'registered' ) && wp_script_is( 'heartbeat', 'enqueued' );
+	$autosave_okay  = wp_script_is( 'autosave', 'registered' ) && wp_script_is( 'autosave', 'enqueued' );
+
+	if ( $heartbeat_okay && $autosave_okay ) {
+		return;
+	}
+
+	$suffix = SCRIPT_DEBUG ? '' : '.min';
+
+	if ( ! $heartbeat_okay ) {
+		$heartbeat_src = "/wp-includes/js/heartbeat{$suffix}.js";
+		wp_enqueue_script( 'heartbeat', $heartbeat_src, array( 'jquery' ), false, true );
+		wp_localize_script( 'heartbeat', 'heartbeatSettings', apply_filters( 'heartbeat_settings', array() ) );
+	}
+
+	if ( ! $autosave_okay ) {
+		$autosave_src = "/wp-includes/js/autosave{$suffix}.js";
+		wp_enqueue_script( 'autosave', $autosave_src, array( 'heartbeat' ), false, true );
+	}
+}
+add_action( 'admin_print_scripts-post-new.php', 'et_builder_maybe_ensure_heartbeat_script', 9 );
+add_action( 'admin_print_scripts-post.php', 'et_builder_maybe_ensure_heartbeat_script', 9 );
+add_action( 'wp_footer', 'et_builder_maybe_ensure_heartbeat_script', 19 );
+
 function et_builder_set_post_type( $post_type = '' ) {
 	global $et_builder_post_type, $post;
 
@@ -1587,8 +1701,13 @@ function et_pb_metabox_settings_save_details( $post_id, $post ){
 
 	// Only run split testing-related update sequence if split testing is allowed
 	if ( et_pb_is_allowed( 'ab_testing' ) ) {
+		// Delete split test settings' autosave
+		delete_post_meta( $post_id, '_et_pb_use_ab_testing_draft' );
+		delete_post_meta( $post_id, '_et_pb_ab_subjects_draft' );
+
 		if ( isset( $_POST['et_pb_use_ab_testing'] ) && in_array( $_POST['et_pb_use_ab_testing'], array( 'on', 'off' ) ) ) {
 			update_post_meta( $post_id, '_et_pb_use_ab_testing', sanitize_text_field( $_POST['et_pb_use_ab_testing'] ) );
+
 			if ( 'on' === $_POST['et_pb_use_ab_testing'] ) {
 				if ( ! get_post_meta( $post_id, '_et_pb_ab_testing_id', true ) ) {
 					update_post_meta( $post_id, '_et_pb_ab_testing_id', rand() );
@@ -1604,7 +1723,7 @@ function et_pb_metabox_settings_save_details( $post_id, $post ){
 		}
 
 		if ( isset( $_POST['et_pb_ab_subjects'] ) && '' !== $_POST['et_pb_ab_subjects'] ) {
-			update_post_meta( $post_id, '_et_pb_ab_subjects', sanitize_text_field( $_POST['et_pb_ab_subjects'] ) );
+			update_post_meta( $post_id, '_et_pb_ab_subjects', sanitize_text_field( et_prevent_duplicate_item( $_POST['et_pb_ab_subjects'], ',') ) );
 		} else {
 			delete_post_meta( $post_id, '_et_pb_ab_subjects' );
 		}
@@ -1615,8 +1734,8 @@ function et_pb_metabox_settings_save_details( $post_id, $post ){
 			delete_post_meta( $post_id, '_et_pb_ab_goal_module' );
 		}
 
-		if ( isset( $_POST['_et_pb_ab_bounce_rate_limit'] ) && '' !== $_POST['_et_pb_ab_bounce_rate_limit'] ) {
-			update_post_meta( $post_id, '_et_pb_ab_bounce_rate_limit', sanitize_text_field( $_POST['_et_pb_ab_bounce_rate_limit'] ) );
+		if ( isset( $_POST['et_pb_ab_bounce_rate_limit'] ) && '' !== $_POST['et_pb_ab_bounce_rate_limit'] ) {
+			update_post_meta( $post_id, '_et_pb_ab_bounce_rate_limit', sanitize_text_field( $_POST['et_pb_ab_bounce_rate_limit'] ) );
 		} else {
 			delete_post_meta( $post_id, '_et_pb_ab_bounce_rate_limit' );
 		}
@@ -1640,11 +1759,12 @@ function et_pb_metabox_settings_save_details( $post_id, $post ){
 
 	foreach ( $builder_settings as $builder_setting_unparsed ) {
 		$builder_setting = wp_parse_args( $builder_setting_unparsed, $builder_setting_defaults );
-		$id              = "_{$builder_setting['id']}";
+		$id              = $builder_setting['id'];
+		$meta_key        = isset( $builder_setting['meta_key'] ) ? $builder_setting['meta_key'] : "_{$id}";
 		$is_default      = false;
 
 		// check whether the defined value == default value or not
-		if ( 'et_pb_gutter_width' === $builder_setting['id'] ) {
+		if ( 'et_pb_page_gutter_width' === $builder_setting['id'] ) {
 			$is_default = isset( $_POST[ $id ] ) && (int) $_POST[ $id ] === (int) et_get_option( 'gutter_width', 3 );
 		}
 
@@ -1654,13 +1774,38 @@ function et_pb_metabox_settings_save_details( $post_id, $post ){
 
 		// Save or remove post meta if it's not default
 		if ( isset( $_POST[ $id ] ) && ! $is_default ) {
-			update_post_meta( $post_id, $id, sanitize_text_field( $_POST[ $id ] ) );
+			update_post_meta( $post_id, $meta_key, sanitize_text_field( $_POST[ $id ] ) );
 		} else {
-			delete_post_meta( $post_id, $id );
+			delete_post_meta( $post_id, $meta_key );
 		}
 	}
 }
 add_action( 'save_post', 'et_pb_metabox_settings_save_details', 10, 2 );
+
+function et_pb_set_et_saved_cookie( $post_id, $post ) {
+	global $pagenow;
+
+	if ( 'post.php' != $pagenow ) return $post_id;
+
+	if ( defined( 'DOING_AUTOSAVE' ) && DOING_AUTOSAVE )
+		return $post_id;
+
+	$post_type = get_post_type_object( $post->post_type );
+	if ( ! current_user_can( $post_type->cap->edit_post, $post_id ) ) {
+		return $post_id;
+	}
+
+	if ( ! isset( $_POST['et_pb_settings_nonce'] ) || ! wp_verify_nonce( $_POST['et_pb_settings_nonce'], basename( __FILE__ ) ) ) {
+		return $post_id;
+	}
+
+	// delete
+	setcookie( 'et-saving-post-' . $post_id . '-bb', 'bb', time() - DAY_IN_SECONDS, SITECOOKIEPATH, false, is_ssl() );
+	// set
+	setcookie( 'et-saved-post-' . $post_id . '-bb', 'bb', time() + MINUTE_IN_SECONDS * 5, SITECOOKIEPATH, false, is_ssl() );
+}
+
+add_action( 'save_post', 'et_pb_set_et_saved_cookie', 10, 2 );
 
 function et_pb_before_main_editor( $post ) {
 	if ( ! in_array( $post->post_type, et_builder_get_builder_post_types() ) ) return;
@@ -1712,6 +1857,7 @@ function et_pb_before_main_editor( $post ) {
 	?>
 	<p class="et_pb_page_settings" style="display: none;">
 		<?php wp_nonce_field( basename( __FILE__ ), 'et_pb_settings_nonce' ); ?>
+		<input type="hidden" id="et_pb_last_post_modified" name="et_pb_last_post_modified" value="<?php echo esc_attr( $post->post_modified ); ?>" />
 		<input type="hidden" id="et_pb_use_builder" name="et_pb_use_builder" value="<?php echo esc_attr( $_et_builder_use_builder ); ?>" />
 		<input type="hidden" autocomplete="off" id="et_pb_use_ab_testing" name="et_pb_use_ab_testing" value="<?php echo esc_attr( $_et_builder_use_ab_testing ); ?>">
 		<input type="hidden" autocomplete="off" id="et_pb_ab_stats_refresh_interval" name="et_pb_ab_stats_refresh_interval" value="<?php echo esc_attr( $_et_builder_ab_stats_refresh_interval ); ?>">
@@ -2131,9 +2277,10 @@ function et_pb_add_builder_page_js_css(){
 	wp_enqueue_script( 'et_pb_admin_js', ET_BUILDER_URI .'/scripts/builder.js', array( 'jquery', 'jquery-ui-core', 'underscore', 'backbone', 'chart', 'jquery-tablesorter', 'et_pb_admin_global_js' ), ET_BUILDER_VERSION, true );
 
 	wp_localize_script( 'et_pb_admin_js', 'et_pb_options', apply_filters( 'et_pb_options_builder', array_merge( array(
-		'debug'                                    => true,
+		'debug'                                    => false,
 		'ajaxurl'                                  => admin_url( 'admin-ajax.php' ),
 		'home_url'                                 => home_url(),
+		'cookie_path'                              => SITECOOKIEPATH,
 		'preview_url'                              => add_query_arg( 'et_pb_preview', 'true', $preview_url ),
 		'et_admin_load_nonce'                      => wp_create_nonce( 'et_admin_load_nonce' ),
 		'images_uri'                               => ET_BUILDER_URI .'/images',
@@ -2191,6 +2338,7 @@ function et_pb_add_builder_page_js_css(){
 		'options_page_url'                         => et_pb_get_options_page_link(),
 		'et_pb_google_maps_script_notice'          => et_pb_enqueue_google_maps_script(),
 		'select_text'                              => esc_html__( 'Select', 'et_builder' ),
+		'et_fb_autosave_nonce'                     => wp_create_nonce( 'et_fb_autosave_nonce' ),
 	), et_pb_history_localization() ) ) );
 
 	wp_localize_script( 'et_pb_admin_js', 'et_pb_ab_js_options', apply_filters( 'et_pb_ab_js_options', array(
@@ -2394,6 +2542,17 @@ function et_pb_add_builder_page_js_css(){
 	wp_add_inline_style( 'et_pb_admin_css', et_pb_ab_get_subject_rank_colors_style() );
 }
 endif;
+
+function et_pb_set_editor_available_cookie() {
+	$post_id = isset( $_GET['post'] ) ? absint( $_GET['post'] ) : false;
+
+	$headers_sent = headers_sent();
+
+	if ( et_builder_should_load_framework() && is_admin() && ! $headers_sent && !empty( $post_id ) ) {
+		setcookie( 'et-editor-available-post-' . $post_id . '-bb', 'bb', time() + ( MINUTE_IN_SECONDS * 30 ), SITECOOKIEPATH, false, is_ssl() );
+	}
+}
+add_action('admin_init', 'et_pb_set_editor_available_cookie');
 
 /**
  * List of history meta.
@@ -2835,7 +2994,6 @@ function et_builder_get_columns_layout() {
 	return apply_filters( 'et_builder_layout_columns', $layout_columns );
 }
 
-
 function et_pb_pagebuilder_meta_box() {
 	global $typenow, $post;
 
@@ -3250,11 +3408,19 @@ function et_pb_pagebuilder_meta_box() {
 		et_pb_is_allowed( 'divi_library' ) && et_pb_is_allowed( 'add_library' ) ? $add_from_lib_section : ''
 	);
 
+	$insert_first_row_button = sprintf(
+		'<a href="#" class="et-pb-insert-row">
+			<span>%1$s</span>
+		</a>',
+		esc_html__( 'Insert Row(s)', 'et_builder' )
+	);
+
 	printf(
 		'<script type="text/template" id="et-builder-section-template">
 			<div class="et-pb-right-click-trigger-overlay"></div>
 			%1$s
 			<div class="et-pb-section-content et-pb-data-cid%3$s%4$s" data-cid="<%%= cid %%>" data-skip="<%%= typeof( et_pb_skip_module ) === \'undefined\' ? \'false\' : \'true\' %%>">
+				%5$s
 			</div>
 			%2$s
 			<div class="et-pb-locked-overlay et-pb-locked-overlay-section"></div>
@@ -3265,7 +3431,8 @@ function et_pb_pagebuilder_meta_box() {
 		! et_pb_is_allowed( 'move_module' ) ? ' et-pb-disable-sort' : '',
 		! et_pb_is_allowed( 'edit_global_library' )
 			? sprintf( '<%%= typeof et_pb_global_module !== \'undefined\' ? \' et-pb-disable-sort\' : \'\' %%>' )
-			: ''
+			: '',
+		et_pb_is_allowed( 'add_module' ) ? $insert_first_row_button : ''
 	);
 
 	$row_settings_button = sprintf(
@@ -4515,8 +4682,9 @@ function et_pb_builder_settings_hidden_inputs( $post_id ) {
 			continue;
 		}
 
-		$id            = "_{$setting['id']}";
-		$value         = get_post_meta( $post_id, $id, true );
+		$id            = $setting['id'];
+		$meta_key      = isset( $setting['meta_key'] ) ? $setting['meta_key'] : "_{$id}";
+		$value         = get_post_meta( $post_id, $meta_key, true );
 
 		if ( ( ! $value || '' === $value ) && $setting['default'] ) {
 			$value = $setting['default'];
@@ -4558,10 +4726,14 @@ function et_pb_get_builder_settings_configuration_default() {
 function et_pb_get_builder_settings_configurations() {
 	$settings = array();
 
-	if ( et_pb_is_allowed( 'ab_testing' ) && ! et_fb_is_enabled() ) {
+	if ( et_pb_is_allowed( 'ab_testing' ) ) {
 		$ab_testing_settings = array(
 			'et_pb_enable_ab_testing' => array(
 				'type'     => 'yes_no_button',
+				'options'  => array(
+					'on'   => __( 'On', 'et_builder'),
+					'off'  => __( 'Off', 'et_builder'),
+				),
 				'id'       => 'et_pb_enable_ab_testing',
 				'label'    => esc_html__( 'Enable Split Testing', 'et_builder' ),
 				'autoload' => false,
@@ -4571,6 +4743,7 @@ function et_pb_get_builder_settings_configurations() {
 					'et_pb_ab_refresh_interval',
 					'et_pb_enable_shortcode_tracking',
 				),
+				'hide_on_fb' => true,
 			),
 			'et_pb_ab_bounce_rate_limit' => array(
 				'type'            => 'range',
@@ -4588,6 +4761,7 @@ function et_pb_get_builder_settings_configurations() {
 				'depends_to'      => array(
 					'et_pb_enable_ab_testing',
 				),
+				'hide_on_fb'       => true,
 			),
 			'et_pb_ab_refresh_interval' => array(
 				'type'            => 'select',
@@ -4602,9 +4776,14 @@ function et_pb_get_builder_settings_configurations() {
 				'depends_to'      => array(
 					'et_pb_enable_ab_testing',
 				),
+				'hide_on_fb' => true,
 			),
 			'et_pb_enable_shortcode_tracking' => array(
 				'type'            => 'yes_no_button',
+				'options'  => array(
+					'on'   => __( 'On', 'et_builder'),
+					'off'  => __( 'Off', 'et_builder'),
+				),
 				'id'              => 'et_pb_enable_shortcode_tracking',
 				'label'           => esc_html__( 'Shortcode Tracking', 'et_builder' ),
 				'depends_show_if' => 'on',
@@ -4614,6 +4793,7 @@ function et_pb_get_builder_settings_configurations() {
 				'depends_to'      => array(
 					'et_pb_enable_ab_testing',
 				),
+				'hide_on_fb'      => true,
 			),
 			'et_pb_ab_current_shortcode' => array(
 				'type'            => 'textarea',
@@ -4625,6 +4805,7 @@ function et_pb_get_builder_settings_configurations() {
 				'depends_to'      => array(
 					'et_pb_enable_shortcode_tracking',
 				),
+				'hide_on_fb'      => true,
 			),
 		);
 
@@ -4644,9 +4825,10 @@ function et_pb_get_builder_settings_configurations() {
 			'label'   => esc_html__( 'Color Picker Color Pallete', 'et_builder' ),
 			'default' => implode( '|', et_pb_get_default_color_palette() ),
 		),
-		'et_pb_gutter_width' => array(
+		'et_pb_page_gutter_width' => array(
 			'type'    => 'range',
-			'id'      => 'et_pb_gutter_width',
+			'id'      => 'et_pb_page_gutter_width',
+			'meta_key'=> '_et_pb_gutter_width',
 			'label'   => esc_html__( 'Gutter Width', 'et_builder' ),
 			'range_settings' => array(
 				'step'    => 1,
@@ -4713,8 +4895,8 @@ function et_pb_get_builder_settings_values( $post_id = false ) {
 		$color_palette : implode( '|', et_pb_get_default_color_palette() );
 
 	$gutter_width       = get_post_meta( $post_id, '_et_pb_gutter_width', true );
-	$et_pb_gutter_width = '' !== $gutter_width ?
-		$gutter_width : $config['et_pb_gutter_width']['default'];
+	$et_pb_page_gutter_width = '' !== $gutter_width ?
+		$gutter_width : $config['et_pb_page_gutter_width']['default'];
 
 	$light_text_color       = get_post_meta( $post_id, '_et_pb_light_text_color', true );
 	$et_pb_light_text_color = $config['et_pb_light_text_color']['default'] !== $light_text_color ?
@@ -4736,11 +4918,12 @@ function et_pb_get_builder_settings_values( $post_id = false ) {
 		'et_pb_enable_ab_testing'             => et_is_ab_testing_active() ? 'on' : 'off',
 		'et_pb_ab_bounce_rate_limit'          => $et_pb_ab_bounce_rate_limit,
 		'et_pb_ab_refresh_interval'           => et_pb_ab_get_refresh_interval( $post_id ),
+		'et_pb_ab_subjects'                   => et_pb_ab_get_subjects( $post_id ),
 		'et_pb_enable_shortcode_tracking'     => get_post_meta( $post_id, '_et_pb_enable_shortcode_tracking', true ),
 		'et_pb_ab_current_shortcode'          => '[et_pb_split_track id="' . $post_id . '" /]',
 		'et_pb_custom_css'                    => get_post_meta( $post_id, '_et_pb_custom_css', true ),
 		'et_pb_color_palette'                 => $et_pb_color_palette,
-		'et_pb_gutter_width'                  => $et_pb_gutter_width,
+		'et_pb_page_gutter_width'             => $et_pb_page_gutter_width,
 		'et_pb_light_text_color'              => strtolower( $et_pb_light_text_color ),
 		'et_pb_dark_text_color'               => strtolower( $et_pb_dark_text_color ),
 		'et_pb_content_area_background_color' => strtolower( $et_pb_content_area_background_color ),
@@ -4749,7 +4932,13 @@ function et_pb_get_builder_settings_values( $post_id = false ) {
 }
 
 function et_pb_update_page_settings( $post_id, $settings ) {
-	$fields = et_pb_get_builder_settings_configurations();
+	$fields_bypass = array(
+		'et_pb_ab_subjects' => array(
+			'id'   => 'et_pb_ab_subjects',
+			'type' => 'text',
+		)
+	);
+	$fields = array_merge( et_pb_get_builder_settings_configurations(), $fields_bypass );
 
 	foreach ( $settings as $setting_key => $setting_value ) {
 		// Verify setting key
@@ -4758,6 +4947,11 @@ function et_pb_update_page_settings( $post_id, $settings ) {
 		}
 
 		$is_default = false;
+
+		// Auto-formatting subjects' value format
+		if ( 'et_pb_ab_subjects' === $setting_key && is_array( $setting_value ) ) {
+			$setting_value = implode(',', $setting_value );
+		}
 
 		// TODO Possibly move sanitization.php to builder dir
 		// Sanitize value
@@ -4784,7 +4978,7 @@ function et_pb_update_page_settings( $post_id, $settings ) {
 				}
 
 				// set default flag if needed
-				if ( 'et_pb_gutter_width' === $setting_key && $setting_value === (int) et_get_option( 'gutter_width', 3 ) ) {
+				if ( 'et_pb_page_gutter_width' === $setting_key && $setting_value === (int) et_get_option( 'gutter_width', 3 ) ) {
 					$is_default = true;
 				}
 
@@ -4799,8 +4993,13 @@ function et_pb_update_page_settings( $post_id, $settings ) {
 				break;
 		}
 
+		// Auto-formatting split test status' meta key
+		if ( 'et_pb_enable_ab_testing' === $setting_key ) {
+			$setting_key = 'et_pb_use_ab_testing';
+		}
+
 		// Prepare key
-		$meta_key = "_{$setting_key}";
+		$meta_key = isset( $fields[ $setting_key ]['meta_key'] ) ? $fields[ $setting_key ]['meta_key'] : "_{$setting_key}";
 
 		// remove post meta if value is default
 		if ( $is_default ) {
@@ -4809,7 +5008,15 @@ function et_pb_update_page_settings( $post_id, $settings ) {
 			// Update post meta
 			update_post_meta( $post_id, $meta_key, $setting_value );
 		}
+
+		// Removing autosave
+		delete_post_meta( $post_id, "{$meta_key}_draft" );
 	}
+
+	// Removing builder settings autosave
+	$current_user_id = get_current_user_id();
+
+	delete_post_meta( $post_id, "_et_builder_settings_autosave_{$current_user_id}");
 }
 
 /**
@@ -6241,9 +6448,37 @@ function et_fb_retrieve_builder_data() {
 	$fields_data['custom_css'] = ET_Builder_Element::get_custom_css_fields( $post_type );
 	$fields_data['advanced_fields'] = ET_Builder_Element::get_advanced_fields( $post_type );
 	$fields_data['general_fields'] = ET_Builder_Element::get_general_fields( $post_type );
+	$fields_data['fields_defaults'] = ET_Builder_Element::get_fields_defaults( $post_type );
+	$fields_data['defaults'] = ET_Builder_Element::get_defaults( $post_type );
+	$fields_data['contact_form_input_defaults'] = et_fb_process_shortcode( sprintf(
+		'[et_pb_contact_field field_title="%1$s" field_type="input" field_id="Name" required_mark="on" fullwidth_field="off" /][et_pb_contact_field field_title="%2$s" field_type="email" field_id="Email" required_mark="on" fullwidth_field="off" /][et_pb_contact_field field_title="%3$s" field_type="text" field_id="Message" required_mark="on" fullwidth_field="on" /]',
+		esc_attr__( 'Name', 'et_builder' ),
+		esc_attr__( 'Email Address', 'et_builder' ),
+		esc_attr__( 'Message', 'et_builder' )
+	) );
 
 	$post_data = get_post( $post_id );
+	$post_data_post_modified = date( 'U', strtotime( $post_data->post_modified ) );
 	$post_content = $post_data->post_content;
+
+	// if autosave exists here, return it with the real content, autosave.js and getServerSavedPostData() will look for it
+	$current_user_id = get_current_user_id();
+	// Store one autosave per author. If there is already an autosave, overwrite it.
+	$autosave = wp_get_post_autosave( $post_id, $current_user_id );
+
+	if ( !empty( $autosave ) ) {
+		$autosave_post_modified = date( 'U', strtotime( $autosave->post_modified ) );
+
+		if ( $autosave_post_modified > $post_data_post_modified ) {
+			$fields_data['autosave_shortcode_object'] = et_fb_process_shortcode( $autosave->post_content );
+			$fields_data['has_newer_autosave'] = true;
+		} else {
+			$fields_data['has_newer_autosave'] = false;
+		}
+		// Delete the autosave, becuase we will present the option to use the autosave to the user, and they will use it or not
+		// we need to delete the db copy now
+		wp_delete_post_revision( $autosave->ID );
+	}
 
 	switch ( $layout_type ) {
 		case 'module':
@@ -6336,23 +6571,13 @@ function et_fb_process_shortcode( $content, $parent_address = '', $global_parent
 		$GLOBALS['et_fb_processing_shortcode_object'] = true;
 
 		if ( isset( $match[5] ) ) {
-			// enclosing tag - extra parameter
-
-			// do not process rows without columns
-			if ( ! ( in_array( $tag, array( 'et_pb_row', 'et_pb_row_inner' ) ) && empty( $match[5] ) ) ) {
-				$output = call_user_func( $shortcode_tags[$tag], $attr, $match[5], $tag, $parent_address, $global_parent, $global_parent_type );
-			}
+			$output = call_user_func( $shortcode_tags[$tag], $attr, $match[5], $tag, $parent_address, $global_parent, $global_parent_type );
 		} else {
 			// self-closing tag
 			$output = call_user_func( $shortcode_tags[$tag], $attr, null, $tag );
 		}
 
-		// if row doesn't contain any columns then put an empty value instead of array
-		if ( in_array( $tag, array( 'et_pb_row', 'et_pb_row_inner' ) ) && empty( $match[5] ) ) {
-			$_matches = '';
-		} else {
-			$_matches[] = $output;
-		}
+		$_matches[] = $output;
 	}
 
 	// Turn off the flag since the shortcode object is done being built.

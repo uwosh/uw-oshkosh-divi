@@ -30,10 +30,14 @@ class ET_Builder_Module_Image extends ET_Builder_Module {
 			'max_width_last_edited',
 		);
 
+		$animation_option_name = sprintf( '%1$s-animation', $this->slug );
+		$global_animation_direction = ET_Global_Settings::get_value( $animation_option_name );
+		$default_animation = $global_animation_direction && '' !== $global_animation_direction ? $global_animation_direction : 'left';
+
 		$this->fields_defaults = array(
 			'show_in_lightbox'        => array( 'off' ),
 			'url_new_window'          => array( 'off' ),
-			'animation'               => array( 'left' ),
+			'animation'               => array( $default_animation ),
 			'sticky'                  => array( 'off' ),
 			'align'                   => array( 'left' ),
 			'force_fullwidth'         => array( 'off' ),
@@ -564,8 +568,8 @@ class ET_Builder_Module_Gallery extends ET_Builder_Module {
 				'type'              => 'select',
 				'option_category'   => 'layout',
 				'options'           => array(
-					'on'  => esc_html__( 'Slider', 'et_builder' ),
 					'off' => esc_html__( 'Grid', 'et_builder' ),
+					'on'  => esc_html__( 'Slider', 'et_builder' ),
 				),
 				'description'       => esc_html__( 'Toggle between the various blog layout types.', 'et_builder' ),
 				'affects'           => array(
@@ -756,7 +760,7 @@ class ET_Builder_Module_Gallery extends ET_Builder_Module {
 		$defaults = array(
 			'gallery_ids'     => array(),
 			'gallery_orderby' => '',
-			'fullwidth'       => 'on',
+			'fullwidth'       => 'off',
 			'orientation'     => 'landscape',
 		);
 
@@ -1821,7 +1825,7 @@ class ET_Builder_Module_Blurb extends ET_Builder_Module {
 			'icon_placement'      => array( 'top' ),
 			'animation'           => array( 'top' ),
 			'background_layout'   => array( 'light' ),
-			'text_orientation'    => array( 'center' ),
+			'text_orientation'    => array( 'left' ),
 			'use_icon_font_size'  => array( 'off' ),
 		);
 
@@ -2208,48 +2212,46 @@ class ET_Builder_Module_Blurb extends ET_Builder_Module {
 			$title = "<h4>{$title}</h4>";
 		}
 
-		if ( '' !== trim( $image ) || '' !== $font_icon ) {
-			if ( 'off' === $use_icon ) {
-				$image = sprintf(
-					'<img src="%1$s" alt="%2$s" class="et-waypoint%3$s" />',
-					esc_url( $image ),
-					esc_attr( $alt ),
-					esc_attr( " et_pb_animation_{$animation}" )
-				);
-			} else {
-				$icon_style = sprintf( 'color: %1$s;', esc_attr( $icon_color ) );
+		if ( 'off' === $use_icon ) {
+			$image = ( '' !== trim( $image ) ) ? sprintf(
+				'<img src="%1$s" alt="%2$s" class="et-waypoint%3$s" />',
+				esc_url( $image ),
+				esc_attr( $alt ),
+				esc_attr( " et_pb_animation_{$animation}" )
+			) : '';
+		} else {
+			$icon_style = sprintf( 'color: %1$s;', esc_attr( $icon_color ) );
 
-				if ( 'on' === $use_circle ) {
-					$icon_style .= sprintf( ' background-color: %1$s;', esc_attr( $circle_color ) );
+			if ( 'on' === $use_circle ) {
+				$icon_style .= sprintf( ' background-color: %1$s;', esc_attr( $circle_color ) );
 
-					if ( 'on' === $use_circle_border ) {
-						$icon_style .= sprintf( ' border-color: %1$s;', esc_attr( $circle_border_color ) );
-					}
+				if ( 'on' === $use_circle_border ) {
+					$icon_style .= sprintf( ' border-color: %1$s;', esc_attr( $circle_border_color ) );
 				}
-
-				$image = sprintf(
-					'<span class="et-pb-icon et-waypoint%2$s%3$s%4$s" style="%5$s">%1$s</span>',
-					esc_attr( et_pb_process_font_icon( $font_icon ) ),
-					esc_attr( " et_pb_animation_{$animation}" ),
-					( 'on' === $use_circle ? ' et-pb-icon-circle' : '' ),
-					( 'on' === $use_circle && 'on' === $use_circle_border ? ' et-pb-icon-circle-border' : '' ),
-					$icon_style
-				);
 			}
 
-			$image = sprintf(
-				'<div class="et_pb_main_blurb_image">%1$s</div>',
-				( '' !== $url
-					? sprintf(
-						'<a href="%1$s"%3$s>%2$s</a>',
-						esc_url( $url ),
-						$image,
-						( 'on' === $url_new_window ? ' target="_blank"' : '' )
-					)
-					: $image
-				)
-			);
+			$image = ( '' !== $font_icon ) ? sprintf(
+				'<span class="et-pb-icon et-waypoint%2$s%3$s%4$s" style="%5$s">%1$s</span>',
+				esc_attr( et_pb_process_font_icon( $font_icon ) ),
+				esc_attr( " et_pb_animation_{$animation}" ),
+				( 'on' === $use_circle ? ' et-pb-icon-circle' : '' ),
+				( 'on' === $use_circle && 'on' === $use_circle_border ? ' et-pb-icon-circle-border' : '' ),
+				$icon_style
+			) : '';
 		}
+
+		$image = $image ? sprintf(
+			'<div class="et_pb_main_blurb_image">%1$s</div>',
+			( '' !== $url
+				? sprintf(
+					'<a href="%1$s"%3$s>%2$s</a>',
+					esc_url( $url ),
+					$image,
+					( 'on' === $url_new_window ? ' target="_blank"' : '' )
+				)
+				: $image
+			)
+		) : '';
 
 		$class = " et_pb_module et_pb_bg_layout_{$background_layout} et_pb_text_align_{$text_orientation}";
 
@@ -2301,7 +2303,6 @@ class ET_Builder_Module_Tabs extends ET_Builder_Module {
 					'css'      => array(
 						'main' => "{$this->main_css_element} .et_pb_tabs_controls li, {$this->main_css_element} .et_pb_tabs_controls li a",
 						'color' => "{$this->main_css_element} .et_pb_tabs_controls li a",
-						'plugin_main' => "{$this->main_css_element} .et_pb_tabs_controls li, {$this->main_css_element} .et_pb_tabs_controls li a",
 					),
 				),
 				'body'   => array(
@@ -2482,9 +2483,8 @@ class ET_Builder_Module_Tabs_Item extends ET_Builder_Module {
 				'tab' => array(
 					'label'    => esc_html__( 'Tab', 'et_builder' ),
 					'css'      => array(
-						'main'      => ".et_pb_tabs .et_pb_tabs_controls li{$this->main_css_element}",
+						'main'      => ".et_pb_tabs .et_pb_tabs_controls li{$this->main_css_element}, .et_pb_tabs .et_pb_tabs_controls li{$this->main_css_element} a",
 						'color'     => ".et_pb_tabs .et_pb_tabs_controls li{$this->main_css_element} a",
-						'plugin_main' => ".et_pb_tabs .et_pb_tabs_controls li{$this->main_css_element}, .et_pb_tabs .et_pb_tabs_controls li{$this->main_css_element} a",
 						'important' => 'all',
 					),
 					'line_height' => array(
@@ -6278,6 +6278,7 @@ class ET_Builder_Module_Button extends ET_Builder_Module {
 		$this->whitelisted_fields = array(
 			'button_url',
 			'url_new_window',
+			'button_rel',
 			'button_text',
 			'background_layout',
 			'button_alignment',
@@ -6315,6 +6316,16 @@ class ET_Builder_Module_Button extends ET_Builder_Module {
 		);
 	}
 
+	function get_rel_values() {
+		return array(
+			'bookmark',
+			'external',
+			'nofollow',
+			'noreferrer',
+			'noopener',
+		);
+	}
+
 	function get_fields() {
 		$fields = array(
 			'button_url' => array(
@@ -6348,7 +6359,7 @@ class ET_Builder_Module_Button extends ET_Builder_Module {
 					'center' => esc_html__( 'Center', 'et_builder' ),
 					'right'  => esc_html__( 'Right', 'et_builder' ),
 				),
-				'description'     => esc_html__( 'Here you can define the alignemnt of Button', 'et_builder' ),
+				'description'     => esc_html__( 'Here you can define the alignment of Button', 'et_builder' ),
 			),
 			'background_layout' => array(
 				'label'           => esc_html__( 'Text Color', 'et_builder' ),
@@ -6359,6 +6370,13 @@ class ET_Builder_Module_Button extends ET_Builder_Module {
 					'dark'  => esc_html__( 'Light', 'et_builder' ),
 				),
 				'description'     => esc_html__( 'Here you can choose whether your text should be light or dark. If you are working with a dark background, then your text should be light. If your background is light, then your text should be set to dark.', 'et_builder' ),
+			),
+			'button_rel' => array(
+				'label'           => esc_html__( 'Button Relationship', 'et_builder' ),
+				'type'            => 'multiple_checkboxes',
+				'option_category' => 'configuration',
+				'options'         => $this->get_rel_values(),
+				'description'     => et_get_safe_localization( __( "Specify the value of your link's <em>rel</em> attribute. The <em>rel</em> attribute specifies the relationship between the current document and the linked document.<br><strong>Tip:</strong> Search engines can use this attribute to get more information about a link.", 'et_builder' ) ),
 			),
 			'disabled_on' => array(
 				'label'           => esc_html__( 'Disable on', 'et_builder' ),
@@ -6399,6 +6417,7 @@ class ET_Builder_Module_Button extends ET_Builder_Module {
 		$module_id         = $this->shortcode_atts['module_id'];
 		$module_class      = $this->shortcode_atts['module_class'];
 		$button_url        = $this->shortcode_atts['button_url'];
+		$button_rel        = $this->shortcode_atts['button_rel'];
 		$button_text       = $this->shortcode_atts['button_text'];
 		$background_layout = $this->shortcode_atts['background_layout'];
 		$url_new_window    = $this->shortcode_atts['url_new_window'];
@@ -6411,13 +6430,28 @@ class ET_Builder_Module_Button extends ET_Builder_Module {
 			return;
 		}
 
+		$rel_attributes = array();
+
+		if ( $button_rel ) {
+			$rel_values    = $this->get_rel_values();
+			$selected_rels = explode( '|', $button_rel );
+
+			foreach ( $selected_rels as $index => $selected_rel ) {
+				if ( ! $selected_rel || 'off' === $selected_rel ) {
+					continue;
+				}
+
+				$rel_attributes[] = $rel_values[ $index ];
+			}
+		}
+
 		$module_class = ET_Builder_Element::add_module_order_class( $module_class, $function_name );
 
 		$module_class .= " et_pb_module et_pb_bg_layout_{$background_layout}";
 
 		$output = sprintf(
-			'<div class="et_pb_button_module_wrapper et_pb_module%8$s">
-				<a class="et_pb_button%5$s%7$s" href="%1$s"%3$s%4$s%6$s>%2$s</a>
+			'<div class="et_pb_button_module_wrapper et_pb_module%9$s">
+				<a class="et_pb_button%5$s%7$s" href="%1$s"%3$s%4$s%6$s%8$s>%2$s</a>
 			</div>',
 			esc_url( $button_url ),
 			'' !== $button_text ? esc_html( $button_text ) : esc_url( $button_url ),
@@ -6429,6 +6463,7 @@ class ET_Builder_Module_Button extends ET_Builder_Module {
 			'' !== $custom_icon && 'on' === $button_custom ? ' et_pb_custom_button_icon' : '',
 			( '' !== $module_id ? sprintf( ' id="%1$s"', esc_attr( $module_id ) ) : '' ),
 			( '' !== $module_class ? sprintf( ' %1$s', esc_attr( $module_class ) ) : '' ),
+			$rel_attributes ? sprintf( ' rel="%1$s"', esc_attr( implode( ' ', $rel_attributes ) ) ) : '',
 			'right' === $button_alignment || 'center' === $button_alignment ? sprintf( ' et_pb_button_alignment_%1$s', esc_attr( $button_alignment ) )  : ''
 		);
 
@@ -9439,7 +9474,7 @@ class ET_Builder_Module_Number_Counter extends ET_Builder_Module {
 		$this->fields_defaults = array(
 			'number'            => array( '0' ),
 			'percent_sign'      => array( 'on' ),
-			'counter_color'     => array( et_builder_accent_color(), 'add_default_setting' ),
+			'number_text_color' => array( et_builder_accent_color(), 'add_default_setting' ),
 			'background_layout' => array( 'light' ),
 		);
 
@@ -9475,6 +9510,10 @@ class ET_Builder_Module_Number_Counter extends ET_Builder_Module {
 							'max'  => '100',
 							'step' => '1',
 						),
+					),
+					'text_color' => array(
+						'old_option_ref' => 'counter_color',
+						'default' => et_builder_accent_color(),
 					),
 				),
 			),
@@ -9523,9 +9562,9 @@ class ET_Builder_Module_Number_Counter extends ET_Builder_Module {
 				'description'        => esc_html__( 'Here you can choose whether the percent sign should be added after the number set above.', 'et_builder' ),
 			),
 			'counter_color' => array(
-				'label'             => esc_html__( 'Counter Text Color', 'et_builder' ),
-				'type'              => 'color',
-				'description'       => esc_html__( 'This will change the fill color for the bar.', 'et_builder' ),
+				'type'              => 'hidden',
+				'shortcode_default' => '',
+				'tab_slug'          => 'advanced',
 			),
 			'background_layout' => array(
 				'label'           => esc_html__( 'Text Color', 'et_builder' ),
@@ -9588,22 +9627,24 @@ class ET_Builder_Module_Number_Counter extends ET_Builder_Module {
 			wp_enqueue_script( 'fittext' );
 		}
 
-		$number = str_ireplace( '%', '', $number );
+		$separator = strpos( $number, ',' ) ? ',' : '';
+		$number = str_ireplace( array( '%', ',' ), '', $number );
 
 		$class = " et_pb_module et_pb_bg_layout_{$background_layout}";
 
 		$output = sprintf(
-			'<div%1$s class="et_pb_number_counter%2$s%3$s" data-number-value="%4$s">
-				<div class="percent" style="%5$s"><p><span class="percent-value"></span>%6$s</p></div>
+			'<div%1$s class="et_pb_number_counter%2$s%3$s" data-number-value="%4$s" data-number-separator="%8$s">
+				<div class="percent"%5$s><p><span class="percent-value"></span>%6$s</p></div>
 				%7$s
 			</div><!-- .et_pb_number_counter -->',
 			( '' !== $module_id ? sprintf( ' id="%1$s"', esc_attr( $module_id ) ) : '' ),
 			esc_attr( $class ),
 			( '' !== $module_class ? sprintf( ' %1$s', esc_attr( $module_class ) ) : '' ),
 			esc_attr( $number ),
-			sprintf( 'color:%s', esc_attr( $counter_color ) ),
+			( '' !== $counter_color ? sprintf( ' style="color:%s"', esc_attr( $counter_color ) ) : '' ),
 			( 'on' == $percent_sign ? '%' : ''),
-			( '' !== $title ? '<h3>' . esc_html( $title ) . '</h3>' : '' )
+			( '' !== $title ? '<h3>' . esc_html( $title ) . '</h3>' : '' ),
+			esc_attr( $separator )
 		 );
 
 		return $output;
@@ -10578,13 +10619,17 @@ class ET_Builder_Module_Contact_Form extends ET_Builder_Module {
 
 			add_filter( 'et_get_safe_localization', 'et_allow_ampersand' );
 
+			$email_message = trim( stripslashes( wp_strip_all_tags( $message_pattern ) ) );
+
 			wp_mail( apply_filters( 'et_contact_page_email_to', $et_email_to ),
 				et_get_safe_localization( sprintf(
 					__( 'New Message From %1$s%2$s', 'et_builder' ),
 					sanitize_text_field( html_entity_decode( $et_site_name ) ),
 					( '' !== $title ? sprintf( _x( ' - %s', 'contact form title separator', 'et_builder' ), sanitize_text_field( html_entity_decode( $title ) ) ) : '' )
 				) ),
-				stripslashes( wp_strip_all_tags( $message_pattern ) ), apply_filters( 'et_contact_page_headers', $headers, $contact_name, $contact_email ) );
+				! empty( $email_message ) ? $email_message : ' ',
+				apply_filters( 'et_contact_page_headers', $headers, $contact_name, $contact_email )
+			);
 
 			remove_filter( 'et_get_safe_localization', 'et_allow_ampersand' );
 
@@ -11117,10 +11162,17 @@ class ET_Builder_Module_Divider extends ET_Builder_Module {
 		$this->slug       = 'et_pb_divider';
 		$this->fb_support = true;
 
+		$style_option_name = sprintf( '%1$s-divider_style', $this->slug );
+		$global_divider_style = ET_Global_Settings::get_value( $style_option_name );
+		$position_option_name = sprintf( '%1$s-divider_position', $this->slug );
+		$global_divider_position = ET_Global_Settings::get_value( $position_option_name );
+		$weight_option_name = sprintf( '%1$s-divider_weight', $this->slug );
+		$global_divider_weight = ET_Global_Settings::get_value( $weight_option_name );
+
 		$this->defaults = array(
-			'divider_style'    => 'solid',
-			'divider_position' => 'top',
-			'divider_weight'   => '1px',
+			'divider_style'    => $global_divider_style && '' !== $global_divider_style ? $global_divider_style : 'solid',
+			'divider_position' => $global_divider_position && '' !== $global_divider_position ? $global_divider_position : 'top',
+			'divider_weight'   => $global_divider_weight && '' !== $global_divider_weight ? $global_divider_weight : '1px',
 		);
 
 		// Show divider options is modifieable via customizer
@@ -14091,7 +14143,7 @@ class ET_Builder_Module_Social_Media_Follow_Item extends ET_Builder_Module {
 		$all_fields = $this->get_fields();
 		$network_names_mapping = $all_fields['social_network']['options'];
 
-		if ( isset( $network_names_mapping[ $network ] ) ) {
+		if ( isset( $network_names_mapping[ $network ] ) && isset( $network_names_mapping[ $network ]['value'] ) ) {
 			return $network_names_mapping[ $network ]['value'];
 		}
 
@@ -15582,13 +15634,16 @@ class ET_Builder_Module_Posts_Navigation extends ET_Builder_Module {
 
 		if ( ! isset( $post ) && defined( 'DOING_AJAX' ) && DOING_AJAX && ! empty( $_POST['et_post_id'] ) ) {
 			$post_id = sanitize_text_field( $_POST['et_post_id'] );
-		} else {
-			$post_id = $post->ID;
-		}
-
-		// Overwrite global $post value in this scope
-		if ( isset( $current_page['id'] ) ) {
+		} else if ( isset( $current_page['id'] ) ) {
+			// Overwrite global $post value in this scope
 			$post_id = intval( $current_page['id'] );
+		} else if ( is_object( $post ) && isset( $post->ID ) ) {
+			$post_id = $post->ID;
+		} else {
+			return array(
+				'next' => '',
+				'prev' => '',
+			);
 		}
 
 		// Set current post as global $post
