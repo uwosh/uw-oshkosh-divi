@@ -1,0 +1,50 @@
+version: '2'
+services:
+  wordpress:
+    image: visiblevc/wordpress:latest
+    ports:
+      - 8080:80
+    volumes:
+      # database configuration
+      - ./data:/data
+      # development theme setup
+      - ./dist/wp-content/themes:/app/wp-content/themes
+      # development plugin setup
+      - ./dist/wp-content/plugins:/app/wp-content/plugins
+      # WordPress uploads folder
+      - ./dist/wp-content/uploads:/app/wp-content/uploads
+    environment:
+      DB_NAME: wordpress
+      DB_PASS: root
+      PLUGINS: >-
+        404-to-301,
+        adminimize,
+        akismet,
+        [local]elegant-themes-updater,
+        ewww-image-optimizer,
+        font-awesome-shortcodes,
+        [local]gravityforms,
+        json-content-importer,
+        sidekick,
+        tablepress,
+        wordpress-importer,
+        wordpress-seo,
+        wp-simple-anchors-links
+      THEMES: >-
+        [local]Divi,
+        [local]uw-oshkosh-divi
+      WP_DEBUG: 'true'
+  db:
+    image: mariadb:10 # or mysql:5.7
+    volumes:
+      - data:/var/lib/mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+    ports:
+      - 22222:80
+volumes:
+  data:

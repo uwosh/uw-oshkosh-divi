@@ -1,38 +1,67 @@
-# Install
+### Prerequisites
 
-## Prerequisites
+## [Docker](https://docs.docker.com/engine/installation/)
+Make sure you've installed this application and it's running on your machine.
 
-### 1. [Node.js](https://nodejs.org)
+## [Node.js](https://nodejs.org)
 
 Bring up a terminal and type `node --version`.
 Node should respond with a version at or above 0.10.x.
 If you require Node, go to [nodejs.org](https://nodejs.org) and click on the big green Install button.
 
-### 2. [Gulp](http://gulpjs.com)
+## [Gulp](http://gulpjs.com)
 
-After installing Node, bring up a terminal and type `npm install gulp-cli -g`
+Bring up a terminal and type `gulp --version`.
+If Gulp is installed it should return a version number at or above 3.9.x.
+If you need to install/upgrade Gulp, open up a terminal and type in the following:
 
-### 3. [Ruby](https://www.ruby-lang.org/en/documentation/installation/)
+```sh
+$ npm install --global gulp
+```
 
-Select your operating system from the list and install Ruby making sure to add Ruby to your system path.
+*This will install Gulp globally. Depending on your user account, you may need to [configure your system](https://github.com/sindresorhus/guides/blob/master/npm-global-without-sudo.md) to install packages globally without administrative privileges.*
 
-### Install local dependencies
-1. Navigate to the repository in a terminal window
-2. Run ```npm install```
-3. The Sass linter requires Ruby and <a href='https://github.com/causes/scss-lint' target='_blank'>scss-lint</a>. Run ```gem install scss_lint```
+## [Ruby](https://www.ruby-lang.org/en/documentation/installation/)
 
-It should be noted that this package runs some UNIX commands, so this won't work on Windows. It does work on Linux and Mac.
+Select your operating system from the list, install Ruby, and make sure to add Ruby to your system path.
 
-That's it! You should have everything you need to run scripts for uw-oshkosh-divi.
 
-# Commands
+### Local dependencies
 
-There are two basic build commands this this package uses.
+Next, install the local dependencies UWO WordPress Bundle requires:
 
-1. ```gulp build``` builds the project and places it in the builds folder. This build minifes CSS and JavaScript. Image compression is enabled.
-3. ```gulp serve``` rebuilds the theme and starts a watch on your files to serve them to your local web stack on save.
+```sh
+$ npm install && gem install scss_lint
+```
 
-# About uw-oshkosh-divi
-A child theme for UW Oshkosh Wordpress sites using the Divi parent theme.
+That's it! You should now have everything needed to use the UWO WordPress Bundle.
 
-This theme is a child theme of <a href='http://www.elegantthemes.com/gallery/divi/' target='_blank'>Divi</a> by <a href='http://www.elegantthemes.com/' target='_blank'>Elegant Themes</a>.
+### Usage
+
+Finally, start the UWO WordPress Bundle with `docker-compose up`.
+
+In a separate bash window, there are two main Gulp commands you may run.
+
+## Using Gulp
+
+1. `gulp` - builds the project
+
+2. `gulp serve` - builds the project, opens the site in your web browser, and starts a watch on your `src` folder.
+
+## Using phpMyAdmin
+
+You may log into phpMyAdmin via your web browser at `http://localhost:22222`.
+
+Default login credentials are:
+
+Username: `root`
+
+Password: `root`
+
+## Logging into WordPress
+
+Default login credentials are:
+
+Username: `root`
+
+Password: `root`
