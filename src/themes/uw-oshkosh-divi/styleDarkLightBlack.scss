@@ -142,7 +142,7 @@ header {
     padding-left: 0;
     padding-right: 0;
   }
-
+  
 }
 
 .et_nav_text_color_light,
@@ -304,8 +304,8 @@ form.gsc-search-box {
 }
 
 #footer-top {
-  background-color: $yellow;
-  color: $dark-grey;
+  background-color: $dark-grey;
+  color: $light-grey;
   text-align: center;
   font-weight: bold;
   font-size: 16px;
@@ -426,7 +426,7 @@ form.gsc-search-box {
 
 #footer-bottom{
   overflow: hidden;
-  background-color: $dark-grey;
+  background-color: $black;
   padding: 0px;
 
   #footer-copy{
