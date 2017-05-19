@@ -314,6 +314,45 @@ form.gsc-search-box {
   }
 }
 
+// Begin our own grid system
+.grid-container {
+  width: 100%;
+}
+
+.grid-container * {
+  box-sizing: border-box;
+}
+
+// our cleafix hack
+.row:before,
+.row:after {
+  content:"";
+  display: table;
+  clear:both;
+}
+
+.col {
+  float: left;
+  min-height: 1px;
+  width: 25%;
+  padding: 12px; // gutter
+}
+
+// Medium devices
+@media only screen and (max-width: 820px) {
+  .col {
+    width: 50%;
+  }
+}
+
+// Small devices
+@media only screen and (max-width: 480px) {
+  .col {
+    width: 100%;
+  }
+}
+// End our own grid system
+
 #footer-body {
   background-color: $light-grey;
   padding: 45px 5% 45px 5%;
@@ -331,7 +370,7 @@ form.gsc-search-box {
 #footer-column-3,
 #footer-column-4 {
   float: left;
-  height: 190px;
+  // height: 190px;
 }
 
 .footer-column-header{
@@ -362,7 +401,17 @@ form.gsc-search-box {
 }
 
 #column-2-header{
-    padding-left: 54px;
+  padding-left: 54px;
+}
+
+.quick-links {
+  padding-bottom: 10px;
+}
+
+.quick-links::after {
+  content: "";
+  display: table;
+  clear: both;
 }
 
 #footer-column-2,
@@ -409,13 +458,8 @@ form.gsc-search-box {
 }
 
 #footer-column-4{
-  img{
-    height: 155px;
-    padding: 35px 8%;
-  }
-
-  #footer-accredited{
-    padding-left: 2%;
+  .accredited-img {
+    padding-right: 10px;
   }
 
   #footer-uw-logo{
@@ -427,12 +471,14 @@ form.gsc-search-box {
   overflow: hidden;
   background-color: $dark-grey;
   padding: 0px;
+  width: 100%;
 
   #footer-copy{
     float: left;
     color: $light-grey;
     font-size: 15px;
-    padding: 19px;
+    padding-top: 19px;
+    padding-left: 10px;
   }
   #footer-social{
     float: right;
