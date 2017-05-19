@@ -35,78 +35,74 @@ if ( ! is_page_template( 'page-template-blank.php' ) ) : ?>
 						The University of Wisconsin Oshkosh — Where Excellence and Opportunity Meet.
 					</span>
 				</div> <!-- #footer-top -->
-				<div id="footer-body">
-					<div class="row" data-equalizer>
-						<div id="footer-column-1" class="large-3 medium-6 small-12">
-							<p class="footer-column-header"> Location </p>
-							<div>
+				<div class="grid-container">
+					<div id="footer-body" class="row">
+						<div id="footer-column-1" class="col">
+								<p class="footer-column-header">Location</p>
 								<a href="https://maps.google.com/maps?q=University+of+Wisconsin+Oshkosh+800+Algoma+Blvd.+Oshkosh,+WI+54901&amp;um=1&amp;ie=UTF-8&amp;hl=en&amp;sa=N&amp;tab=wl" target="_blank">
 									<img src="<?php echo esc_attr(get_stylesheet_directory_uri() . '/images/footer/wismap-color.png') ?>" class="wismap pull-left desaturate">
 								</a>
 								<address id="footer-address" class="link-list">
 									<a href="https://maps.google.com/maps?q=University+of+Wisconsin+Oshkosh+800+Algoma+Blvd.+Oshkosh,+WI+54901&amp;um=1&amp;ie=UTF-8&amp;hl=en&amp;sa=N&amp;tab=wl" target="_blank">
 										<ul>
-											<li> University of Wisconsin Oshkosh </li>
-											<li class="street-address"> 800 Algoma Blvd. </li>
+											<li>University of Wisconsin Oshkosh</li>
+											<li class="street-address">800 Algoma Blvd.</li>
 											<li>
 												<span class="locality">Oshkosh</span>,
 												<span class="region">WI</span>
 												<span class="postal-code">54901</span>
 											</li>
-											<li> <a href="tel:9204241234">(920) 424-1234</a> </li>
+											<li><a href="tel:9204241234">(920) 424-1234</a></li>
 										</ul>
 									</a>
-								</address> <!-- #address -->
-							</div>
+								</address><!-- #address -->
 						</div> <!-- #footer-column-1 -->
-						<div id="footer-column-2" class="large-3 medium-6 small-12">
-							<p id="column-2-header" class="footer-column-header"> Quick Links </p>
-							<div>
-								<div id="mobile-emergency">
-									<p>
-										<a href="http://www.uwosh.edu/go/mobile">
-											<i class="fa fa-mobile desaturate" aria-hidden="true"></i>
-											Download UW Oshkosh's Mobile App
-										</a>
-									</p>
-									<p>
-										<a href="http://emergency.uwosh.edu">
-											<i class="fa fa-exclamation-triangle desaturate" aria-hidden="true"></i>
-											Emergency and Safety Information
-										</a>
-									</p>
+						<div id="footer-column-2" class="col">
+							<p id="column-2-header" class="footer-column-header">Quick Links</p>
+							<div id="mobile-emergency">
+								<div class="quick-links">
+									<a href="http://www.uwosh.edu/go/mobile">
+										<i class="fa fa-mobile desaturate" aria-hidden="true"></i>
+										<span>Download UW Oshkosh's Mobile App</span>
+									</a>
 								</div>
-							</div>
+								<div class="quick-links">
+									<a href="http://emergency.uwosh.edu">
+										<i class="fa fa-exclamation-triangle desaturate" aria-hidden="true"></i>
+										<span>Emergency and Safety Information</span>
+									</a>
+								</div>
+							</div><!-- #mobile-emergency -->
 						</div> <!-- #footer-column-2 -->
-						<div id="footer-column-3" class="large-3 medium-6 small-12">
-							<p class="footer-column-header"> Resources </p>
-							<div id="sitemap" class="link-list">
-								<ul class="list-block">
-									<li>
-										<a href="http://www.uwosh.edu/resources/accessibility">Accessibility</a></li>
-									<li>
-										<a href="http://www.uwosh.edu/career/">Career Services</a></li>
-									<li>
-										<a href="http://uwosh.edu/go/directions" target="_blank">Get Directions</a></li>
-									<li>
-										<a href="http://www.uwosh.edu/foundation/why-give/support-uw-oshkosh/online-giving">Give to UW Oshkosh</a></li>
-									<li>
-										<a href="http://www.uwosh.edu/imc/media-relations/newsroom">Media Relations</a></li>
-									<li>
-										<a href="http://www.uwosh.edu/hr/employment/">Work at UW Oshkosh</a></li>
-								</ul>
-							</div>
+						<div id="footer-column-3" class="col">
+								<p class="footer-column-header">Resources</p>
+								<div id="sitemap" class="link-list">
+									<ul class="list-block">
+										<li>
+											<a href="http://www.uwosh.edu/resources/accessibility">Accessibility</a></li>
+										<li>
+											<a href="http://www.uwosh.edu/career/">Career Services</a></li>
+										<li>
+											<a href="http://uwosh.edu/go/directions" target="_blank">Get Directions</a></li>
+										<li>
+											<a href="http://www.uwosh.edu/foundation/why-give/support-uw-oshkosh/online-giving">Give to UW Oshkosh</a></li>
+										<li>
+											<a href="http://www.uwosh.edu/imc/media-relations/newsroom">Media Relations</a></li>
+										<li>
+											<a href="http://www.uwosh.edu/hr/employment/">Work at UW Oshkosh</a></li>
+									</ul>
+								</div>
 						</div> <!-- #footer-column-3 -->
-						<div id="footer-column-4" class="large-3 medium-6 small-12">
-							<a href="http://www.ncahlc.org/?option=com_directory&amp;Action=ShowBasic&amp;instid=2030" target="_blank">
-								<img src="<?php echo esc_attr(get_stylesheet_directory_uri() . '/images/footer/hlc.png') ?>" id="footer-accredited" class="inline" alt="Higher Learning Commission">
-							</a>
-							<a href="http://www.wisconsin.edu/" target="_blank">
-								<img src="<?php echo esc_attr(get_stylesheet_directory_uri() . '/images/footer/uw-system.png') ?>" id="footer-uw-logo" class="inline" alt="UW System">
-							</a>
+						<div id="footer-column-4" class="col">
+								<a href="http://www.ncahlc.org/?option=com_directory&amp;Action=ShowBasic&amp;instid=2030" target="_blank">
+									<img class="accredited-img" src="<?php echo esc_attr(get_stylesheet_directory_uri() . '/images/footer/hlc.png') ?>" id="footer-accredited" class="inline" alt="Higher Learning Commission">
+								</a>
+								<a href="http://www.wisconsin.edu/" target="_blank">
+									<img class="uw-system-img" src="<?php echo esc_attr(get_stylesheet_directory_uri() . '/images/footer/uw-system.png') ?>" id="footer-uw-logo" class="inline" alt="UW System">
+								</a>
 						</div> <!-- #footer-column-4 -->
-					</div>
-				</div> <!-- #footer-body -->
+					</div><!-- #footer-body .row -->
+				</div>
 				<div id="footer-bottom">
 					<div id="footer-copy">
 						<span>&copy;<?php echo date("Y") ?> UW Board of Regents </span>
