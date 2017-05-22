@@ -94,10 +94,10 @@ if ( ! is_page_template( 'page-template-blank.php' ) ) : ?>
 								</div>
 						</div> <!-- #footer-column-3 -->
 						<div id="footer-column-4" class="col">
-								<a href="http://www.ncahlc.org/?option=com_directory&amp;Action=ShowBasic&amp;instid=2030" target="_blank">
+								<a href="http://www.ncahlc.org/?option=com_directory&amp;Action=ShowBasic&amp;instid=2030" target="_blank" class="image-wrapper">
 									<img class="accredited-img" src="<?php echo esc_attr(get_stylesheet_directory_uri() . '/images/footer/hlc.png') ?>" id="footer-accredited" class="inline" alt="Higher Learning Commission">
 								</a>
-								<a href="http://www.wisconsin.edu/" target="_blank">
+								<a href="http://www.wisconsin.edu/" target="_blank" class="image-wrapper">
 									<img class="uw-system-img" src="<?php echo esc_attr(get_stylesheet_directory_uri() . '/images/footer/uw-system.png') ?>" id="footer-uw-logo" class="inline" alt="UW System">
 								</a>
 						</div> <!-- #footer-column-4 -->
