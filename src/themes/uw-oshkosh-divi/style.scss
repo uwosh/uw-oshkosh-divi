@@ -5,11 +5,10 @@
  Author:       Joseph Kerkhof
  Author URI:   http://twitter.com/musicaljoeker
  Template:     Divi
- Version:      1.1.0
+ Version:      1.1.1
 */
 
 // Variables
-
 // Colors
 $white: #fff;
 $black: #241e1b;
@@ -17,42 +16,68 @@ $dark-grey: #444;
 $light-grey: #b0b0b0;
 $yellow: #fec424;
 $blue: rgb(46, 163, 242);
+$links: #0077ad;
 $box-shadow: rgba(0, 0, 0, .0980392);
-
 // Social-icon colors
-$icon-facebook:  #3b5998;
+$icon-facebook: #3b5998;
 $icon-twitter: #1da1f2;
 $icon-instagram: #f56040;
 $icon-youtube: #cd201f;
 $icon-linkedin: #0077b5;
 $icon-pinterest: #bd081c;
 $icon-flickr: #8032B0;
-
 // Font Style
 $font: 'Open Sans', Arial, sans-serif !important;
-
 // Defaults
 body {
   min-width: 320px;
   font-family: $font;
+  color: $dark-grey;
+}
+a {
+  color: $links;
 }
 
 // Utility
 .desaturate {
   backface-visibility: hidden;
   filter: grayscale(100%);
-  transition: all .6s ease;
+  transition: all 0.6s ease;
 }
 
 .desaturate:hover {
   filter: grayscale(0%);
 }
+
 // UWO Navigation
 header {
   z-index: 999;
 
   #logo {
     max-width: none !important;
+  }
+}
+
+#main-header,
+#main-header .et_mobile_menu,
+#main-header .nav li ul,
+.et-search-form {
+  background-color: $yellow;
+}
+
+#et-secondary-nav li ul,
+#top-header {
+  background-color: $dark-grey;
+}
+
+.et_pb_fullwidth_menu_0.et_pb_fullwidth_menu .nav li ul {
+  background-color: $links !important;
+}
+
+@media only screen and (min-width:981px) {
+  .et-fixed-header#top-header,
+  .et-fixed-header#top-header #et-secondary-nav li ul {
+    background-color: $dark-grey;
   }
 }
 
@@ -89,19 +114,16 @@ header {
 #mobile_menu {
   top: 100px;
 }
-
 @media only screen and (max-width: 375px) {
   header a img {
     max-width: 50% !important;
   }
 }
-
 @media only screen and (min-width: 980px) {
   header .container {
     min-width: 793px;
   }
 }
-
 @media only screen and (max-width: 540px) {
   .site-title h1 {
     font-size: 24px;
@@ -137,6 +159,7 @@ header {
 
 #et-secondary-nav li {
   text-align: left;
+
   a {
     padding-top: 0;
     padding-left: 0;
@@ -187,6 +210,7 @@ header {
   line-height: normal !important;
 }
 // Quicklinks Navigation
+
 #top-menu li {
   font-weight: 600;
   padding-right: 8px;
@@ -196,6 +220,7 @@ header {
   color: $dark-grey !important;
 }
 // Custom Search Bar
+
 .display-search {
   opacity: 1 !important;
 }
@@ -242,7 +267,6 @@ form.gsc-search-box {
 .et_mobile_nav_menu .mobile_nav .mobile_menu_bar::before {
   color: $white;
 }
-
 @media only screen and (max-width: 475px) {
   form.gsc-search-box {
     position: absolute;
@@ -254,13 +278,13 @@ form.gsc-search-box {
     }
   }
 }
-
 @media only screen and (max-width: 980px) {
   form.gsc-search-box {
     margin-top: 40px;
   }
 }
 // Site Navigation
+
 .et_pb_fullwidth_menu .fullwidth-menu-nav > ul {
   line-height: 48px;
   padding: 0 !important;
@@ -274,7 +298,6 @@ form.gsc-search-box {
     padding-bottom: 0;
   }
 }
-
 // Content
 .et_pb_section {
   padding: 0 !important;
@@ -288,7 +311,6 @@ form.gsc-search-box {
 .promo-multicolor .widget_text {
   margin: 0 !important;
 }
-
 // Footer
 #main-footer {
   background-color: $white !important;
@@ -308,8 +330,9 @@ form.gsc-search-box {
   text-align: center;
   font-weight: bold;
   font-size: 16px;
-  padding: 12px 0 12px 0;
-  span{
+  padding: 12px 0;
+
+  span {
     padding: 0 10px;
   }
 }
@@ -322,13 +345,12 @@ form.gsc-search-box {
 .grid-container * {
   box-sizing: border-box;
 }
-
 // our cleafix hack
-.row:before,
-.row:after {
-  content:"";
+.row:after,
+.row:before {
+  content: "";
   display: table;
-  clear:both;
+  clear: both;
 }
 
 .col {
@@ -337,14 +359,12 @@ form.gsc-search-box {
   width: 25%;
   padding: 12px; // gutter
 }
-
 // Medium devices
 @media only screen and (max-width: 820px) {
   .col {
     width: 50%;
   }
 }
-
 // Small devices
 @media only screen and (max-width: 480px) {
   .col {
@@ -355,12 +375,14 @@ form.gsc-search-box {
 
 #footer-body {
   background-color: $light-grey;
-  padding: 45px 5% 45px 5%;
-  a{
+  padding: 45px 5%;
+
+  a {
     color: $dark-grey;
     font-style: normal;
   }
-  ul{
+
+  ul {
     list-style-type: none;
   }
 }
@@ -373,34 +395,34 @@ form.gsc-search-box {
   // height: 190px;
 }
 
-.footer-column-header{
+.footer-column-header {
   margin-bottom: 5px;
   font-weight: bold;
 }
 
-#footer-column-1{
-  .wismap{
+#footer-column-1 {
+  .wismap {
     width: 40%;
   }
 
-  p{
+  p {
     padding-left: 40%;
     margin-left: 10px;
   }
 }
 
-#footer-address{
+#footer-address {
   width: 60%;
   float: right;
   padding-left: 10px;
 
-  ul{
+  ul {
     line-height: 1.75em;
     margin: 0;
   }
 }
 
-#column-2-header{
+#column-2-header {
   padding-left: 54px;
 }
 
@@ -415,49 +437,54 @@ form.gsc-search-box {
 }
 
 #footer-column-2,
-#footer-column-3{
-    padding-left: 60px;
+#footer-column-3 {
+  padding-left: 60px;
 }
 
 #mobile-emergency {
-  i{
+  i {
     margin-right: 15px;
     float: left;
     width: 40px;
     text-align: center;
   }
-  i:hover{
-      color: $yellow;
+
+  i:hover {
+    color: $yellow;
   }
-  .fa-mobile{
+
+  .fa-mobile {
     font-size: 60px;
   }
-  .fa-exclamation-triangle{
+
+  .fa-exclamation-triangle {
     font-size: 40px;
     padding-top: 10px;
   }
-  p{
+
+  p {
     height: 65px;
     margin-bottom: 15px;
-    a{
+
+    a {
       vertical-align: sub;
       line-height: 1;
     }
   }
 }
 
-#sitemap{
-  ul{
+#sitemap {
+  ul {
     margin: 0;
     line-height: 1.75;
 
-    li:hover{
+    li:hover {
       text-decoration: underline;
     }
   }
 }
 
-#footer-column-4{
+#footer-column-4 {
   .image-wrapper {
     display: inline-block;
     padding-bottom: 10px;
@@ -467,150 +494,145 @@ form.gsc-search-box {
     }
   }
 
-  #footer-uw-logo{
+  #footer-uw-logo {
     padding-right: 0;
   }
 }
 
-#footer-bottom{
+#footer-bottom {
   overflow: hidden;
   background-color: $dark-grey;
-  padding: 0px;
+  padding: 0;
   width: 100%;
 
-  #footer-copy{
+  #footer-copy {
     float: left;
     color: $light-grey;
     font-size: 15px;
     padding-top: 19px;
     padding-left: 10px;
   }
-  #footer-social{
+
+  #footer-social {
     float: right;
-    a{
+
+    a {
       display: table-cell;
       text-align: center;
       color: $light-grey;
       padding: 15px;
     }
 
-    .fa-facebook:hover{
+    .fa-facebook:hover {
       color: $icon-facebook;
     }
 
-    .fa-twitter:hover{
+    .fa-twitter:hover {
       color: $icon-twitter;
     }
 
-    .fa-instagram:hover{
+    .fa-instagram:hover {
       color: $icon-instagram;
     }
 
-    .fa-youtube-play:hover{
+    .fa-youtube-play:hover {
       color: $icon-youtube;
     }
 
-    .fa-linkedin:hover{
+    .fa-linkedin:hover {
       color: $icon-linkedin;
     }
 
-    .fa-pinterest-p:hover{
+    .fa-pinterest-p:hover {
       color: $icon-pinterest;
     }
 
-    .fa-flickr:hover{
+    .fa-flickr:hover {
       color: $icon-flickr;
     }
   }
 }
-
 @media only screen and (max-width: 1025px) {
-
-  #footer-column-1{
-    p{
+  #footer-column-1 {
+    p {
       padding-left: 20px;
-      margin-left: 0px;
+      margin-left: 0;
     }
 
-    .wismap{
+    .wismap {
       display: none;
     }
 
-    #footer-address{
+    #footer-address {
       padding-left: 20px;
       width: 100%;
     }
   }
 
-  #footer-column-2{
-      padding-left: 10px;
-      padding-right: 30px;
+  #footer-column-2 {
+    padding-left: 10px;
+    padding-right: 30px;
   }
 
-  #footer-column-3{
-      padding-left: 20px;
+  #footer-column-3 {
+    padding-left: 20px;
   }
 }
-
 @media only screen and (max-width: 640px) {
   // rules defined inside here are only applied to browsers that support CSS media queries and the browser window is 640px or smaller
   #footer-column-1,
   #footer-column-2,
   #footer-column-3,
-  #footer-column-4{
+  #footer-column-4 {
     text-align: left;
-    padding: 0 0 15px 0;
+    padding: 0 0 15px;
 
     #footer-address,
-    p{
+    p {
       padding-left: 0;
     }
 
-    ul{
+    ul {
       margin: 0;
     }
   }
 
-  #footer-body{
+  #footer-body {
     padding-bottom: 0;
   }
 
-  #footer-column-1{
+  #footer-column-1 {
     height: 160px;
   }
 
-  #footer-column-2 p{
-      width: 205px;
+  #footer-column-2 p {
+    width: 205px;
   }
 
-  #footer-column-4{
-    img{
+  #footer-column-4 {
+    img {
       padding: 35px 14% 35px 0;
     }
 
-    #footer-accredited{
+    #footer-accredited {
       padding-left: 0;
     }
   }
 
-  #footer-bottom #footer-social a{
-        padding: 15px 10px;
-    }
+  #footer-bottom #footer-social a {
+    padding: 15px 10px;
+  }
 }
-
 @media only screen and (max-width: 540px) {
-    #footer-bottom #footer-social{
-        float:left;
-    }
+  #footer-bottom #footer-social {
+    float: left;
+  }
 }
-
 // END FOOTER
-
 // Ninja Forms
 .widget_ninja_forms_widget {
   width: 100% !important;
 }
-
 // HTML JavaScript Adder
 .widget_html_javascript_adder {
   margin-right: 0;

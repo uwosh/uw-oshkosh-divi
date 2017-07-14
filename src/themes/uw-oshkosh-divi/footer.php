@@ -81,11 +81,7 @@ if ( ! is_page_template( 'page-template-blank.php' ) ) : ?>
 										<li>
 											<a href="http://www.uwosh.edu/resources/accessibility">Accessibility</a></li>
 										<li>
-											<a href="http://www.uwosh.edu/career/">Career Services</a></li>
-										<li>
 											<a href="http://uwosh.edu/go/directions" target="_blank">Get Directions</a></li>
-										<li>
-											<a href="http://www.uwosh.edu/foundation/why-give/support-uw-oshkosh/online-giving">Give to UW Oshkosh</a></li>
 										<li>
 											<a href="http://www.uwosh.edu/imc/media-relations/newsroom">Media Relations</a></li>
 										<li>

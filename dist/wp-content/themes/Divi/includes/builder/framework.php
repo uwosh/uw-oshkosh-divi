@@ -2,10 +2,10 @@
 
 require_once( ET_BUILDER_DIR . 'core.php' );
 
-if ( defined( 'DOING_AJAX' ) && DOING_AJAX && ! is_customize_preview() ) {
+if ( wp_doing_ajax() && ! is_customize_preview() ) {
 	define( 'WPE_HEARTBEAT_INTERVAL', et_builder_heartbeat_interval() );
 
-	$builder_load_actions = array(
+	$_builder_load_actions = array(
 		'et_pb_get_backbone_template',
 		'et_pb_get_backbone_templates',
 		'et_pb_process_computed_property',
@@ -25,11 +25,19 @@ if ( defined( 'DOING_AJAX' ) && DOING_AJAX && ! is_customize_preview() ) {
 		'et_fb_process_imported_content',
 		'et_fb_get_saved_templates',
 		'et_fb_retrieve_builder_data',
+		'et_builder_email_add_account',     // email opt-in module
+		'et_builder_email_remove_account',  // email opt-in module
+		'et_builder_email_get_lists',       // email opt-in module
+		'et_builder_save_settings',         // builder plugin dashboard (global builder settings)
+		'save_epanel',                      // ePanel (global builder settings)
 	);
 
 	if ( class_exists( 'Easy_Digital_Downloads') ) {
-		$builder_load_actions[] = 'edd_load_gateway';
+		$_builder_load_actions[] = 'edd_load_gateway';
 	}
+
+	$builder_load_actions = apply_filters( 'et_builder_load_actions', array() );
+	$builder_load_actions = array_merge( $builder_load_actions, $_builder_load_actions );
 
 	$force_builder_load = isset( $_POST['et_load_builder_modules'] ) && '1' === $_POST['et_load_builder_modules'];
 
@@ -54,6 +62,7 @@ add_action( 'wp_enqueue_scripts', 'et_builder_load_global_functions_script', 7 )
 
 function et_builder_load_modules_styles() {
 	$current_page_id = apply_filters( 'et_is_ab_testing_active_post_id', get_the_ID() );
+	$is_fb_enabled = function_exists( 'et_fb_enabled' ) ? et_fb_enabled() : false;
 
 	wp_register_script( 'google-maps-api', esc_url( add_query_arg( array( 'key' => et_pb_get_google_api_key(), 'callback' => 'initMap' ), is_ssl() ? 'https://maps.googleapis.com/maps/api/js' : 'http://maps.googleapis.com/maps/api/js' ) ), array(), ET_BUILDER_VERSION, true );
 	wp_enqueue_script( 'divi-fitvids', ET_BUILDER_URI . '/scripts/jquery.fitvids.js', array( 'jquery' ), ET_BUILDER_VERSION, true );
@@ -73,7 +82,7 @@ function et_builder_load_modules_styles() {
 	}
 
 	// Load visible.min.js only if AB testing active on current page OR VB (because post settings is synced between VB and BB)
-	if ( et_is_ab_testing_active() || et_fb_enabled() ) {
+	if ( et_is_ab_testing_active() || $is_fb_enabled ) {
 		wp_enqueue_script( 'et-jquery-visible-viewport', ET_BUILDER_URI . '/scripts/ext/jquery.visible.min.js', array( 'jquery', 'et-builder-modules-script' ), ET_BUILDER_VERSION, true );
 	}
 
@@ -82,7 +91,7 @@ function et_builder_load_modules_styles() {
 	wp_enqueue_script( 'et-jquery-touch-mobile', ET_BUILDER_URI . '/scripts/jquery.mobile.custom.min.js', array( 'jquery' ), ET_BUILDER_VERSION, true );
 	wp_enqueue_script( 'et-builder-modules-script', ET_BUILDER_URI . '/scripts/frontend-builder-scripts.js', apply_filters( 'et_pb_frontend_builder_scripts_dependencies', array( 'jquery', 'et-jquery-touch-mobile' ) ), ET_BUILDER_VERSION, true );
 	wp_localize_script( 'et-builder-modules-script', 'et_pb_custom', array(
-		'ajaxurl'                => admin_url( 'admin-ajax.php' ),
+		'ajaxurl'                => is_ssl() ? admin_url( 'admin-ajax.php' ) : admin_url( 'admin-ajax.php', 'http' ),
 		'images_uri'             => get_template_directory_uri() . '/images',
 		'builder_images_uri'     => ET_BUILDER_URI . '/images',
 		'et_frontend_nonce'      => wp_create_nonce( 'et_frontend_nonce' ),
@@ -231,6 +240,7 @@ function et_builder_load_framework() {
 
 	require ET_BUILDER_DIR . 'functions.php';
 	require ET_BUILDER_DIR . 'compat/woocommerce.php';
+	require ET_BUILDER_DIR . 'class-et-global-settings.php';
 
 	if ( is_admin() ) {
 		global $pagenow, $et_current_memory_limit;
@@ -249,13 +259,24 @@ function et_builder_load_framework() {
 		require ET_BUILDER_DIR . 'class-et-builder-element.php';
 		require ET_BUILDER_DIR . 'class-et-builder-plugin-compat-base.php';
 		require ET_BUILDER_DIR . 'class-et-builder-plugin-compat-loader.php';
-		require ET_BUILDER_DIR . 'class-et-global-settings.php';
 		require ET_BUILDER_DIR . 'ab-testing.php';
+		require ET_BUILDER_DIR . 'class-et-builder-settings.php';
+
+		$builder_settings_loaded = true;
 
 		do_action( 'et_builder_framework_loaded' );
 
-		add_action( $action_hook, 'et_builder_init_global_settings' );
+		add_action( $action_hook, 'et_builder_init_global_settings', 9 );
 		add_action( $action_hook, 'et_builder_add_main_elements' );
+	} else if ( is_admin() ) {
+		require ET_BUILDER_DIR . 'class-et-builder-plugin-compat-base.php';
+		require ET_BUILDER_DIR . 'class-et-builder-plugin-compat-loader.php';
+		require ET_BUILDER_DIR . 'class-et-builder-settings.php';
+		$builder_settings_loaded = true;
+	}
+
+	if ( isset( $builder_settings_loaded ) ) {
+		et_builder_settings_init();
 	}
 
 	add_action( $action_hook, 'et_builder_load_frontend_builder' );

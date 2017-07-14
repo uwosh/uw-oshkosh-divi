@@ -29,7 +29,7 @@
 		$et_header_style_split = $('.et_header_style_split'),
 		$et_top_navigation = $('#et-top-navigation'),
 		$logo = $('#logo'),
-		$et_pb_first_row = $( 'body.et_pb_pagebuilder_layout .et_pb_section:first-child' ),
+		$et_pb_first_row = $( 'body.et_pb_pagebuilder_layout .et_pb_section:visible:first' ),
 		et_is_touch_device = 'ontouchstart' in window || navigator.maxTouchPoints;
 
 	$(document).ready( function(){
@@ -203,6 +203,19 @@
 			}
 		}
 
+		// Saving current styling for the next resize cycle
+		function et_save_initial_page_container_style( $selector, property ) {
+			var styling = {};
+
+			styling[property] = $selector.css( property );
+
+			$selector.attr({
+				'data-fix-page-container' : 'on'
+			}).data({
+				'fix_page_container_style' : styling
+			});
+		}
+
 		function et_page_load_scroll_to_anchor() {
 			var $map_container = $( window.et_location_hash + ' .et_pb_map_container' ),
 				$map = $map_container.children( '.et_pb_map' ),
@@ -245,9 +258,20 @@
 		function et_fix_page_container_position(){
 			var et_window_width     = parseInt( $et_window.width() ),
 				$top_header          = $( '#top-header' ),
+				$et_pb_first_row     = $( 'body.et_pb_pagebuilder_layout .et_pb_section:visible:first' ),
 				secondary_nav_height = $top_header.length && $top_header.is( ':visible' ) ? parseInt( $top_header.innerHeight() ) : 0,
 				main_header_fixed_height = 0,
 				header_height;
+
+			// Replace previous resize cycle's adjustment
+			$('*[data-fix-page-container="on"]').each(function(){
+				var $adjusted_element = $(this),
+					styling = $adjusted_element.data();
+
+				// Reapply previous styling
+				$adjusted_element.css( styling.fix_page_container_style );
+
+			});
 
 			// Set data-height-onload for header if the page is loaded on large screen
 			// If the page is loaded from small screen, rely on data-height-onload printed on the markup,
@@ -345,11 +369,23 @@
 
 					} else if ( is_post_pb_full_layout_no_title ) {
 
+						// Save current styling for the next resize cycle
+						et_save_initial_page_container_style(
+							$et_pb_first_row,
+							'paddingTop'
+						);
+
 						$et_pb_first_row.css({
 							'paddingTop' : header_height
 						});
 
 					} else {
+
+						// Save current styling for the next resize cycle
+						et_save_initial_page_container_style(
+							$et_main_content_first_row,
+							'paddingTop'
+						);
 
 						// Add header height to first row content as padding top
 						$et_main_content_first_row.css({
@@ -362,7 +398,7 @@
 
 					/* Desktop / Mobile + Pagebuilder + Fullwidth Section */
 
-					var $et_pb_first_row_first_module = $et_pb_first_row.children( '.et_pb_module:first' );
+					var $et_pb_first_row_first_module = $et_pb_first_row.children( '.et_pb_module:visible:first' );
 
 					// Quirks: If this is post with fullwidth layout + no title + fullwidth section at first row,
 					// Remove the added height at line 2656
@@ -382,6 +418,12 @@
 							$et_pb_first_row_first_module_slider_arrow 		= $et_pb_first_row_first_module.find( '.et-pb-slider-arrows a'),
 							et_pb_first_row_slider_arrow_height = $et_pb_first_row_first_module_slider_arrow.height();
 
+						// Save current styling for the next resize cycle
+						et_save_initial_page_container_style(
+							$et_pb_first_row_first_module_slide,
+							'paddingTop'
+						);
+
 						// Adding padding top to each slide so the transparency become useful
 						$et_pb_first_row_first_module_slide.css({
 							'paddingTop' : header_height
@@ -392,10 +434,23 @@
 							'min-height' : ''
 						});
 
+
+						// Save current styling for the next resize cycle
+						et_save_initial_page_container_style(
+							$et_pb_first_row_first_module_slide_image,
+							'marginTop'
+						);
+
 						// Adjusting slider's image, considering additional top padding of slideshow
 						$et_pb_first_row_first_module_slide_image.css({
 							'marginTop' : et_pb_slide_image_margin_top
 						});
+
+						// Save current styling for the next resize cycle
+						et_save_initial_page_container_style(
+							$et_pb_first_row_first_module_slider_arrow,
+							'marginTop'
+						);
 
 						// Adjusting slider's arrow, considering additional top padding of slideshow
 						$et_pb_first_row_first_module_slider_arrow.css({
@@ -427,6 +482,12 @@
 							}
 						});
 
+						// Save current styling for the next resize cycle
+						et_save_initial_page_container_style(
+							$et_pb_first_row_first_module_slide_container,
+							'min-height'
+						);
+
 						// Setting appropriate min-height, considering additional top padding of slideshow
 						$et_pb_first_row_first_module_slide_container.css({
 							'min-height' : et_pb_first_row_slide_container_height_new
@@ -442,6 +503,12 @@
 						// Get paddingTop from stylesheet
 						var et_pb_first_row_first_module_fullwidth_header_padding_top = parseInt( $et_pb_first_row_first_module.css( 'paddingTop' ) );
 
+						// Save current styling for the next resize cycle
+						et_save_initial_page_container_style(
+							$et_pb_first_row_first_module,
+							'paddingTop'
+						);
+
 						// Implement stylesheet's padding-top + header_height
 						$et_pb_first_row_first_module.css({
 							'paddingTop' : ( header_height + et_pb_first_row_first_module_fullwidth_header_padding_top )
@@ -450,6 +517,12 @@
 					} else if ( $et_pb_first_row_first_module.is( '.et_pb_fullwidth_portfolio' ) ) {
 
 						/* Desktop / Mobile + Pagebuilder + Fullwidth Portfolio */
+
+						// Save current styling for the next resize cycle
+						et_save_initial_page_container_style(
+							$et_pb_first_row_first_module,
+							'paddingTop'
+						);
 
 						$et_pb_first_row_first_module.css({ 'paddingTop' : header_height });
 
@@ -473,6 +546,13 @@
 					} else if ( $et_pb_first_row_first_module.is( '.et_pb_fullwidth_menu' ) ) {
 
 						/* Desktop / Mobile + Pagebuilder + Fullwidth Menu */
+
+						// Save current styling for the next resize cycle
+						et_save_initial_page_container_style(
+							$et_pb_first_row_first_module,
+							'marginTop'
+						);
+
 						$et_pb_first_row_first_module.css({ 'marginTop' : header_height });
 
 					} else if ( $et_pb_first_row_first_module.is( '.et_pb_fullwidth_code' ) ) {
@@ -485,6 +565,12 @@
 
 						var et_pb_first_row_first_module_code_padding_top = parseInt( $et_pb_first_row_first_module_code.css( 'paddingTop' ) );
 
+						// Save current styling for the next resize cycle
+						et_save_initial_page_container_style(
+							$et_pb_first_row_first_module_code,
+							'paddingTop'
+						);
+
 						$et_pb_first_row_first_module_code.css({
 							'paddingTop' : header_height + et_pb_first_row_first_module_code_padding_top
 						});
@@ -492,6 +578,13 @@
 					} else if ( $et_pb_first_row_first_module.is( '.et_pb_post_title' ) ) {
 
 						/* Desktop / Mobile + Pagebuilder + Fullwidth Post Title */
+						var $et_pb_first_row_first_module_title = $et_pb_first_row_first_module;
+
+						// Save current styling for the next resize cycle
+						et_save_initial_page_container_style(
+							$et_pb_first_row_first_module_title,
+							'paddingTop'
+						);
 
 						$et_pb_first_row_first_module.css({
 							'paddingTop' : header_height + 50
@@ -542,6 +635,12 @@
 						// Pagebuilder ignores #main-content .container's fixed height and uses its row's padding
 						// Anticipate the use of custom section padding.
 						et_pb_first_row_padding_top = header_height + parseInt( $et_pb_first_row.css( 'paddingBottom' ) );
+
+						// Save current styling for the next resize cycle
+						et_save_initial_page_container_style(
+							$et_pb_first_row,
+							'paddingTop'
+						);
 
 						// Implementing padding-top + header_height
 						$et_pb_first_row.css({
@@ -797,7 +896,8 @@
 				has_closest_woocommerce_tabs = ( $this_link.closest( '.woocommerce-tabs' ).length && $this_link.closest( '.tabs' ).length ),
 				has_closest_eab_cal_link = $this_link.closest( '.eab-shortcode_calendar-navigation-link' ).length,
 				has_acomment_reply = $this_link.hasClass( 'acomment-reply' ),
-				disable_scroll = has_closest_smooth_scroll_disabled || has_closest_woocommerce_tabs || has_closest_eab_cal_link || has_acomment_reply;
+				is_woocommerce_review_link = $this_link.hasClass( 'woocommerce-review-link' ),
+				disable_scroll = has_closest_smooth_scroll_disabled || has_closest_woocommerce_tabs || has_closest_eab_cal_link || has_acomment_reply || is_woocommerce_review_link;
 
 			if ( ( location.pathname.replace( /^\//,'' ) == this.pathname.replace( /^\//,'' ) && location.hostname == this.hostname ) && ! disable_scroll ) {
 				var target = $( this.hash );
