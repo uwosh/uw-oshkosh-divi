@@ -5,34 +5,50 @@
  Author:       Joseph Kerkhof
  Author URI:   http://twitter.com/musicaljoeker
  Template:     Divi
- Version:      1.0.2
+ Version:      1.1.1
 */
 
 // Variables
-
 // Colors
 $white: #fff;
+$black: #241e1b;
 $dark-grey: #444;
 $light-grey: #b0b0b0;
 $yellow: #fec424;
 $blue: rgb(46, 163, 242);
+$links: #0077ad;
 $box-shadow: rgba(0, 0, 0, .0980392);
-
+// Social-icon colors
+$icon-facebook: #3b5998;
+$icon-twitter: #1da1f2;
+$icon-instagram: #f56040;
+$icon-youtube: #cd201f;
+$icon-linkedin: #0077b5;
+$icon-pinterest: #bd081c;
+$icon-flickr: #8032B0;
+// Font Style
+$font: 'Open Sans', Arial, sans-serif !important;
 // Defaults
 body {
   min-width: 320px;
+  font-family: $font;
+  color: $dark-grey;
+}
+a {
+  color: $links;
 }
 
 // Utility
 .desaturate {
   backface-visibility: hidden;
   filter: grayscale(100%);
-  transition: all .6s ease;
+  transition: all 0.6s ease;
 }
 
 .desaturate:hover {
   filter: grayscale(0%);
 }
+
 // UWO Navigation
 header {
   z-index: 999;
@@ -42,13 +58,36 @@ header {
   }
 }
 
+#main-header,
+#main-header .et_mobile_menu,
+#main-header .nav li ul,
+.et-search-form {
+  background-color: $yellow;
+}
+
+#et-secondary-nav li ul,
+#top-header {
+  background-color: $dark-grey;
+}
+
+.et_pb_fullwidth_menu_0.et_pb_fullwidth_menu .nav li ul {
+  background-color: $links !important;
+}
+
+@media only screen and (min-width:981px) {
+  .et-fixed-header#top-header,
+  .et-fixed-header#top-header #et-secondary-nav li ul {
+    background-color: $dark-grey;
+  }
+}
+
 .site-title {
   display: inline-block;
   padding-bottom: 22px;
   vertical-align: bottom;
 
   h1 {
-    font-family: 'Open Sans', Arial, sans-serif;
+    font-family: $font;
     font-size: 33px;
     font-weight: 600;
   }
@@ -75,19 +114,16 @@ header {
 #mobile_menu {
   top: 100px;
 }
-
 @media only screen and (max-width: 375px) {
   header a img {
     max-width: 50% !important;
   }
 }
-
 @media only screen and (min-width: 980px) {
   header .container {
     min-width: 793px;
   }
 }
-
 @media only screen and (max-width: 540px) {
   .site-title h1 {
     font-size: 24px;
@@ -123,6 +159,12 @@ header {
 
 #et-secondary-nav li {
   text-align: left;
+
+  a {
+    padding-top: 0;
+    padding-left: 0;
+    padding-right: 0;
+  }
 }
 
 .et_nav_text_color_light,
@@ -168,6 +210,7 @@ header {
   line-height: normal !important;
 }
 // Quicklinks Navigation
+
 #top-menu li {
   font-weight: 600;
   padding-right: 8px;
@@ -177,6 +220,7 @@ header {
   color: $dark-grey !important;
 }
 // Custom Search Bar
+
 .display-search {
   opacity: 1 !important;
 }
@@ -223,7 +267,6 @@ form.gsc-search-box {
 .et_mobile_nav_menu .mobile_nav .mobile_menu_bar::before {
   color: $white;
 }
-
 @media only screen and (max-width: 475px) {
   form.gsc-search-box {
     position: absolute;
@@ -235,13 +278,13 @@ form.gsc-search-box {
     }
   }
 }
-
 @media only screen and (max-width: 980px) {
   form.gsc-search-box {
     margin-top: 40px;
   }
 }
 // Site Navigation
+
 .et_pb_fullwidth_menu .fullwidth-menu-nav > ul {
   line-height: 48px;
   padding: 0 !important;
@@ -255,7 +298,6 @@ form.gsc-search-box {
     padding-bottom: 0;
   }
 }
-
 // Content
 .et_pb_section {
   padding: 0 !important;
@@ -269,271 +311,328 @@ form.gsc-search-box {
 .promo-multicolor .widget_text {
   margin: 0 !important;
 }
-
-// FOOTER
+// Footer
 #main-footer {
   background-color: $white !important;
 }
 
-#portal-footer {
-  background-color: $dark-grey;
-  color: $white;
-  text-align: center;
-}
-
-#footer-bottom {
-  background-color: $light-grey;
-  padding-top: 0;
-}
-
-#footer {
+#uwo-footer {
+  text-align: left;
   background-color: $light-grey;
   clear: both;
   color: $dark-grey;
-  font-size: 13px;
-  height: 178px;
-  margin: auto;
-  padding-left: 30px;
-  padding-right: 30px;
+  font-size: 15px;
 }
 
-#uwo-footer {
-  font-family: Helvetica, Arial, Verdana, sans-serif;
-  font-style: normal;
-  text-align: left;
+#footer-top {
+  background-color: $yellow;
+  color: $dark-grey;
+  text-align: center;
+  font-weight: bold;
+  font-size: 16px;
+  padding: 12px 0;
+
+  span {
+    padding: 0 10px;
+  }
+}
+
+// Begin our own grid system
+.grid-container {
+  width: 100%;
+}
+
+.grid-container * {
+  box-sizing: border-box;
+}
+// our cleafix hack
+.row:after,
+.row:before {
+  content: "";
+  display: table;
+  clear: both;
+}
+
+.col {
+  float: left;
+  min-height: 1px;
+  width: 25%;
+  padding: 12px; // gutter
+}
+// Medium devices
+@media only screen and (max-width: 820px) {
+  .col {
+    width: 50%;
+  }
+}
+// Small devices
+@media only screen and (max-width: 480px) {
+  .col {
+    width: 100%;
+  }
+}
+// End our own grid system
+
+#footer-body {
+  background-color: $light-grey;
+  padding: 45px 5%;
 
   a {
     color: $dark-grey;
-    font-family: Helvetica, Arial, Verdana, sans-serif;
-    font-size: 13px;
-    text-decoration: none;
+    font-style: normal;
   }
 
-  h2 {
-    color: $dark-grey;
-    font-family: Helvetica, Arial, Verdana,sans-serif;
-    font-size: 25px;
-    font-weight: normal;
-    letter-spacing: .03em;
-    margin-bottom: 10px;
-
-    a {
-      color: $dark-grey;
-      font-family: "gnuolane",sans-serif;
-      font-size: 25px;
-      font-weight: normal;
-      margin-bottom: 10px;
-    }
+  ul {
+    list-style-type: none;
   }
 }
 
 #footer-column-1,
 #footer-column-2,
-#footer-column-3 {
+#footer-column-3,
+#footer-column-4 {
   float: left;
-  margin: 20px 0 0;
+  // height: 190px;
+}
+
+.footer-column-header {
+  margin-bottom: 5px;
+  font-weight: bold;
 }
 
 #footer-column-1 {
-  width: 30%;
+  .wismap {
+    width: 40%;
+  }
+
+  p {
+    padding-left: 40%;
+    margin-left: 10px;
+  }
+}
+
+#footer-address {
+  width: 60%;
+  float: right;
+  padding-left: 10px;
 
   ul {
-    float: left;
-    list-style-type: none;
-    margin-left: 0;
-    margin-top: 0;
-    padding-left: 0;
-    padding-right: 20px;
+    line-height: 1.75em;
+    margin: 0;
+  }
+}
 
-    li {
-      display: block;
-      padding-bottom: 5px;
+#column-2-header {
+  padding-left: 54px;
+}
+
+.quick-links {
+  padding-bottom: 10px;
+}
+
+.quick-links::after {
+  content: "";
+  display: table;
+  clear: both;
+}
+
+#footer-column-2,
+#footer-column-3 {
+  padding-left: 60px;
+}
+
+#mobile-emergency {
+  i {
+    margin-right: 15px;
+    float: left;
+    width: 40px;
+    text-align: center;
+  }
+
+  i:hover {
+    color: $yellow;
+  }
+
+  .fa-mobile {
+    font-size: 60px;
+  }
+
+  .fa-exclamation-triangle {
+    font-size: 40px;
+    padding-top: 10px;
+  }
+
+  p {
+    height: 65px;
+    margin-bottom: 15px;
+
+    a {
+      vertical-align: sub;
+      line-height: 1;
     }
   }
 }
 
-#footer-column-2 {
-  width: 35%;
+#sitemap {
+  ul {
+    margin: 0;
+    line-height: 1.75;
 
-  p {
-    bottom: 12px;
-    position: relative;
+    li:hover {
+      text-decoration: underline;
+    }
   }
 }
 
-#footer-column-3 {
-  width: 35%;
+#footer-column-4 {
+  .image-wrapper {
+    display: inline-block;
+    padding-bottom: 10px;
 
-  a img {
-    margin-right: 3px;
+    .accredited-img {
+      padding-right: 10px;
+    }
+  }
+
+  #footer-uw-logo {
+    padding-right: 0;
   }
 }
 
-address.vcard {
-  font-style: normal;
-  line-height: 18px;
-}
-
-#uwo-everywhere {
-  margin-top: 15px;
+#footer-bottom {
+  overflow: hidden;
+  background-color: $dark-grey;
   padding: 0;
-
-  img {
-    margin: 0 !important;
-    position: relative;
-    right: 20px;
-  }
-
-  h2 {
-    padding-bottom: 5px;
-  }
-}
-
-#meet-uw-oshkosh {
-  padding-bottom: 5px;
-}
-
-#uwo-footer-map {
-  margin-left: 40px;
-  text-align: center;
-}
-
-.uwo-connect-icons {
-  margin-right: 18px;
-  margin-top: 10px;
-}
-
-#footer-logos {
-  clear: both;
-  margin-bottom: 20px;
-  text-align: center;
-  white-space: nowrap;
   width: 100%;
 
-  img {
-    margin-right: 20px !important;
-    margin-top: 40px !important;
-  }
-}
-
-#uwo-footer-mobile-icon {
-  display: inline-block;
-  float: right;
-  margin-right: 46px;
-  vertical-align: middle;
-}
-
-#uwo-tagline {
-  text-align: center;
-
-  p {
-    color: $white;
-    font-size: .7em;
+  #footer-copy {
+    float: left;
+    color: $light-grey;
+    font-size: 15px;
+    padding-top: 19px;
+    padding-left: 10px;
   }
 
-  h2 {
-    line-height: 130%;
-    margin-bottom: 0;
+  #footer-social {
+    float: right;
+
+    a {
+      display: table-cell;
+      text-align: center;
+      color: $light-grey;
+      padding: 15px;
+    }
+
+    .fa-facebook:hover {
+      color: $icon-facebook;
+    }
+
+    .fa-twitter:hover {
+      color: $icon-twitter;
+    }
+
+    .fa-instagram:hover {
+      color: $icon-instagram;
+    }
+
+    .fa-youtube-play:hover {
+      color: $icon-youtube;
+    }
+
+    .fa-linkedin:hover {
+      color: $icon-linkedin;
+    }
+
+    .fa-pinterest-p:hover {
+      color: $icon-pinterest;
+    }
+
+    .fa-flickr:hover {
+      color: $icon-flickr;
+    }
   }
 }
+@media only screen and (max-width: 1025px) {
+  #footer-column-1 {
+    p {
+      padding-left: 20px;
+      margin-left: 0;
+    }
 
-.pull-left {
-  float: left;
-}
+    .wismap {
+      display: none;
+    }
 
-.app-icon {
-  height: 32px;
-  width: 32px;
-}
-
-.wismap {
-  margin-right: 10px;
-  width: 124px;
-}
-
-#address {
-  margin-top: 20px;
-}
-
-#sitemap {
-  margin-right: 25px;
-  margin-top: 20px;
-}
-
-#mobile-emergency {
-  float: left;
-  margin-top: 30px;
-  width: 170px;
-}
-
-#college-portrait {
-  margin-top: 61px;
-}
-
-#footerSocialLinks {
-  margin-bottom: 20px;
-
-  li {
-    display: inline;
-    margin-right: 16px;
+    #footer-address {
+      padding-left: 20px;
+      width: 100%;
+    }
   }
-}
 
-.social-icon {
-  height: 24px;
-}
-
-.list-block li {
-  display: block;
-}
-
-.img-block {
-  display: block;
-}
-
-@media only screen and (max-width: 1100px) {
-  // rules defined inside here are only applied to browsers that support CSS media queries and the browser window is 1100px or smaller
-  #footer-column-1,
   #footer-column-2 {
-    width: 50%;
+    padding-left: 10px;
+    padding-right: 30px;
   }
 
   #footer-column-3 {
-    text-align: center;
-    width: 100%;
+    padding-left: 20px;
   }
 }
-
-@media only screen and (max-width: 980px) {
-    // rules defined inside here are only applied to browsers that support CSS media queries and the browser window is 980px or smaller
+@media only screen and (max-width: 640px) {
+  // rules defined inside here are only applied to browsers that support CSS media queries and the browser window is 640px or smaller
   #footer-column-1,
   #footer-column-2,
-  #footer-column-3 {
+  #footer-column-3,
+  #footer-column-4 {
     text-align: left;
-    width: 100%;
+    padding: 0 0 15px;
+
+    #footer-address,
+    p {
+      padding-left: 0;
+    }
+
+    ul {
+      margin: 0;
+    }
+  }
+
+  #footer-body {
+    padding-bottom: 0;
+  }
+
+  #footer-column-1 {
+    height: 160px;
+  }
+
+  #footer-column-2 p {
+    width: 205px;
+  }
+
+  #footer-column-4 {
+    img {
+      padding: 35px 14% 35px 0;
+    }
+
+    #footer-accredited {
+      padding-left: 0;
+    }
+  }
+
+  #footer-bottom #footer-social a {
+    padding: 15px 10px;
   }
 }
-
-@media only screen and (max-width: 480px) {
-  // rules defined inside here are only applied to browsers that support CSS media queries and the browser window is 480px or smaller
-  #footer-column-1,
-  #footer-column-2,
-  #footer-column-3 {
-    text-align: left;
-    width: 100%;
-  }
-
-  .wismap {
-    display: none;
+@media only screen and (max-width: 540px) {
+  #footer-bottom #footer-social {
+    float: left;
   }
 }
 // END FOOTER
-
 // Ninja Forms
 .widget_ninja_forms_widget {
   width: 100% !important;
 }
-
 // HTML JavaScript Adder
 .widget_html_javascript_adder {
   margin-right: 0;

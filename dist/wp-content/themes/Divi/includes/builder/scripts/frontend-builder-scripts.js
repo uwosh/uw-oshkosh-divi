@@ -90,7 +90,7 @@
 					$et_slider_prev 	= $et_slider.find( settings.prev_arrow );
 					$et_slider_next 	= $et_slider.find( settings.next_arrow );
 
-					$et_slider_next.click( function(){
+					$et_slider.on( 'click.et_pb_simple_slider', settings.next_arrow, function() {
 						if ( $et_slider.et_animation_running )	return false;
 
 						$et_slider.et_slider_move_to( 'next' );
@@ -98,7 +98,7 @@
 						return false;
 					} );
 
-					$et_slider_prev.click( function(){
+					$et_slider.on( 'click.et_pb_simple_slider', settings.prev_arrow, function() {
 						if ( $et_slider.et_animation_running )	return false;
 
 						$et_slider.et_slider_move_to( 'previous' );
@@ -107,7 +107,7 @@
 					} );
 
 					// swipe support requires et-jquery-touch-mobile
-					$et_slider.find( settings.slide ).on( 'swipeleft', function( event ) {
+					$et_slider.on( 'swipeleft.et_pb_simple_slider', settings.slide, function( event ) {
 						// do not switch slide on selecting text in VB
 						if ( $( event.target ).closest( '.et-fb-popover-tinymce' ).length || $( event.target ).closest( '.et-fb-editable-element' ).length ) {
 							return;
@@ -115,7 +115,7 @@
 
 						$et_slider.et_slider_move_to( 'next' );
 					});
-					$et_slider.find( settings.slide ).on( 'swiperight', function( event ) {
+					$et_slider.on( 'swiperight.et_pb_simple_slider', settings.slide, function( event ) {
 						// do not switch slide on selecting text in VB
 						if ( $( event.target ).closest( '.et-fb-popover-tinymce' ).length || $( event.target ).closest( '.et-fb-editable-element' ).length ) {
 							return;
@@ -151,7 +151,7 @@
 
 					et_maybe_set_controls_color( $et_slide.eq(0) );
 
-					$et_slider_controls.click( function(){
+					$et_slider.on( 'click.et_pb_simple_slider', settings.controls, function () {
 						if ( $et_slider.et_animation_running )	return false;
 
 						$et_slider.et_slider_move_to( $(this).index() );
@@ -180,7 +180,7 @@
 					$et_slider.after( carousel_html );
 
 					$et_slider_carousel_controls = $et_slider.siblings('.et_pb_carousel').find( settings.carousel_controls );
-					$et_slider_carousel_controls.click( function(){
+					$et_slider_carousel_controls.on( 'click.et_pb_simple_slider', function() {
 						if ( $et_slider.et_animation_running )	return false;
 
 						var $this = $(this);
@@ -191,7 +191,7 @@
 				}
 
 				if ( settings.slideshow && et_slides_number > 1 ) {
-					$et_slider.hover( function() {
+					$et_slider.on( 'mouseenter.et_pb_simple_slider', function() {
 						if ( $et_slider.hasClass( 'et_slider_auto_ignore_hover' ) ) {
 							return;
 						}
@@ -201,7 +201,7 @@
 						if ( typeof et_slider_timer != 'undefined' ) {
 							clearInterval( et_slider_timer );
 						}
-					}, function() {
+					}).on( 'mouseleave.et_pb_simple_slider', function() {
 						if ( $et_slider.hasClass( 'et_slider_auto_ignore_hover' ) ) {
 							return;
 						}
@@ -228,9 +228,8 @@
 						clearInterval( et_slider_timer );
 					}
 
-					// Deregister existing events
-					$et_slider.unbind('mouseenter mouseleave');
-					$et_slider.find('.et-pb-slider-arrows a, .et-pb-controllers a').unbind('click');
+					// Deregister all own existing events
+					$et_slider.off( '.et_pb_simple_slider' );
 
 					// Removing existing style from slide(s)
 					$et_slider.find('.et_pb_slide').css({
@@ -246,6 +245,9 @@
 					// Removing DOM that was added by slider
 					$et_slider.find('.et-pb-slider-arrows, .et-pb-controllers').remove();
 					$et_slider.siblings('.et_pb_carousel').remove();
+
+					// Remove references
+					$et_slider.removeData( 'et_pb_simple_slider' );
 				};
 
 				function et_stop_video( active_slide ) {
@@ -312,7 +314,7 @@
 						next_slide_dot_color = $slide.attr( 'data-dots_color' ) || '';
 
 						if ( next_slide_dot_color !== '' ) {
-							$et_slider_controls.attr( 'style', 'background-color: ' + hex_to_rgba( next_slide_dot_color, '0.3' ) + ';' )
+							$et_slider_controls.attr( 'style', 'background-color: ' + hex_to_rgba( next_slide_dot_color, '0.3' ) + ';' );
 							$et_slider_controls.filter( '.et-pb-active-control' ).attr( 'style', 'background-color: ' + hex_to_rgba( next_slide_dot_color ) + '!important;' );
 						} else {
 							$et_slider_controls.removeAttr( 'style' );
@@ -374,7 +376,7 @@
 					} );
 				}
 
-				$et_window.on( 'resize', function() {
+				$et_window.on( 'resize.et_simple_slider', function() {
 					et_fix_slider_height( $et_slider );
 				} );
 
@@ -455,8 +457,9 @@
 					$et_slide.each( function(){
 						$(this).css( 'zIndex', 1 );
 					} );
-					$active_slide.css( 'zIndex', 2 ).removeClass( 'et-pb-active-slide' ).addClass('et-pb-moved-slide');
-					$next_slide.css( { 'display' : 'block', opacity : 0 } ).addClass( 'et-pb-active-slide' );
+					// add 'slide-status' data attribute so it can be used to determine active slide in Visual Builder
+					$active_slide.css( 'zIndex', 2 ).removeClass( 'et-pb-active-slide' ).addClass('et-pb-moved-slide').data('slide-status', 'inactive');
+					$next_slide.css( { 'display' : 'block', opacity : 0 } ).addClass( 'et-pb-active-slide' ).data('slide-status', 'active');
 
 					et_fix_slider_content_images();
 
@@ -509,13 +512,14 @@
 
 					et_slider_auto_rotate();
 				}
-		}
+		};
 
 		$.fn.et_pb_simple_slider = function( options ) {
 			return this.each(function() {
-				new $.et_pb_simple_slider(this, options);
+				var slider = $.data( this, 'et_pb_simple_slider' );
+				return slider ? slider : new $.et_pb_simple_slider( this, options );
 			});
-		}
+		};
 
 		var et_hash_module_seperator = '||',
 			et_hash_module_param_seperator = '|';
@@ -962,13 +966,14 @@
 					} );
 				}
 			}
-		}
+		};
 
 		$.fn.et_pb_simple_carousel = function( options ) {
 			return this.each(function() {
-				new $.et_pb_simple_carousel(this, options);
+				var carousel = $.data( this, 'et_pb_simple_carousel' );
+				return carousel ? carousel : new $.et_pb_simple_carousel( this, options );
 			});
-		}
+		};
 
 		$(document).ready( function(){
 			/**
@@ -1037,7 +1042,7 @@
 				var et_slider_settings = {
 						fade_speed 		: 700,
 						slide			: ! $this_slider.hasClass( 'et_pb_gallery' ) ? '.et_pb_slide' : '.et_pb_gallery_item'
-					}
+					};
 
 				if ( $this_slider.hasClass('et_pb_slider_no_arrows') )
 					et_slider_settings.use_arrows = false;
@@ -1050,7 +1055,7 @@
 
 					et_slider_settings.slideshow = true;
 
-					et_slider_autospeed = et_slider_autospeed_class_value.exec( $this_slider.attr('class') );
+					var et_slider_autospeed = et_slider_autospeed_class_value.exec( $this_slider.attr('class') );
 
 					et_slider_settings.slideshow_speed = et_slider_autospeed === null ? 10 : et_slider_autospeed[1];
 				}
@@ -1357,7 +1362,7 @@
 				$et_pb_carousel.each( function() {
 					var $this_carousel = $(this),
 						et_carousel_settings = {
-							fade_speed 		: 1000
+							slide_duration: 1000
 						};
 
 					$this_carousel.et_pb_simple_carousel( et_carousel_settings );
@@ -1366,7 +1371,7 @@
 
 			if ( $et_pb_fullwidth_portfolio.length || is_frontend_builder ) {
 
-			 	window.et_fullwidth_portfolio_init = function( $the_portfolio ) {
+				window.et_fullwidth_portfolio_init = function( $the_portfolio ) {
 					var $portfolio_items = $the_portfolio.find('.et_pb_portfolio_items');
 
 						$portfolio_items.data('items', $portfolio_items.find('.et_pb_portfolio_item').toArray() );
@@ -1413,10 +1418,10 @@
 						// setup fullwidth portfolio grid
 						set_fullwidth_portfolio_columns( $the_portfolio, false );
 					}
-			 	}
+				}
 
-			 	function fullwidth_portfolio_carousel_slide( $arrow ) {
-			 		var $the_portfolio = $arrow.parents('.et_pb_fullwidth_portfolio'),
+				function fullwidth_portfolio_carousel_slide( $arrow ) {
+					var $the_portfolio = $arrow.parents('.et_pb_fullwidth_portfolio'),
 						$portfolio_items = $the_portfolio.find('.et_pb_portfolio_items'),
 						$the_portfolio_items = $portfolio_items.find('.et_pb_portfolio_item'),
 						$active_carousel_group = $portfolio_items.find('.et_pb_carousel_group.active'),
@@ -1666,7 +1671,7 @@
 							}
 						} );
 					}
-			 	}
+				}
 
 				function set_fullwidth_portfolio_columns( $the_portfolio, carousel_mode ) {
 					var columns,
@@ -1796,9 +1801,10 @@
 				$time_slider.removeAttr( 'style' );
 
 				var $count_timer = $this_player.find( 'div.mejs-currenttime-container' ),
+					$count_timer_width_container = $this_player.find( '.mejs-duration-container' ).length ? $this_player.find( '.mejs-duration-container' ) : $this_player.find( '.mejs-currenttime-container' ),
 					player_width = $this_player.width(),
 					controls_play_width = $this_player.find( '.mejs-play' ).outerWidth(),
-					time_width = $this_player.find( '.mejs-currenttime-container' ).outerWidth(),
+					time_width = $count_timer_width_container.outerWidth(),
 					volume_icon_width = $this_player.find( '.mejs-volume-button' ).outerWidth(),
 					volume_bar_width = $this_player.find( '.mejs-horizontal-volume-slider' ).outerWidth(),
 					new_time_rail_width;
@@ -1831,7 +1837,8 @@
 
 				window.set_filterable_portfolio_init = function( $the_portfolio ) {
 					var $the_portfolio_items = $the_portfolio.find('.et_pb_portfolio_items'),
-						$left_orientatation = true == $the_portfolio.data( 'rtl' ) ? false : true;
+						$left_orientatation = true == $the_portfolio.data( 'rtl' ) ? false : true,
+						all_portfolio_items = $the_portfolio_items.clone(); // cache for all the portfolio items
 
 					$the_portfolio.show();
 
@@ -1845,8 +1852,12 @@
 						if ( 'all' == category_slug ) {
 							$the_portfolio.find('.et_pb_portfolio_filter a').removeClass('active');
 							$the_portfolio.find('.et_pb_portfolio_filter_all a').addClass('active');
-							$the_portfolio.find('.et_pb_portfolio_item').removeClass('active inactive');
-							$the_portfolio.find('.et_pb_portfolio_item').show();
+
+							// remove all items from the portfolio items container
+							$the_portfolio_items.empty();
+
+							// fill the portfolio items container with cached items from memory
+							$the_portfolio_items.append( all_portfolio_items.find( '.et_pb_portfolio_item' ).clone() );
 							$the_portfolio.find('.et_pb_portfolio_item').addClass('active');
 						} else {
 							$the_portfolio.find('.et_pb_portfolio_filter_all').removeClass('active');
@@ -1854,10 +1865,13 @@
 							$the_portfolio.find('.et_pb_portfolio_filter_all a').removeClass('active');
 							$(this).addClass('active');
 
-							$the_portfolio_items.find('.et_pb_portfolio_item').hide();
-							$the_portfolio_items.find('.et_pb_portfolio_item').addClass( 'inactive' );
+							// remove all items from the portfolio items container
+							$the_portfolio_items.empty();
+
+							// fill the portfolio items container with cached items from memory
+							$the_portfolio_items.append( all_portfolio_items.find( '.et_pb_portfolio_item.project_category_' + $(this).data('category-slug') ).clone() );
+
 							$the_portfolio_items.find('.et_pb_portfolio_item').removeClass('active');
-							$the_portfolio_items.find('.et_pb_portfolio_item.project_category_' + $(this).data('category-slug') ).show();
 							$the_portfolio_items.find('.et_pb_portfolio_item.project_category_' + $(this).data('category-slug') ).addClass('active').removeClass( 'inactive' );
 						}
 
@@ -1926,6 +1940,8 @@
 						$the_portfolio.find('.et_pb_portfolio_item').filter(function( index ) {
 							return $(this).data('page') === to_page;
 						}).show();
+
+						window.et_pb_set_responsive_grid( $the_portfolio.find( '.et_pb_portfolio_items' ), '.et_pb_portfolio_item' );
 
 						setTimeout(function(){
 							set_filterable_portfolio_hash( $the_portfolio );
@@ -2385,6 +2401,8 @@
 
 						return false;
 					} );
+
+					window.et_pb_set_tabs_height();
 				}
 				window.et_pb_tabs_init( $et_pb_tabs );
 			}
@@ -2537,12 +2555,19 @@
 
 			if ( $et_pb_number_counter.length || is_frontend_builder ) {
 				window.et_pb_reinit_number_counters = function( $et_pb_number_counter ) {
+
+					function et_format_number( number_value, separator ) {
+						return number_value.toString().replace( /\B(?=(\d{3})+(?!\d))/g, separator );
+					}
+
 					if ( $.fn.fitText ) {
 						$et_pb_number_counter.find( '.percent p' ).fitText( 0.3 );
 					}
 
 					$et_pb_number_counter.each(function(){
 						var $this_counter = $(this);
+						var separator     = $this_counter.data('number-separator');
+
 						$this_counter.easyPieChart({
 							animate: {
 								duration: 1800,
@@ -2557,10 +2582,10 @@
 							},
 							onStep: function(from, to, percent) {
 								if ( percent != to )
-									$(this.el).find('.percent-value').text( Math.round( parseInt( percent ) ) );
+									$(this.el).find('.percent-value').text( et_format_number( Math.round( parseInt( percent ) ), separator ) );
 							},
 							onStop: function(from, to) {
-								$(this.el).find('.percent-value').text( $(this.el).data('number-value') );
+								$(this.el).find('.percent-value').text( et_format_number( $(this.el).data('number-value'), separator ) );
 							}
 						});
 					});
@@ -2581,7 +2606,7 @@
 
 				main_position = 'translate(0, ' + y_pos + 'px)';
 
-				$this.find('.et_parallax_bg').css( {
+				$this.children('.et_parallax_bg').css( {
 					'-webkit-transform' : main_position,
 					'-moz-transform'    : main_position,
 					'-ms-transform'     : main_position,
@@ -2682,13 +2707,21 @@
 					var $this_contact_container = $( this ),
 						$et_contact_form = $this_contact_container.find( 'form' ),
 						$et_contact_submit = $this_contact_container.find( 'input.et_pb_contact_submit' ),
-						$et_inputs = $et_contact_form.find( 'input[type=text],textarea' ),
-						et_email_reg = /^[\w-]+(\.[\w-]+)*@([a-z0-9-]+(\.[a-z0-9-]+)*?\.[a-z]{2,6}|(\d{1,3}\.){3}\d{1,3})(:\d{4})?$/,
+						$et_inputs = $et_contact_form.find( 'input[type=text], input[type=radio]:checked, textarea, .et_pb_contact_select' ),
+						et_email_reg = /^[\w-]+(\.[\w-]+)*@([a-z0-9-]+(\.[a-z0-9-]+)*?\.[a-z]{2,}|(\d{1,3}\.){3}\d{1,3})(:\d{4})?$/,
 						redirect_url = typeof $this_contact_container.data( 'redirect_url' ) !== 'undefined' ? $this_contact_container.data( 'redirect_url' ) : '';
+
+					$et_contact_form.find( 'input[type=checkbox]' ).on( 'change', function() {
+						var $checkbox = $(this);
+						var $checkbox_field = $checkbox.siblings( 'input[type=text]:first' );
+						var is_checked = $checkbox.prop( 'checked' );
+
+						$checkbox_field.val( is_checked ? $checkbox_field.data( 'checked' ) : $checkbox_field.data( 'unchecked' ) );
+					} );
 
 					$et_contact_form.on( 'submit', function( event ) {
 						var $this_contact_form = $( this ),
-							$this_inputs = $this_contact_form.find( 'input[type=text],textarea' ),
+							$this_inputs = $this_contact_form.find( 'input[type=text], .et_pb_contact_field[data-type="checkbox"], .et_pb_contact_field[data-type="radio"], textarea, select' ),
 							this_et_contact_error = false,
 							$et_contact_message = $this_contact_form.closest( '.et_pb_contact_form_container' ).find( '.et-pb-contact-message' ),
 							et_message = '',
@@ -2702,22 +2735,85 @@
 						$this_inputs.removeClass( 'et_contact_error' );
 
 						$this_inputs.each( function(){
-							var $this_el = $( this ),
-								this_val = $this_el.val(),
-								this_label = $this_el.siblings( 'label' ).text(),
-								field_type = typeof $this_el.data( 'field_type' ) !== 'undefined' ? $this_el.data( 'field_type' ) : 'text',
-								required_mark = typeof $this_el.data( 'required_mark' ) !== 'undefined' ? $this_el.data( 'required_mark' ) : 'not_required',
-								original_id = typeof $this_el.data( 'original_id' ) !== 'undefined' ? $this_el.data( 'original_id' ) : '',
-								default_value;
+							var $this_el      = $( this );
+							var $this_wrapper = false;
+
+							// Prevent field processing if that field is not visible (conditional logic)
+							if ( ! $this_el.is(':visible') ) {
+								return;
+							}
+
+							if ( 'checkbox' === $this_el.data('type') ) {
+								$this_el      = $this_el.find('input[type="checkbox"]');
+								$this_wrapper = $this_el.parents('.et_pb_contact_field');
+							}
+
+							if ( 'radio' === $this_el.data('type') ) {
+								$this_el = $this_el.find('input[type="radio"]');
+								$this_wrapper = $this_el.parents('.et_pb_contact_field');
+							}
+
+							var this_id       = $this_el.attr( 'id' );
+							var this_val      = $this_el.val();
+							var this_label    = $this_el.siblings( 'label:first' ).text();
+							var field_type    = typeof $this_el.data( 'field_type' ) !== 'undefined' ? $this_el.data( 'field_type' ) : 'text';
+							var required_mark = typeof $this_el.data( 'required_mark' ) !== 'undefined' ? $this_el.data( 'required_mark' ) : 'not_required';
+							var original_id   = typeof $this_el.data( 'original_id' ) !== 'undefined' ? $this_el.data( 'original_id' ) : '';
+							var unchecked     = false;
+							var default_value;
+
+							// Escape double quotes in label
+							this_label = this_label.replace(/"/g, "&quot;");
+
+							// radio field properties adjustment
+							if ( 'radio' === field_type ) {
+								if ( 0 !== $this_wrapper.find( 'input[type="radio"]').length ) {
+									field_type = 'radio';
+
+									var $firstRadio = $this_wrapper.find('input[type="radio"]:first');
+
+									required_mark = typeof $firstRadio.data( 'required_mark' ) !== 'undefined' ? $firstRadio.data( 'required_mark' ) : 'not_required';
+									original_id   = typeof $firstRadio.data( 'original_id' ) !== 'undefined' ? $firstRadio.data( 'original_id' ) : '';
+
+									this_val = '';
+									if ( $this_wrapper.find('input[type="radio"]:checked') ) {
+										this_val = $this_wrapper.find('input[type="radio"]:checked').val();
+									}
+								}
+
+								this_label = $this_wrapper.find('.et_pb_contact_form_label').text();
+								this_id = $this_wrapper.find('input[type="radio"]:first').attr('name');
+
+								if ( 0 === $this_wrapper.find('input[type="radio"]:checked').length ) {
+									unchecked = true;
+								}
+							}
+
+							// checkbox field value adjustment
+							if ( 'checkbox' === field_type ) {
+								var $checkbox = $this_el;
+								var $handle   = $checkbox.siblings('[data-checked][data-unchecked]');
+
+								this_id       = $handle.attr('id');
+								this_val      = $checkbox.prop('checked') ? $handle.data('checked') : $handle.data('unchecked');
+								unchecked     = ! $checkbox.prop('checked');
+
+								$handle.val( this_val );
+							}
 
 							// add current field data into array of inputs
-							if ( typeof $this_el.attr( 'id' ) !== 'undefined' ) {
-								inputs_list.push( { 'field_id' : $this_el.attr( 'id' ), 'original_id' : original_id, 'required_mark' : required_mark, 'field_type' : field_type, 'field_label' : this_label } );
+							if ( typeof this_id !== 'undefined' ) {
+								inputs_list.push( { 'field_id' : this_id, 'original_id' : original_id, 'required_mark' : required_mark, 'field_type' : field_type, 'field_label' : this_label } );
 							}
 
 							// add error message for the field if it is required and empty
-							if ( 'required' === required_mark && ( '' === this_val || this_label === this_val ) ) {
-								$this_el.addClass( 'et_contact_error' );
+							if ( 'required' === required_mark && ( '' === this_val || true === unchecked ) ) {
+								if ( false === $this_wrapper ) {
+									$this_el.addClass( 'et_contact_error' );
+								} else {
+									$this_wrapper.addClass( 'et_contact_error' );
+								}
+
 								this_et_contact_error = true;
 
 								default_value = this_label;
@@ -2730,12 +2826,18 @@
 							}
 
 							// add error message if email field is not empty and fails the email validation
-							if ( 'email' === field_type && '' !== this_val && this_label !== this_val && ! et_email_reg.test( this_val ) ) {
-								$this_el.addClass( 'et_contact_error' );
-								this_et_contact_error = true;
+							if ( 'email' === field_type ) {
+								// remove trailing/leading spaces and convert email to lowercase
+								var processed_email = this_val.trim().toLowerCase();
+								var is_valid_email = et_email_reg.test( processed_email );
 
-								if ( ! et_email_reg.test( this_val ) ) {
-									et_message += '<li>' + et_pb_custom.invalid + '</li>';
+								if ( '' !== processed_email && this_label !== processed_email && ! is_valid_email ) {
+									$this_el.addClass( 'et_contact_error' );
+									this_et_contact_error = true;
+
+									if ( ! is_valid_email ) {
+										et_message += '<li>' + et_pb_custom.invalid + '</li>';
+									}
 								}
 							}
 						});
@@ -2873,17 +2975,31 @@
 				$element = typeof $video !== 'undefined' ? $video.closest( '.et_pb_section_video_bg' ) : $( '.et_pb_section_video_bg' );
 
 				$element.each( function() {
-					var $this_el = $(this),
-						ratio = ( typeof $this_el.attr( 'data-ratio' ) !== 'undefined' ) && ! is_frontend_builder
-							? $this_el.attr( 'data-ratio' )
-							: $this_el.find('video').attr( 'width' ) / $this_el.find('video').attr( 'height' ),
-						$video_elements = $this_el.find( '.mejs-video, video, object' ).css( 'margin', 0 ),
-						$container = $this_el.closest( '.et_pb_section_video' ).length
+					var $this_el  = $(this);
+
+					if ( is_frontend_builder ) {
+						$this_el.removeAttr('data-ratio');
+						$this_el.find('video').removeAttr('style');
+					}
+
+					var el_ratio  = parseFloat( $this_el.attr( 'data-ratio' ) );
+					var el_width  = parseInt( $this_el.find( 'video' ).attr( 'width' ) || $this_el.find( 'video' ).width() );
+					var el_height = parseInt( $this_el.find( 'video' ).attr( 'height' ) || $this_el.find( 'video' ).height() );
+
+					var ratio = ( ! isNaN( el_ratio ) ) ? el_ratio : ( el_width / el_height );
+
+					var $video_elements = $this_el.find( '.mejs-video, video, object' ).css( 'margin', 0 );
+
+					var  $container = $this_el.closest( '.et_pb_section_video' ).length
 							? $this_el.closest( '.et_pb_section_video' )
-							: $this_el.closest( '.et_pb_slides' ),
-						body_width = $container.innerWidth(),
-						container_height = $container.innerHeight(),
-						width, height;
+							: $this_el.closest( '.et_pb_slides' );
+
+					var body_width = $container.innerWidth();
+
+					var container_height = $container.innerHeight();
+
+					var width, height;
+
 					if ( typeof $this_el.attr( 'data-ratio' ) == 'undefined' && !isNaN(ratio) ) {
 						$this_el.attr( 'data-ratio', ratio );
 					}
@@ -2910,28 +3026,36 @@
 			window.et_pb_center_video = function( $video ) {
 				$element = typeof $video !== 'undefined' ? $video : $( '.et_pb_section_video_bg .mejs-video' );
 
-					$element.each( function() {
-						var $this_el = $(this);
-						var $video_width = $this_el.width() / 2;
-						var $video_width_negative = 0 - $video_width;
-						$this_el.css("margin-left",$video_width_negative );
+				if ( ! $element.length ) {
+					return;
+				}
 
-						// need to re-calculate the values in Frontend builder
-						if ( is_frontend_builder ) {
-							setTimeout( function() {
-								var $video_width = $this_el.width() / 2;
-								var $video_width_negative = 0 - $video_width;
-								$this_el.css("margin-left",$video_width_negative );
-							}, 0 );
-						}
+				$element.each( function() {
+					var $this_el = $(this);
 
-						if ( typeof $video !== 'undefined' ) {
-							if ( $video.closest( '.et_pb_slider' ).length && ! $video.closest( '.et_pb_first_video' ).length ) {
-								return false;
-							}
+					et_pb_adjust_video_margin( $this_el );
+
+					// need to re-calculate the values in Frontend builder
+					if ( is_frontend_builder ) {
+						setTimeout( function() {
+							et_pb_adjust_video_margin( $this_el );
+						}, 0 );
+					}
+
+					if ( typeof $video !== 'undefined' ) {
+						if ( $video.closest( '.et_pb_slider' ).length && ! $video.closest( '.et_pb_first_video' ).length ) {
+							return false;
 						}
-					} );
+					}
+				} );
 			};
+
+			window.et_pb_adjust_video_margin = function( $el ) {
+				var $video_width          = $el.width() / 2;
+				var $video_width_negative = 0 - $video_width;
+
+				$el.css("margin-left", $video_width_negative );
+			}
 
 			window.et_fix_slider_height = function( $slider ) {
 				var $this_slider = $slider || $et_pb_slider;
@@ -2960,7 +3084,9 @@
 					// make slides visible to calculate the height correctly
 					$slides.addClass( 'et_pb_temp_slide' );
 
-					$(this).data('et_pb_simple_slider').et_fix_slider_content_images();
+					if ( typeof $(this).data('et_pb_simple_slider') === 'object' ) {
+						$(this).data('et_pb_simple_slider').et_fix_slider_content_images();
+					}
 
 					$slides.each( function() {
 						var height = parseFloat( $(this).innerHeight() ),
@@ -3066,7 +3192,8 @@
 					$email = $newsletter_container.find( 'input[name="et_pb_signup_email"]' ),
 					list_id = $newsletter_container.find( 'input[name="et_pb_signup_list_id"]' ).val(),
 					$result = $newsletter_container.find( '.et_pb_newsletter_result' ).hide(),
-					service = $submit.closest( '.et_pb_newsletter_form' ).data( 'service' ) || 'mailchimp';
+					service = $submit.closest( '.et_pb_newsletter_form' ).data( 'service' ) || 'mailchimp',
+					account = $newsletter_container.find( 'input[name="et_pb_signup_account_name"]' ).val();
 
 				$firstname.removeClass( 'et_pb_signup_error' );
 				$lastname.removeClass( 'et_pb_signup_error' );
@@ -3103,7 +3230,8 @@
 						et_firstname : $firstname.val(),
 						et_lastname : $lastname.val(),
 						et_email : $email.val(),
-						et_service : service
+						et_service : service,
+						et_account: account
 					},
 					beforeSend: function() {
 						$newsletter_container
@@ -3135,27 +3263,27 @@
 						}
 					}
 				} );
-			}
+			};
 
 			window.et_fix_testimonial_inner_width = function() {
 				var window_width = $( window ).width();
 
-				if( window_width > 767 ){
+				if ( window_width > 767 ) {
 					$( '.et_pb_testimonial' ).each( function() {
-						if ( ! $(this).is(':visible') ) {
+						if ( ! $(this).is( ':visible' ) ) {
 							return;
 						}
 
-						var $testimonial      = $(this),
-							testimonial_width = $testimonial.width(),
-							$portrait         = $testimonial.find( '.et_pb_testimonial_portrait' ),
-							portrait_width    = $portrait.width(),
-							$testimonial_inner= $testimonial.find( '.et_pb_testimonial_description_inner' ),
-							$outer_column     = $testimonial.closest( '.et_pb_column' ),
-							testimonial_inner_width = testimonial_width,
-							subtract = ! ( $outer_column.hasClass( 'et_pb_column_1_3' ) || $outer_column.hasClass( 'et_pb_column_1_4' ) || $outer_column.hasClass( 'et_pb_column_3_8' ) ) ? portrait_width + 31 : 0;
+						var $testimonial            = $(this);
+						var testimonial_width       = $testimonial.width();
+						var $portrait               = $testimonial.find( '.et_pb_testimonial_portrait' );
+						var portrait_width          = $portrait.outerWidth( true );
+						var $testimonial_inner      = $testimonial.find( '.et_pb_testimonial_description_inner' );
+						var $outer_column           = $testimonial.closest( '.et_pb_column' );
+						var testimonial_inner_width = testimonial_width;
+						var subtract                = ! ( $outer_column.hasClass( 'et_pb_column_1_3' ) || $outer_column.hasClass( 'et_pb_column_1_4' ) || $outer_column.hasClass( 'et_pb_column_3_8' ) ) ? portrait_width : 0;
 
-							$testimonial_inner.width( testimonial_inner_width - subtract );
+						$testimonial_inner.width( testimonial_inner_width - subtract );
 					} );
 				} else {
 					$( '.et_pb_testimonial_description_inner' ).removeAttr( 'style' );
@@ -3164,23 +3292,42 @@
 			window.et_fix_testimonial_inner_width();
 
 			window.et_pb_video_background_init = function( $this_video_background, this_video_background ) {
-				var $video_background_wrapper = $this_video_background.closest( '.et_pb_section_video_bg' ),
-					this_video_player = this_video_background.player;
+				var $video_background_wrapper = $this_video_background.closest( '.et_pb_section_video_bg' );
+
+				// Initializing video values
+				var onplaying = false;
+				var onpause   = true;
+
+				// On video playing toggle values
+				this_video_background.onplaying = function() {
+					onplaying = true;
+					onpause   = false;
+				};
+
+				// On video pause toggle values
+				this_video_background.onpause = function() {
+					onplaying = false;
+					onpause   = true;
+				};
 
 				// Entering video's top viewport
-				$video_background_wrapper.waypoint({
+				et_waypoint( $video_background_wrapper, {
 					offset: '100%',
 					handler : function( direction ) {
 						if ( $this_video_background.is(':visible') && direction === 'down' ) {
-							this_video_player.play();
+							if ( this_video_background.paused && ! onplaying ) {
+								this_video_background.play();
+							}
 						} else if ( $this_video_background.is(':visible') && direction === 'up' ) {
-							this_video_player.pause();
+							if ( ! this_video_background.paused && ! onpause ) {
+								this_video_background.pause();
+							}
 						}
 					}
 				});
 
 				// Entering video's bottom viewport
-				$video_background_wrapper.waypoint({
+				et_waypoint( $video_background_wrapper, {
 					offset: function() {
 						var video_height = this.element.clientHeight,
 							toggle_offset = Math.ceil( window.innerHeight / 2);
@@ -3193,12 +3340,29 @@
 					},
 					handler : function( direction ) {
 						if ( $this_video_background.is(':visible') && direction === 'up' ) {
-							this_video_player.play();
+							if ( this_video_background.paused && ! onplaying ) {
+								this_video_background.play();
+							}
 						} else if ( $this_video_background.is(':visible') && direction === 'down' ) {
-							this_video_player.pause();
+							if ( ! this_video_background.paused && ! onpause ) {
+								this_video_background.pause();
+							}
 						}
 					}
 				});
+			};
+
+			function et_waypoint( $element, options ) {
+				if ( ! $element.data( 'et_waypoint' ) ) {
+					var instances = $element.waypoint( options );
+
+					if ( instances && instances.length > 0 ) {
+						$element.data( 'et_waypoint', instances[0] );
+					}
+				} else {
+					// Reinit existing
+					$element.data( 'et_waypoint' ).context.refresh();
+				}
 			}
 
 			window.et_reinit_waypoint_modules = et_pb_debounce( function() {
@@ -3207,7 +3371,7 @@
 						$et_pb_video_background = $( '.et_pb_section_video_bg video' );
 
 				if ( $.fn.waypoint && 'yes' !== et_pb_custom.ignore_waypoints ) {
-					$( '.et_pb_counter_container, .et-waypoint' ).waypoint( {
+					et_waypoint( $( '.et_pb_counter_container, .et-waypoint' ), {
 						offset: '75%',
 						handler: function() {
 							$(this.element).addClass( 'et-animated' );
@@ -3215,7 +3379,7 @@
 					} );
 
 					// fallback to 'bottom-in-view' offset, to make sure element become visible when it's on the bottom of page and other offsets are not triggered
-					$( '.et_pb_counter_container, .et-waypoint' ).waypoint( {
+					et_waypoint( $( '.et_pb_counter_container, .et-waypoint' ), {
 						offset: 'bottom-in-view',
 						handler: function() {
 							$(this.element).addClass( 'et-animated' );
@@ -3228,10 +3392,10 @@
 							if ( ! $this_counter.is( ':visible' ) ) {
 								return;
 							}
-							$this_counter.waypoint({
+							et_waypoint( $this_counter, {
 								offset: '65%',
 								handler: function() {
-									if ( $this_counter.data( 'PieChartHasLoaded' ) ) {
+									if ( $this_counter.data( 'PieChartHasLoaded' ) || typeof $this_counter.data('easyPieChart') === 'undefined' ) {
 										return;
 									}
 
@@ -3242,10 +3406,10 @@
 							});
 
 							// fallback to 'bottom-in-view' offset, to make sure animation applied when element is on the bottom of page and other offsets are not triggered
-							$this_counter.waypoint({
+							et_waypoint( $this_counter, {
 								offset: 'bottom-in-view',
 								handler: function() {
-									if ( $this_counter.data( 'PieChartHasLoaded' ) ) {
+									if ( $this_counter.data( 'PieChartHasLoaded' ) || typeof $this_counter.data('easyPieChart') === 'undefined' ) {
 										return;
 									}
 
@@ -3260,7 +3424,7 @@
 					if ( $et_pb_number_counter.length ) {
 						$et_pb_number_counter.each(function(){
 							var $this_counter = $(this);
-							$this_counter.waypoint({
+							et_waypoint( $this_counter, {
 								offset: '75%',
 								handler: function() {
 									$this_counter.data('easyPieChart').update( $this_counter.data('number-value') );
@@ -3268,7 +3432,7 @@
 							});
 
 							// fallback to 'bottom-in-view' offset, to make sure animation applied when element is on the bottom of page and other offsets are not triggered
-							$this_counter.waypoint({
+							et_waypoint( $this_counter, {
 								offset: 'bottom-in-view',
 								handler: function() {
 									$this_counter.data('easyPieChart').update( $this_counter.data('number-value') );
@@ -3280,7 +3444,7 @@
 					if ( $( '.et_pb_ab_goal' ).length ) {
 						var $et_pb_ab_goal = $( '.et_pb_ab_goal' );
 
-						$et_pb_ab_goal.waypoint({
+						et_waypoint( $et_pb_ab_goal, {
 							offset: '80%',
 							handler: function() {
 								if ( et_pb_ab_logged_status['read_goal'] || ! $et_pb_ab_goal.length || ! $et_pb_ab_goal.visible( true ) ) {
@@ -4019,6 +4183,155 @@
 			}
 
 			window.et_fix_pricing_currency_position();
+
+			$('.et_pb_contact_form_container').each( function() {
+				var $form = $(this);
+
+				/* Listen for any field change */
+				$form.on( 'change', 'input, textarea, select', function() {
+					et_conditional_check( $form );
+				} );
+
+				// Conditions may be satisfied on default form state
+				et_conditional_check( $form );
+			} );
+
+			function et_conditional_check( $form ) {
+				var $conditionals = $form.find('[data-conditional-logic]');
+
+				/* Upon change loop all the fields that have conditional logic */
+				$conditionals
+					.hide()
+					.each( function() {
+						var $conditional = $(this);
+
+						/* jQuery automatically parses the JSON */
+						var rules    = $conditional.data('conditional-logic');
+						var relation = $conditional.data('conditional-relation');
+
+						show_field = false;
+
+						/* Loop all the conditional logic rules */
+						var matched_rules = [];
+
+						for ( var i = 0; i < rules.length; i++ ) {
+							var ruleset     = rules[i];
+							var check_id    = ruleset[0];
+							var check_type  = ruleset[1];
+							var check_value = ruleset[2];
+							var $wrapper    = $form.find('.et_pb_contact_field[data-id="' + check_id + '"]');
+							var field_id    = $wrapper.data('id');
+							var field_type  = $wrapper.data('type');
+							var field_value;
+
+							/* Get the proper compare value based on the field type */
+							switch( field_type ) {
+								case 'input':
+								case 'email':
+									field_value = $wrapper.find('input').val();
+									break;
+								case 'text':
+									field_value = $wrapper.find('textarea').val();
+									break;
+								case 'radio':
+									field_value = $wrapper.find('input:checked').val() || '';
+									break;
+								case 'checkbox':
+									var $checkbox      = $wrapper.find(':checkbox');
+									var $checkbox_data = $wrapper.find('[data-checked][data-unchecked]');
+
+									field_value = true === $checkbox.prop('checked') ? $checkbox_data.data('checked') : $checkbox_data.data('unchecked');
+									break;
+								case 'select':
+									field_value = $wrapper.find('select').val();
+									break;
+							}
+
+							/*
+								'is empty' / 'is not empty' are comparing against an empty value so simply
+								reset the `check_value` and update the condition to 'is' / 'is not'
+							*/
+							if ( 'is empty' === check_type || 'is not empty' === check_type ) {
+								check_type  = 'is empty' === check_type ? 'is' : 'is not';
+								check_value = '';
+							}
+
+							/* Check if the value IS matching (if it has to) */
+							if ( 'is' === check_type && field_value !== check_value ) {
+								continue;
+							}
+
+							/* Check if the value IS NOT matching (if it has to) */
+							if ( 'is not' === check_type && field_value === check_value ) {
+								continue;
+							}
+
+							/* Create the contains/not contains regular expresion */
+							var containsRegExp = new RegExp( check_value, 'i' );
+
+							/* Check if the value IS containing */
+							if ( 'contains' === check_type && ! field_value.match( containsRegExp ) ) {
+								continue;
+							}
+
+							/* Check if the value IS NOT containing */
+							if ( 'does not contain' === check_type && field_value.match( containsRegExp ) ) {
+								continue;
+							}
+
+							/* Prepare the values for the 'is greater than' / 'is less than' check */
+							var maybeNumericValue       = parseInt( field_value );
+							var maybeNumbericCheckValue = parseInt( check_value );
+
+							if (
+								( 'is greater' === check_type || 'is less' === check_type ) &&
+								( isNaN( maybeNumericValue ) || isNaN( maybeNumbericCheckValue ) )
+							) {
+								continue;
+							}
+
+							/* Check if the value is greater than */
+							if ( 'is greater' === check_type && maybeNumericValue <= maybeNumbericCheckValue) {
+								continue;
+							}
+
+							/* Check if the value is less than */
+							if ( 'is less' === check_type && maybeNumericValue >= maybeNumbericCheckValue) {
+								continue;
+							}
+
+							matched_rules.push( true );
+						}
+
+						// Hide all the conditional fields initially
+						$conditional.hide();
+
+						/*
+							Input fields may have HTML5 pattern validation which must be ignored
+							if the field is not visible. In order for the pattern to not be
+							taken into account the field must have novalidate property and
+							to not be required (or to not have a pattern attribute)
+						*/
+						var $conditional_input  = $conditional.find('input[type="text"]');
+						var conditional_pattern = $conditional_input.attr('pattern');
+
+						$conditional_input.attr('novalidate', 'novalidate');
+						$conditional_input.attr('data-pattern', conditional_pattern);
+						$conditional_input.removeAttr('pattern');
+
+						if ( 'all' === relation && rules.length === matched_rules.length ) {
+							$conditional.show();
+							$conditional_input.removeAttr('novalidate');
+							$conditional_input.attr('pattern', $conditional_input.data('pattern'));
+						}
+
+						if ( 'any' === relation && 0 < matched_rules.length ) {
+							$conditional.show();
+							$conditional_input.removeAttr('novalidate');
+							$conditional_input.attr('pattern', $conditional_input.data('pattern'));
+						}
+					} );
+			}
 
 			/**
 			 * Provide event listener for plugins to hook up to

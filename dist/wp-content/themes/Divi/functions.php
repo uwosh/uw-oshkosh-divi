@@ -12,13 +12,15 @@ function et_setup_theme() {
 
 	$template_directory = get_template_directory();
 
-	$theme_version = et_get_theme_version();
-
-	define( 'ET_CORE_VERSION', $theme_version );
-
 	require_once( $template_directory . '/core/init.php' );
 
 	et_core_setup( get_template_directory_uri() );
+
+	if ( '3.0.61' === ET_CORE_VERSION ) {
+		require_once $template_directory . '/core/functions.php';
+		require_once $template_directory . '/core/components/init.php';
+		et_core_patch_core_3061();
+	}
 
 	require_once( $template_directory . '/epanel/custom_functions.php' );
 
@@ -57,6 +59,9 @@ function et_setup_theme() {
 	) );
 
 	add_theme_support( 'woocommerce' );
+	add_theme_support( 'wc-product-gallery-zoom' );
+	add_theme_support( 'wc-product-gallery-lightbox' );
+	add_theme_support( 'wc-product-gallery-slider' );
 
 	add_theme_support( 'customize-selective-refresh-widgets' );
 
@@ -414,17 +419,22 @@ endif;
 function et_divi_post_settings_save_details( $post_id, $post ){
 	global $pagenow;
 
-	if ( 'post.php' != $pagenow ) return $post_id;
+	if ( 'post.php' !== $pagenow || ! $post || ! is_object( $post ) ) {
+		return;
+	}
 
-	if ( defined( 'DOING_AUTOSAVE' ) && DOING_AUTOSAVE )
-		return $post_id;
+	if ( defined( 'DOING_AUTOSAVE' ) && DOING_AUTOSAVE ) {
+		return;
+	}
 
 	$post_type = get_post_type_object( $post->post_type );
-	if ( ! current_user_can( $post_type->cap->edit_post, $post_id ) )
-		return $post_id;
+	if ( ! current_user_can( $post_type->cap->edit_post, $post_id ) ) {
+		return;
+	}
 
-	if ( ! isset( $_POST['et_settings_nonce'] ) || ! wp_verify_nonce( $_POST['et_settings_nonce'], basename( __FILE__ ) ) )
-		return $post_id;
+	if ( ! isset( $_POST['et_settings_nonce'] ) || ! wp_verify_nonce( $_POST['et_settings_nonce'], basename( __FILE__ ) ) ) {
+		return;
+	}
 
 	if ( isset( $_POST['et_post_use_bg_color'] ) )
 		update_post_meta( $post_id, '_et_post_use_bg_color', true );
@@ -467,8 +477,6 @@ function et_divi_post_settings_save_details( $post_id, $post ){
 	} else {
 		delete_post_meta( $post_id, '_et_pb_side_nav' );
 	}
-
-
 }
 add_action( 'save_post', 'et_divi_post_settings_save_details', 10, 2 );
 
@@ -592,6 +600,11 @@ function et_divi_customizer_theme_settings( $wp_customize ) {
 	);
 
 	foreach ( $google_fonts as $google_font_name => $google_font_properties ) {
+		if ( isset( $google_font_properties['parent_font'] ) ) {
+			$parent_font = $google_font_properties['parent_font'];
+			$google_font_properties['character_set'] = $google_fonts[ $parent_font ]['character_set'];
+		}
+
 		if ( '' !== $site_domain && isset( $et_domain_fonts[$site_domain] ) && false === strpos( $google_font_properties['character_set'], $et_domain_fonts[$site_domain] ) ) {
 			continue;
 		}
@@ -5788,11 +5801,57 @@ if ( class_exists( 'WP_Customize_Control' ) ) {
 
 }
 
-function et_divi_add_customizer_css(){ ?>
-	<?php
+function et_divi_add_customizer_css() { 
 		if ( defined( 'DOING_AJAX' ) && DOING_AJAX ) {
 			return;
 		}
+
+		if ( is_admin() && ! is_customize_preview() ) {
+			return;
+		}
+
+		$post_id     = et_core_page_resource_get_the_ID();
+		$is_preview  = is_preview() || isset( $_GET['et_pb_preview_nonce'] );
+		$is_singular = et_core_page_resource_is_singular();
+
+		$disabled_global = 'off' === et_get_option( 'et_pb_static_css_file', 'on' );
+		$disabled_post   = $disabled_global || ( $is_singular && 'off' === get_post_meta( $post_id, '_et_pb_static_css_file', true ) );
+
+		$forced_inline     = $is_preview || $disabled_global || $disabled_post;
+		$builder_in_footer = 'on' === et_get_option( 'et_pb_css_in_footer', 'off' );
+
+		$unified_styles = $is_singular && ! $forced_inline && ! $builder_in_footer && et_core_is_builder_used_on_current_request();
+		$resource_owner = $unified_styles ? 'core' : 'divi';
+		$resource_slug  = $unified_styles ? 'unified' : 'customizer';
+
+		if ( $is_preview ) {
+			// Don't let previews cause existing saved static css files to be modified.
+			$resource_slug .= '-preview';
+		}
+
+		if ( $unified_styles ) {
+			$styles_manager_global           = et_core_page_resource_get( 'divi', 'customizer', 'global' );
+			$styles_manager_global->disabled = true;
+		} else {
+			$post_id = 'global';
+		}
+
+		$styles_manager    = et_core_page_resource_get( $resource_owner, $resource_slug, $post_id );
+		$styles_manager_vb = et_core_page_resource_get( $resource_owner, "{$resource_slug}-vb", $post_id );
+
+		// Make sure we don't output styles when we're not supposed to
+		$styles_manager->disabled    = function_exists( 'et_fb_is_enabled' ) && et_fb_is_enabled();
+		$styles_manager_vb->disabled = ! $styles_manager->disabled;
+
+		$styles_manager                = $styles_manager->disabled ? $styles_manager_vb : $styles_manager;
+		$styles_manager->forced_inline = $forced_inline;
+
+		if ( ! $styles_manager->forced_inline && $styles_manager->has_file() ) {
+			// Static resource has already been created. No need to continue here.
+			return;
+		}
+
+		$css_output = array();
 
 		// Detect legacy settings
 		$detect_legacy_secondary_nav_color = et_get_option( 'secondary_nav_text_color', 'Light' );
@@ -5921,9 +5980,13 @@ function et_divi_add_customizer_css(){ ?>
 
 		// use different selector for the styles applied directly to body tag while in Visual Builder. Otherwise unwanted styles applied to the Builder interface.
 		$body_selector = empty( $_GET['et_fb'] ) ? 'body' : 'body .et_fb_preview_container';
-	?>
-	<style id="theme-customizer-css">
-		<?php if ( 14 !== $body_font_size ) { ?>
+
+		/* ====================================================
+		 * --------->>> BEGIN THEME CUSTOMIZER CSS <<<---------
+		 * ==================================================== */
+		ob_start();
+
+		if ( 14 !== $body_font_size ) { ?>
 			@media only screen and ( min-width: 767px ) {
 				<?php echo esc_html( $body_selector ); ?>, .et_pb_column_1_2 .et_quote_content blockquote cite, .et_pb_column_1_2 .et_link_content a.et_link_main_url, .et_pb_column_1_3 .et_quote_content blockquote cite, .et_pb_column_3_8 .et_quote_content blockquote cite, .et_pb_column_1_4 .et_quote_content blockquote cite, .et_pb_blog_grid .et_quote_content blockquote cite, .et_pb_column_1_3 .et_link_content a.et_link_main_url, .et_pb_column_3_8 .et_link_content a.et_link_main_url, .et_pb_column_1_4 .et_link_content a.et_link_main_url, .et_pb_blog_grid .et_link_content a.et_link_main_url, body .et_pb_bg_layout_light .et_pb_post p,  body .et_pb_bg_layout_dark .et_pb_post p { font-size: <?php echo esc_html( $body_font_size ); ?>px; }
 				.et_pb_slide_content, .et_pb_best_value { font-size: <?php echo esc_html( intval( $body_font_size * 1.14 ) ); ?>px; }
@@ -5941,10 +6004,10 @@ function et_divi_add_customizer_css(){ ?>
 		<?php if ( $accent_color !== '#2ea3f2' ) { ?>
 			.woocommerce #respond input#submit, .woocommerce-page #respond input#submit, .woocommerce #content input.button, .woocommerce-page #content input.button, .woocommerce-message, .woocommerce-error, .woocommerce-info { background: <?php echo esc_html( $accent_color ); ?> !important; }
 			#et_search_icon:hover, .mobile_menu_bar:before, .mobile_menu_bar:after, .et_toggle_slide_menu:after, .et-social-icon a:hover, .et_pb_sum, .et_pb_pricing li a, .et_pb_pricing_table_button, .et_overlay:before, .entry-summary p.price ins, .woocommerce div.product span.price, .woocommerce-page div.product span.price, .woocommerce #content div.product span.price, .woocommerce-page #content div.product span.price, .woocommerce div.product p.price, .woocommerce-page div.product p.price, .woocommerce #content div.product p.price, .woocommerce-page #content div.product p.price, .et_pb_member_social_links a:hover, .woocommerce .star-rating span:before, .woocommerce-page .star-rating span:before, .et_pb_widget li a:hover, .et_pb_filterable_portfolio .et_pb_portfolio_filters li a.active, .et_pb_filterable_portfolio .et_pb_portofolio_pagination ul li a.active, .et_pb_gallery .et_pb_gallery_pagination ul li a.active, .wp-pagenavi span.current, .wp-pagenavi a:hover, .nav-single a, .posted_in a { color: <?php echo esc_html( $accent_color ); ?>; }
-			.et_pb_contact_submit, .et_password_protected_form .et_submit_button, .et_pb_bg_layout_light .et_pb_newsletter_button, .comment-reply-link, .form-submit .et_pb_button, .et_pb_bg_layout_light .et_pb_promo_button, .et_pb_bg_layout_light .et_pb_more_button, .woocommerce a.button.alt, .woocommerce-page a.button.alt, .woocommerce button.button.alt, .woocommerce-page button.button.alt, .woocommerce input.button.alt, .woocommerce-page input.button.alt, .woocommerce #respond input#submit.alt, .woocommerce-page #respond input#submit.alt, .woocommerce #content input.button.alt, .woocommerce-page #content input.button.alt, .woocommerce a.button, .woocommerce-page a.button, .woocommerce button.button, .woocommerce-page button.button, .woocommerce input.button, .woocommerce-page input.button { color: <?php echo esc_html( $accent_color ); ?>; }
+			.et_pb_contact_submit, .et_password_protected_form .et_submit_button, .et_pb_bg_layout_light .et_pb_newsletter_button, .comment-reply-link, .form-submit .et_pb_button, .et_pb_bg_layout_light .et_pb_promo_button, .et_pb_bg_layout_light .et_pb_more_button, .woocommerce a.button.alt, .woocommerce-page a.button.alt, .woocommerce button.button.alt, .woocommerce-page button.button.alt, .woocommerce input.button.alt, .woocommerce-page input.button.alt, .woocommerce #respond input#submit.alt, .woocommerce-page #respond input#submit.alt, .woocommerce #content input.button.alt, .woocommerce-page #content input.button.alt, .woocommerce a.button, .woocommerce-page a.button, .woocommerce button.button, .woocommerce-page button.button, .woocommerce input.button, .woocommerce-page input.button, .et_pb_contact p input[type="checkbox"]:checked + label i:before { color: <?php echo esc_html( $accent_color ); ?>; }
 			.footer-widget h4 { color: <?php echo esc_html( $accent_color ); ?>; }
 			.et-search-form, .nav li ul, .et_mobile_menu, .footer-widget li:before, .et_pb_pricing li:before, blockquote { border-color: <?php echo esc_html( $accent_color ); ?>; }
-			.et_pb_counter_amount, .et_pb_featured_table .et_pb_pricing_heading, .et_quote_content, .et_link_content, .et_audio_content, .et_pb_post_slider.et_pb_bg_layout_dark, .et_slide_in_menu_container { background-color: <?php echo esc_html( $accent_color ); ?>; }
+			.et_pb_counter_amount, .et_pb_featured_table .et_pb_pricing_heading, .et_quote_content, .et_link_content, .et_audio_content, .et_pb_post_slider.et_pb_bg_layout_dark, .et_slide_in_menu_container, .et_pb_contact p input[type="radio"]:checked + label i:before { background-color: <?php echo esc_html( $accent_color ); ?>; }
 		<?php } ?>
 		<?php if ( 1080 !== $content_width ) { ?>
 			.container, .et_pb_row, .et_pb_slider .et_pb_container, .et_pb_fullwidth_section .et_pb_title_container, .et_pb_fullwidth_section .et_pb_title_featured_container, .et_pb_fullwidth_header:not(.et_pb_fullscreen) .et_pb_fullwidth_header_container { max-width: <?php echo esc_html( $content_width ); ?>px; }
@@ -6048,7 +6111,9 @@ function et_divi_add_customizer_css(){ ?>
 			#main-footer { background-color: <?php echo esc_html( $footer_bg ); ?>; }
 		<?php } ?>
 		<?php if ( $footer_widget_link_color !== '#fff' ) { ?>
-			#footer-widgets .footer-widget li a { color: <?php echo esc_html( $footer_widget_link_color ); ?>; }
+			#footer-widgets .footer-widget a,
+			#footer-widgets .footer-widget li a,
+			#footer-widgets .footer-widget li a:hover { color: <?php echo esc_html( $footer_widget_link_color ); ?>; }
 		<?php } ?>
 		<?php if ( $footer_widget_text_color !== '#fff' ) { ?>
 			.footer-widget { color: <?php echo esc_html( $footer_widget_text_color ); ?>; }
@@ -6566,12 +6631,21 @@ function et_divi_add_customizer_css(){ ?>
 				.et_pb_row, .et_pb_column .et_pb_row_inner { padding: <?php echo esc_html( $phone_row_height ); ?>px 0; }
 			<?php } ?>
 		}
-	</style>
 
-	<?php
-	// output responsive css styles for responsive preview in Frontend Builder
-	if ( ! empty( $_GET['et_fb'] ) ) { ?>
-		<style id="theme-customizer-css-fb-support">
+	<?php // <<<--------- END THEME CUSTOMIZER CSS --------->>>
+
+		/**
+		 * Filter Theme Customizer CSS output.
+		 *
+		 * @since 3.0.51
+		 *
+		 * @param string $theme_customizer_css
+		 */
+		$css_output[] = apply_filters( 'et_divi_theme_customizer_css_output', ob_get_clean() );
+
+		// output responsive css styles for responsive preview in Frontend Builder
+		if ( ! empty( $_GET['et_fb'] ) ) {
+			ob_start(); ?>
 			@media only screen and ( min-width: 981px ) {
 				<?php if ( 4 !== $section_padding ) { ?>
 					.et_fb_desktop_mode .et_pb_section { padding: <?php echo esc_html( $section_padding ); ?>% 0; }
@@ -6641,11 +6715,10 @@ function et_divi_add_customizer_css(){ ?>
 			<?php } ?>
 			<?php if ( 30 !== $phone_row_height && $tablet_row_height !== $phone_row_height ) { ?>
 				.et_fb_preview_active.et_fb_preview_active--responsive_preview.et_fb_preview_active--responsive_preview--phone_preview .et_pb_row, .et_fb_preview_active.et_fb_preview_active--responsive_preview.et_fb_preview_active--responsive_preview--phone_preview .et_pb_column .et_pb_row_inner { padding: <?php echo esc_html( $phone_row_height ); ?>px 0; }
-			<?php } ?>
-		</style>
-	<?php } ?>
+			<?php }
+			$css_output[] = ob_get_clean();
+		}
 
-	<?php
 		$et_gf_heading_font = sanitize_text_field( et_get_option( 'heading_font', 'none' ) );
 		$et_gf_body_font = sanitize_text_field( et_get_option( 'body_font', 'none' ) );
 		$et_gf_buttons_font = sanitize_text_field( et_get_option( 'all_buttons_font', 'none' ) );
@@ -6656,76 +6729,74 @@ function et_divi_add_customizer_css(){ ?>
 
 		$et_one_font_languages = et_get_one_font_languages();
 
+		/* =========================================
+		 * --------->>> BEGIN FONTS CSS <<<---------
+		 * ========================================= */
+		ob_start();
+
 		if ( isset( $et_one_font_languages[$site_domain] ) ) {
-			printf( '<style class="et_one_font_languages">%s { font-family: %s; }</style>',
+			printf( '%s { font-family: %s; }',
 				'h1, h2, h3, h4, h5, h6, body, input, textarea, select',
 				sanitize_text_field( $et_one_font_languages[$site_domain]['font_family'] )
 			);
 		} else if ( ! in_array( $et_gf_heading_font, array( '', 'none' ) ) || ! in_array( $et_gf_body_font, array( '', 'none' ) ) || ! in_array( $et_gf_buttons_font, array( '', 'none' ) ) || ! in_array( $et_gf_primary_nav_font, array( '', 'none' ) ) || ! in_array( $et_gf_secondary_nav_font, array( '', 'none' ) ) || ! in_array( $et_gf_slide_nav_font, array( '', 'none' ) ) ) {
 			if ( ! in_array( $et_gf_heading_font, array( '', 'none' ) ) ) { ?>
-				<style class="et_heading_font">
 				h1, h2, h3, h4, h5, h6 {
 					<?php echo sanitize_text_field( et_builder_get_font_family( $et_gf_heading_font ) ); ?>
 				}
-				</style>
 			<?php }
 
 			if ( ! in_array( $et_gf_body_font, array( '', 'none' ) ) ) { ?>
-				<style class="et_body_font">
 				body, input, textarea, select {
 					<?php echo sanitize_text_field( et_builder_get_font_family( $et_gf_body_font ) ); ?>
 				}
-				</style>
 			<?php }
 
 			if ( ! in_array( $et_gf_buttons_font, array( '', 'none' ) ) ) { ?>
-				<style class="et_all_buttons_font">
 				.et_pb_button {
 					<?php echo sanitize_text_field( et_builder_get_font_family( $et_gf_buttons_font ) ); ?>
 				}
-				</style>
 			<?php }
 
 			if ( ! in_array( $et_gf_primary_nav_font, array( '', 'none' ) ) ) { ?>
-				<style class="et_primary_nav_font">
 				#main-header,
 				#et-top-navigation {
 					<?php echo sanitize_text_field( et_builder_get_font_family( $et_gf_primary_nav_font ) ); ?>
 				}
-				</style>
 			<?php }
 
 			if ( ! in_array( $et_gf_secondary_nav_font, array( '', 'none' ) ) ) { ?>
-				<style class="et_secondary_nav_font">
 				#top-header .container{
 					<?php echo sanitize_text_field( et_builder_get_font_family( $et_gf_secondary_nav_font ) ); ?>
 				}
-				</style>
 			<?php }
 
 			if ( ! in_array( $et_gf_slide_nav_font, array( '', 'none' ) ) ) { ?>
-				<style class="et_slide_nav_font">
 				.et_slide_in_menu_container, .et_slide_in_menu_container .et-search-field{
 					<?php echo sanitize_text_field( et_builder_get_font_family( $et_gf_slide_nav_font ) ); ?>
 				}
-				</style>
 			<?php }
-		}
-	?>
+		} // <<<--------- END FONTS CSS --------->>>
 
-	<?php
-	/**
-	 * use_sidebar_width might invalidate the use of sidebar_width.
-	 * It is placed outside other customizer style so live preview
-	 * can invalidate and revalidate it for smoother experience
-	 */
-	if ( $use_sidebar_width && 21 !== $sidebar_width && 19 <= $sidebar_width && 33 >= $sidebar_width ) { ?>
-	<style id="theme-customizer-sidebar-width-css">
-		<?php
+		/**
+		 * Filter fonts CSS output.
+		 *
+		 * @since 3.0.51
+		 *
+		 * @param string $css_output
+		 */
+		$css_output[] = apply_filters( 'et_divi_fonts_css_output', ob_get_clean() );
+
+		/**
+		 * use_sidebar_width might invalidate the use of sidebar_width.
+		 * It is placed outside other customizer style so live preview
+		 * can invalidate and revalidate it for smoother experience
+		 */
+		if ( $use_sidebar_width && 21 !== $sidebar_width && 19 <= $sidebar_width && 33 >= $sidebar_width ) {
 			$content_width = 100 - $sidebar_width;
 			$content_width_percentage = $content_width . '%';
 			$sidebar_width_percentage = $sidebar_width . '%';
-			printf(
+			$sidebar_width_css        = sprintf(
 				'body #page-container #sidebar { width:%2$s; }
 				body #page-container #left-area { width:%1$s; }
 				.et_right_sidebar #main-content .container:before { right:%2$s !important; }
@@ -6733,12 +6804,21 @@ function et_divi_add_customizer_css(){ ?>
 				esc_html( $content_width_percentage  ),
 				esc_html( $sidebar_width_percentage )
 			);
-		?>
-	</style>
-	<?php } ?>
 
-	<style id="module-customizer-css">
-		<?php
+			/**
+			 * Filter sidebar width CSS output.
+			 *
+			 * @since 3.0.51
+			 *
+			 * @param string $sidebar_width_css
+			 */
+			$css_output[] = apply_filters( 'et_divi_sidebar_width_css_output', $sidebar_width_css );
+		}
+
+		/* ====================================================
+		 * --------->>> BEGIN MODULE CUSTOMIZER CSS <<<--------
+		 * ==================================================== */
+		ob_start();
 
 			/* Gallery */
 			et_pb_print_module_styles_css( 'et_pb_gallery', array(
@@ -7457,13 +7537,21 @@ function et_divi_add_customizer_css(){ ?>
 					'selector' 	=> '.et_pb_fullwidth_section .et_pb_slide_description',
 					'default' 	=> '16',
 				),
-			) );
-		?>
-	</style>
+			) ); // <<<--------- END MODULE CUSTOMIZER CSS --------->>>
 
-	<?php
+			/**
+			 * Filter Module Customizer CSS output.
+			 *
+			 * @since 3.0.51
+			 *
+			 * @param string $module_customizer_css
+			 */
+			$css_output[] = apply_filters( 'et_divi_module_customizer_css_output', ob_get_clean() );
+
+			// Give the output to the style manager so a static resource can be created and served.
+			$styles_manager->set_data( implode( '\n', $css_output ) );
 }
-add_action( 'wp_head', 'et_divi_add_customizer_css' );
+add_action( 'wp', 'et_divi_add_customizer_css' );
 
 /**
  * Outputting saved customizer style settings
@@ -8202,12 +8290,14 @@ function et_layout_body_class( $classes ) {
 		$classes[] = 'et_pb_gutter';
 	}
 
-	if ( stristr( $_SERVER['HTTP_USER_AGENT'],"mac") ) {
-		$classes[] = 'osx';
-	} elseif ( stristr( $_SERVER['HTTP_USER_AGENT'],"linux") ) {
-		$classes[] = 'linux';
-	} elseif ( stristr( $_SERVER['HTTP_USER_AGENT'],"windows") ) {
-		$classes[] = 'windows';
+	if ( isset( $_SERVER['HTTP_USER_AGENT'] ) ) {
+		if ( stristr( $_SERVER['HTTP_USER_AGENT'], "mac" ) ) {
+			$classes[] = 'osx';
+		} elseif ( stristr( $_SERVER['HTTP_USER_AGENT'], "linux" ) ) {
+			$classes[] = 'linux';
+		} elseif ( stristr( $_SERVER['HTTP_USER_AGENT'], "windows" ) ) {
+			$classes[] = 'windows';
+		}
 	}
 
 	$gutter_width = '' !== ( $page_custom_gutter = get_post_meta( get_the_ID(), '_et_pb_gutter_width', true ) ) && is_singular() ? $page_custom_gutter :  et_get_option( 'gutter_width', '3' );
@@ -8412,11 +8502,13 @@ function et_divi_woocommerce_image_dimensions() {
 	update_option( 'shop_thumbnail_image_size', $thumbnail );
 }
 
+if ( ! function_exists( 'woocommerce_template_loop_product_thumbnail' ) ):
 function woocommerce_template_loop_product_thumbnail() {
 	printf( '<span class="et_shop_image">%1$s<span class="et_overlay"></span></span>',
 		woocommerce_get_product_thumbnail()
 	);
 }
+endif;
 
 function et_review_gravatar_size( $size ) {
 	return '80';
@@ -8565,7 +8657,7 @@ function et_modify_canonical_redirect( $redirect_url, $requested_url ) {
 
 	// Look for $allowed_shortcodes in content. Once detected, set $is_overwrite_canonical_redirect to true
 	foreach ( $allowed_shortcodes as $shortcode ) {
-		if ( has_shortcode( $post->post_content, $shortcode ) ) {
+		if ( !empty( $post ) && has_shortcode( $post->post_content, $shortcode ) ) {
 			$is_overwrite_canonical_redirect = true;
 			break;
 		}
@@ -8756,4 +8848,15 @@ function et_get_footer_credits() {
 
 	return et_get_safe_localization( sprintf( $credits_format, $footer_credits, 'div' ) );
 }
+endif;
+
+if ( ! function_exists( 'et_divi_filter_et_core_is_builder_used_on_current_request' ) ):
+function et_divi_filter_et_core_is_builder_used_on_current_request( $is_builder_used ) {
+	if ( $is_builder_used && ! is_singular() ) {
+		$is_builder_used = 'on' === et_get_option( 'divi_blog_style', 'false' );
+	}
+
+	return $is_builder_used;
+}
+add_filter( 'et_core_is_builder_used_on_current_request', 'et_divi_filter_et_core_is_builder_used_on_current_request' );
 endif;
