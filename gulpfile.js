@@ -48,7 +48,7 @@ gulp.task('default', function(cb){
 
 gulp.task('build-theme', function(cb) {
   runSequence('clean-theme',
-    ['style-theme', 'js-theme', 'images-theme', 'php-theme'],
+    ['style-theme', 'js-theme', 'images-theme', 'theme-screenshot', 'php-theme'],
     ['js-theme-lint', 'theme-scss-lint'],
     cb);
 });
@@ -85,6 +85,12 @@ gulp.task('images-theme', function(){
   return gulp.src('src/themes/**/images/**/*')
       .pipe(imagemin())
       .pipe(gulp.dest('dist/wp-content/themes/'));
+});
+
+gulp.task('theme-screenshot', function(){
+  return gulp.src('src/themes/uw-oshkosh-divi/screenshot.png')
+    .pipe(imagemin())
+    .pipe(gulp.dest('dist/wp-content/themes/uw-oshkosh-divi/'))
 });
 
 gulp.task('php-theme', function(){
