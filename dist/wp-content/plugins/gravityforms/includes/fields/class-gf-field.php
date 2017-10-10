@@ -28,9 +28,9 @@ class GF_Field extends stdClass implements ArrayAccess {
 	private $_is_entry_detail = null;
 
 	/**
-	 * @var array $_modifiers An array of modifiers specified on the field or all_fields merge tag being processed.
+	 * @var array $_merge_tag_modifiers An array of modifiers specified on the field or all_fields merge tag being processed.
 	 */
-	private $_modifiers = array();
+	private $_merge_tag_modifiers = array();
 
 	public function __construct( $data = array() ) {
 		if ( empty( $data ) ) {
@@ -443,7 +443,7 @@ class GF_Field extends stdClass implements ArrayAccess {
 	public function get_value_merge_tag( $value, $input_id, $entry, $form, $modifier, $raw_value, $url_encode, $esc_html, $format, $nl2br ) {
 
 		if ( $format === 'html' ) {
-			$form_id = absint( $form['id'] );
+			$form_id = isset( $form['id'] ) ? absint( $form['id'] ) : null;
 			$allowable_tags = $this->get_allowable_tags( $form_id );
 
 			if ( $allowable_tags === false ) {
@@ -725,7 +725,7 @@ class GF_Field extends stdClass implements ArrayAccess {
 	 */
 	public function set_modifiers( $modifiers ) {
 
-		$this->_modifiers = $modifiers;
+		$this->_merge_tag_modifiers = $modifiers;
 	}
 
 	/**
@@ -735,7 +735,7 @@ class GF_Field extends stdClass implements ArrayAccess {
 	 */
 	public function get_modifiers() {
 
-		return $this->_modifiers;
+		return $this->_merge_tag_modifiers;
 	}
 
 	/**
@@ -810,7 +810,7 @@ class GF_Field extends stdClass implements ArrayAccess {
 		 */
 		$duplicate_field_link = apply_filters( 'gform_duplicate_field_link', $duplicate_field_link );
 
-		$delete_field_link = "<a class='field_delete_icon' id='gfield_delete_{$this->id}' title='" . esc_attr__( 'click to delete this field', 'gravityforms' ) . "' href='#' onclick='StartDeleteField(this); return false;' onkeypress='StartDeleteField(this); return false;'><i class='fa fa-times fa-lg'></i></a>";
+		$delete_field_link = "<a class='field_delete_icon' id='gfield_delete_{$this->id}' title='" . esc_attr__( 'click to delete this field', 'gravityforms' ) . "' href='#' onclick='DeleteField(this); return false;' onkeypress='DeleteField(this); return false;'><i class='fa fa-times fa-lg'></i></a>";
 
 		/**
 		 * This filter allows for modification of a form field delete link. This will change the link for all fields

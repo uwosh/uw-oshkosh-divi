@@ -208,6 +208,12 @@ abstract class GFPaymentAddOn extends GFFeedAddOn {
 		add_filter( 'gform_validation', array( $this, 'maybe_validate' ), 20 );
 		add_filter( 'gform_entry_post_save', array( $this, 'entry_post_save' ), 10, 2 );
 
+		if ( $this->_requires_credit_card ) {
+			add_filter( 'gform_register_init_scripts', array( $this, 'register_creditcard_token_script' ), 10, 3 );
+			add_filter( 'gform_field_content', array( $this, 'add_creditcard_token_input' ), 10, 5 );
+			add_filter( 'gform_form_args', array( $this, 'force_ajax_for_creditcard_tokens' ), 10, 1 );
+		}
+
 	}
 
 	/**
@@ -244,30 +250,6 @@ abstract class GFPaymentAddOn extends GFFeedAddOn {
 	}
 
 	/**
-	 * Runs only when the payment add-on is initialized on the frontend.
-	 *
-	 * @since  Unknown
-	 * @access public
-	 *
-	 * @used-by GFAddOn::init_frontend()
-	 * @uses    GFAddOn::init_frontend()
-	 * @uses    GFPaymentAddOn::register_creditcard_token_script()
-	 * @uses    GFPaymentAddOn::add_creditcard_token_input()
-	 * @uses    GFPaymentAddOn::force_ajax_for_creditcard_tokens()
-	 *
-	 * @return void
-	 */
-	public function init_frontend() {
-
-		parent::init_frontend();
-
-		add_filter( 'gform_register_init_scripts', array( $this, 'register_creditcard_token_script' ), 10, 3 );
-		add_filter( 'gform_field_content', array( $this, 'add_creditcard_token_input' ), 10, 5 );
-		add_filter( 'gform_form_args', array( $this, 'force_ajax_for_creditcard_tokens' ), 10, 1 );
-
-	}
-
-	/**
 	 * Runs only when AJAX actions are being performed.
 	 *
 	 * @since  Unknown
@@ -300,9 +282,11 @@ abstract class GFPaymentAddOn extends GFFeedAddOn {
 	 * @return void
 	 */
 	public function setup() {
+
 		parent::setup();
 
 		$installed_version = get_option( 'gravityformsaddon_payment_version' );
+
 
 		$installed_addons = get_option( 'gravityformsaddon_payment_addons' );
 		if ( ! is_array( $installed_addons ) ) {
@@ -314,12 +298,15 @@ abstract class GFPaymentAddOn extends GFFeedAddOn {
 
 			$installed_addons = array( $this->_slug );
 			update_option( 'gravityformsaddon_payment_addons', $installed_addons );
-		} elseif ( ! in_array( $this->_slug, $installed_addons ) ) {
+		}
+		elseif ( ! in_array( $this->_slug, $installed_addons ) ) {
+
 			$this->upgrade_payment( $installed_version );
 
 			$installed_addons[] = $this->_slug;
 			update_option( 'gravityformsaddon_payment_addons', $installed_addons );
 		}
+
 
 		update_option( 'gravityformsaddon_payment_version', $this->_payment_version );
 
@@ -362,7 +349,7 @@ abstract class GFPaymentAddOn extends GFFeedAddOn {
                   KEY type_lead (lead_id,transaction_type)
                 ) $charset_collate;";
 
-		GFFormsModel::dbDelta( $sql );
+		gf_upgrade()->dbDelta( $sql );
 
 
 		if ( $this->_supports_callbacks ) {
@@ -376,13 +363,35 @@ abstract class GFPaymentAddOn extends GFFeedAddOn {
                       KEY addon_slug_callback_id (addon_slug(50),callback_id(100))
                     ) $charset_collate;";
 
-			GFFormsModel::dbDelta( $sql );
+			gf_upgrade()->dbDelta( $sql );
 
 			// Dropping legacy index.
-			GFForms::drop_index( "{$wpdb->prefix}gf_addon_payment_callback", 'slug_callback_id' );
+			gf_upgrade()->drop_index( "{$wpdb->prefix}gf_addon_payment_callback", 'slug_callback_id' );
 		}
 
 
+	}
+
+	/**
+	 * Gets called when Gravity Forms upgrade process is completed. This function is intended to be used internally, override the upgrade() function to execute database update scripts.
+	 * @param $db_version - Current Gravity Forms database version
+	 * @param $previous_db_version - Previous Gravity Forms database version
+	 * @param $force_upgrade - True if this is a request to force an upgrade. False if this is a standard upgrade (due to version change)
+	 */
+	public function post_gravityforms_upgrade( $db_version, $previous_db_version, $force_upgrade ){
+
+		// Forcing Upgrade
+		if( $force_upgrade ){
+
+			$installed_version = get_option( 'gravityformsaddon_payment_version' );
+
+			$this->upgrade_payment( $installed_version );
+
+			update_option( 'gravityformsaddon_payment_version', $this->_payment_version );
+
+		}
+
+		parent::post_gravityforms_upgrade( $db_version, $previous_db_version, $force_upgrade );
 	}
 
 	//--------- Submission Process ------
@@ -2125,6 +2134,19 @@ abstract class GFPaymentAddOn extends GFFeedAddOn {
 
 	//--------- Feed Settings ----------------
 
+	/**
+	 * Remove the add new button from the title if the form requires a credit card field.
+	 *
+	 * @return string
+	 */
+	public function feed_list_title() {
+		if ( $this->_requires_credit_card && ! $this->has_credit_card_field( $this->get_current_form() ) ) {
+			return $this->form_settings_title();
+		}
+
+		return parent::feed_list_title();
+	}
+
 	public function feed_list_message() {
 
 		if ( $this->_requires_credit_card && ! $this->has_credit_card_field( $this->get_current_form() ) ) {
@@ -3166,7 +3188,7 @@ abstract class GFPaymentAddOn extends GFFeedAddOn {
 	 * @access public
 	 *
 	 * @param string $content
-	 * @param array $field
+	 * @param GF_Field $field
 	 * @param string $value
 	 * @param string $entry_id
 	 * @param string $form_id
@@ -3303,10 +3325,6 @@ abstract class GFPaymentAddOn extends GFFeedAddOn {
 	 * @return RGCurrency
 	 */
 	public function get_currency( $currency_code = '' ) {
-		if ( ! class_exists( 'RGCurrency' ) ) {
-			require_once( GFCommon::get_base_path() . '/currency.php' );
-		}
-
 		if ( empty( $currency_code ) ) {
 			$currency_code = GFCommon::get_currency();
 		}
@@ -3461,6 +3479,10 @@ abstract class GFPaymentAddOn extends GFFeedAddOn {
 		$card_number = str_replace( array( "\t", "\n", "\r", ' ' ), '', $card_number );
 
 		return $card_number;
+	}
+
+	public function get_supports_callback(){
+		return $this->_supports_callbacks;
 	}
 }
 

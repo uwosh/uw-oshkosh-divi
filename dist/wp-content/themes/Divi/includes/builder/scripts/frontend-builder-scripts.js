@@ -1,3 +1,4 @@
+/*! ET frontend-builder-scripts.js */
 (function($){
 	var $et_window = $(window);
 
@@ -5,6 +6,8 @@
 	window.et_is_transparent_nav = $( 'body' ).hasClass( 'et_transparent_nav' );
 	window.et_is_vertical_nav    = $( 'body' ).hasClass( 'et_vertical_nav' );
 	window.et_is_fixed_nav       = $( 'body' ).hasClass( 'et_fixed_nav' );
+	window.et_is_minified_js     = $( 'body' ).hasClass( 'et_minified_js' );
+	window.et_is_minified_css    = $( 'body' ).hasClass( 'et_minified_css' );
 
 	jQuery.fn.reverse = [].reverse;
 
@@ -326,7 +329,7 @@
 						arrows_color = $slide.attr( 'data-arrows_color' ) || '';
 
 						if ( arrows_color !== '' ) {
-							$arrows.css( 'color', arrows_color );
+							$arrows.attr( 'style', 'color: ' + arrows_color + '!important;' );
 						} else {
 							$arrows.css( 'color', 'inherit' );
 						}
@@ -1428,7 +1431,7 @@
 						slide_duration = 700,
 						items = $portfolio_items.data('items'),
 						columns = $portfolio_items.data('portfolio-columns'),
-						item_width = $active_carousel_group.innerWidth() / columns, //$active_carousel_group.children().first().innerWidth(),
+						item_width = $active_carousel_group.innerWidth() / columns,
 						original_item_width = ( 100 / columns ) + '%';
 
 					if ( 'undefined' == typeof items ) {
@@ -1442,7 +1445,7 @@
 					$the_portfolio.data('carouseling', true);
 
 					$active_carousel_group.children().each(function(){
-						$(this).css({'width': $(this).innerWidth() + 1, 'position':'absolute', 'left': ( $(this).innerWidth() * ( $(this).data('position') - 1 ) ) });
+						$(this).css({'width': item_width + 1, 'max-width': item_width, 'position':'absolute', 'left': ( item_width * ( $(this).data('position') - 1 ) ) });
 					});
 
 					if ( $arrow.hasClass('et-pb-arrow-next') ) {
@@ -1452,10 +1455,11 @@
 							active_items_start = items.indexOf( $active_carousel_group.children().first()[0] ),
 							active_items_end = active_items_start + columns,
 							next_items_start = active_items_end,
-							next_items_end = next_items_start + columns;
+							next_items_end = next_items_start + columns,
+							active_carousel_width = $active_carousel_group.innerWidth();
 
 						$next_carousel_group = $('<div class="et_pb_carousel_group next" style="display: none;left: 100%;position: absolute;top: 0;">').insertAfter( $active_carousel_group );
-						$next_carousel_group.css({ 'width': $active_carousel_group.innerWidth() }).show();
+						$next_carousel_group.css({ 'width': active_carousel_width, 'max-width': active_carousel_width }).show();
 
 						// this is an endless loop, so it can decide internally when to break out, so that next_position
 						// can get filled up, even to the extent of an element having both and current_ and next_ position
@@ -1498,7 +1502,7 @@
 						$( sorted ).show().appendTo( $next_carousel_group );
 
 						$next_carousel_group.children().each(function(){
-							$(this).css({'width': item_width, 'position':'absolute', 'left': ( item_width * ( $(this).data('next_position') - 1 ) ) });
+							$(this).css({'width': item_width, 'max-width': item_width, 'position':'absolute', 'left': ( item_width * ( $(this).data('next_position') - 1 ) ) });
 						});
 
 						$active_carousel_group.animate({
@@ -1507,7 +1511,7 @@
 							duration: slide_duration,
 							complete: function() {
 								$portfolio_items.find('.delayed_container_append').each(function(){
-									$(this).css({'width': item_width, 'position':'absolute', 'left': ( item_width * ( $(this).data('next_position') - 1 ) ) });
+									$(this).css({'width': item_width, 'max-width': item_width, 'position':'absolute', 'left': ( item_width * ( $(this).data('next_position') - 1 ) ) });
 									$(this).appendTo( $next_carousel_group );
 								});
 
@@ -1519,7 +1523,7 @@
 									$(this).data('position', '');
 									$(this).data('current_position', '');
 									$(this).hide();
-									$(this).css({'position': '', 'width': '', 'left': ''});
+									$(this).css({'position': '', 'width': '', 'max-width': '', 'left': ''});
 									$(this).appendTo( $portfolio_items );
 								});
 
@@ -1537,7 +1541,7 @@
 							duration: slide_duration,
 							complete: function(){
 								setTimeout(function(){
-									$next_carousel_group.removeClass('next').addClass('active').css({'position':'', 'width':'', 'top':'', 'left': ''});
+									$next_carousel_group.removeClass('next').addClass('active').css({'position':'', 'width':'', 'max-width':'', 'top':'', 'left': ''});
 
 									$next_carousel_group.find('.delayed_container_append_dup').remove();
 
@@ -1551,7 +1555,7 @@
 										$(this).data('position', ( index + 1 ) );
 									});
 
-									$next_carousel_group.children().css({'position': '', 'width': original_item_width, 'left': ''});
+									$next_carousel_group.children().css({'position': '', 'width': original_item_width, 'max-width': original_item_width, 'left': ''});
 
 									$the_portfolio.data('carouseling', false);
 								}, 100 );
@@ -1566,10 +1570,11 @@
 							active_items_start = items.indexOf( $active_carousel_group.children().last()[0] ),
 							active_items_end = active_items_start - columns_span,
 							prev_items_start = active_items_end - 1,
-							prev_items_end = prev_items_start - columns_span;
+							prev_items_end = prev_items_start - columns_span,
+							active_carousel_width = $active_carousel_group.innerWidth();
 
 						$prev_carousel_group = $('<div class="et_pb_carousel_group prev" style="display: none;left: 100%;position: absolute;top: 0;">').insertBefore( $active_carousel_group );
-						$prev_carousel_group.css({ 'left': '-' + $active_carousel_group.innerWidth(), 'width': $active_carousel_group.innerWidth() }).show();
+						$prev_carousel_group.css({ 'left': '-' + active_carousel_width, 'width': active_carousel_width, 'max-width': active_carousel_width }).show();
 
 						// this is an endless loop, so it can decide internally when to break out, so that next_position
 						// can get filled up, even to the extent of an element having both and current_ and next_ position
@@ -1613,7 +1618,7 @@
 						$( sorted ).show().appendTo( $prev_carousel_group );
 
 						$prev_carousel_group.children().each(function(){
-							$(this).css({'width': item_width, 'position':'absolute', 'left': ( item_width * ( $(this).data('prev_position') - 1 ) ) });
+							$(this).css({'width': item_width, 'max-width': item_width, 'position':'absolute', 'left': ( item_width * ( $(this).data('prev_position') - 1 ) ) });
 						});
 
 						$active_carousel_group.animate({
@@ -1622,7 +1627,7 @@
 							duration: slide_duration,
 							complete: function() {
 								$portfolio_items.find('.delayed_container_append').reverse().each(function(){
-									$(this).css({'width': item_width, 'position':'absolute', 'left': ( item_width * ( $(this).data('prev_position') - 1 ) ) });
+									$(this).css({'width': item_width, 'max-width': item_width, 'position':'absolute', 'left': ( item_width * ( $(this).data('prev_position') - 1 ) ) });
 									$(this).prependTo( $prev_carousel_group );
 								});
 
@@ -1634,7 +1639,7 @@
 									$(this).data('position', '');
 									$(this).data('current_position', '');
 									$(this).hide();
-									$(this).css({'position': '', 'width': '', 'left': ''});
+									$(this).css({'position': '', 'width': '', 'max-width': '', 'left': ''});
 									$(this).appendTo( $portfolio_items );
 								});
 
@@ -1649,7 +1654,7 @@
 							duration: slide_duration,
 							complete: function(){
 								setTimeout(function(){
-									$prev_carousel_group.removeClass('prev').addClass('active').css({'position':'', 'width':'', 'top':'', 'left': ''});
+									$prev_carousel_group.removeClass('prev').addClass('active').css({'position':'', 'width':'', 'max-width':'', 'top':'', 'left': ''});
 
 									$prev_carousel_group.find('.delayed_container_append_dup').remove();
 
@@ -1665,7 +1670,7 @@
 										$(this).addClass('position_' + position );
 									});
 
-									$prev_carousel_group.children().css({'position': '', 'width': original_item_width, 'left': ''});
+									$prev_carousel_group.children().css({'position': '', 'width': original_item_width, 'max-width': original_item_width, 'left': ''});
 									$the_portfolio.data('carouseling', false);
 								}, 100 );
 							}
@@ -1718,7 +1723,7 @@
 					$the_portfolio.data('columns_setting_up', true );
 
 					var portfolio_item_width_percentage = ( 100 / columns ) + '%';
-					$the_portfolio_items.css({ 'width' : portfolio_item_width_percentage });
+					$the_portfolio_items.css({ 'width' : portfolio_item_width_percentage, 'max-width' : portfolio_item_width_percentage });
 
 					// store last setup column
 					$portfolio_items.removeClass('columns-' + $portfolio_items.data('portfolio-columns') );
@@ -1841,13 +1846,16 @@
 						all_portfolio_items = $the_portfolio_items.clone(); // cache for all the portfolio items
 
 					$the_portfolio.show();
+					$the_portfolio.find('.et_pb_portfolio_item').addClass('active');
+					$the_portfolio.css('display', 'block');
 
 					set_filterable_grid_items( $the_portfolio );
 
 					$the_portfolio.on('click', '.et_pb_portfolio_filter a', function(e){
 						e.preventDefault();
 						var category_slug = $(this).data('category-slug');
-						$the_portfolio_items = $(this).parents('.et_pb_filterable_portfolio').find('.et_pb_portfolio_items');
+						var $the_portfolio = $(this).parents('.et_pb_filterable_portfolio');
+						var $the_portfolio_items = $the_portfolio.find('.et_pb_portfolio_items');
 
 						if ( 'all' == category_slug ) {
 							$the_portfolio.find('.et_pb_portfolio_filter a').removeClass('active');
@@ -1879,14 +1887,17 @@
 						setTimeout(function(){
 							set_filterable_portfolio_hash( $the_portfolio );
 						}, 500 );
+
+						$the_portfolio.find('.et_pb_portfolio_item').removeClass( 'first_in_row last_in_row' );
+						et_pb_set_responsive_grid( $the_portfolio, '.et_pb_portfolio_item:visible' );
 					});
 
 					$the_portfolio.on('click', '.et_pb_portofolio_pagination a', function(e){
 						e.preventDefault();
 
-						var to_page = $(this).data('page'),
-							$the_portfolio = $(this).parents('.et_pb_filterable_portfolio'),
-							$the_portfolio_items = $the_portfolio.find('.et_pb_portfolio_items');
+						var to_page = $(this).data('page');
+						var $the_portfolio = $(this).parents('.et_pb_filterable_portfolio');
+						var $the_portfolio_items = $the_portfolio.find('.et_pb_portfolio_items');
 
 						et_pb_smooth_scroll( $the_portfolio, false, 800 );
 
@@ -1946,6 +1957,9 @@
 						setTimeout(function(){
 							set_filterable_portfolio_hash( $the_portfolio );
 						}, 500 );
+
+						$the_portfolio.find('.et_pb_portfolio_item').removeClass( 'first_in_row last_in_row' );
+						et_pb_set_responsive_grid( $the_portfolio, '.et_pb_portfolio_item:visible' );
 					});
 
 					$(this).on('et_hashchange', function( event ){
@@ -2506,8 +2520,7 @@
 				} );
 			}
 
-			if ( $et_pb_circle_counter.length || is_frontend_builder ) {
-
+			if ( $et_pb_circle_counter.length || is_frontend_builder || $( '.et_pb_ajax_pagination_container' ).length > 0 ) {
 				window.et_pb_circle_counter_init = function($the_counter, animate) {
 					if ( 0 === $the_counter.width() ) {
 						return;
@@ -2553,7 +2566,7 @@
 				window.et_pb_reinit_circle_counters( $et_pb_circle_counter );
 			}
 
-			if ( $et_pb_number_counter.length || is_frontend_builder ) {
+			if ( $et_pb_number_counter.length || is_frontend_builder || $( '.et_pb_ajax_pagination_container' ).length > 0 ) {
 				window.et_pb_reinit_number_counters = function( $et_pb_number_counter ) {
 
 					function et_format_number( number_value, separator ) {
@@ -2577,8 +2590,8 @@
 							trackColor: false,
 							scaleColor: false,
 							lineWidth: 0,
-							onStart: function() {
-								$(this.el).find('.percent p').css({ 'visibility' : 'visible' });
+							onStart: function () {
+								$(this.el).addClass('active');
 							},
 							onStep: function(from, to, percent) {
 								if ( percent != to )
@@ -2589,7 +2602,7 @@
 							}
 						});
 					});
-				}
+				};
 				window.et_pb_reinit_number_counters( $et_pb_number_counter );
 			}
 
@@ -2707,8 +2720,8 @@
 					var $this_contact_container = $( this ),
 						$et_contact_form = $this_contact_container.find( 'form' ),
 						$et_contact_submit = $this_contact_container.find( 'input.et_pb_contact_submit' ),
-						$et_inputs = $et_contact_form.find( 'input[type=text], input[type=radio]:checked, textarea, .et_pb_contact_select' ),
-						et_email_reg = /^[\w-]+(\.[\w-]+)*@([a-z0-9-]+(\.[a-z0-9-]+)*?\.[a-z]{2,}|(\d{1,3}\.){3}\d{1,3})(:\d{4})?$/,
+						$et_inputs = $et_contact_form.find( 'input[type=text], .et_pb_checkbox_handle, input[type=radio]:checked, textarea, .et_pb_contact_select' ),
+						et_email_reg = /^[\w-]+(\.[\w-]+)*@([a-z0-9-]+(\.[a-z0-9-]+)*?\.[a-z]{2,6}|(\d{1,3}\.){3}\d{1,3})(:\d{4})?$/,
 						redirect_url = typeof $this_contact_container.data( 'redirect_url' ) !== 'undefined' ? $this_contact_container.data( 'redirect_url' ) : '';
 
 					$et_contact_form.find( 'input[type=checkbox]' ).on( 'change', function() {
@@ -2721,7 +2734,7 @@
 
 					$et_contact_form.on( 'submit', function( event ) {
 						var $this_contact_form = $( this ),
-							$this_inputs = $this_contact_form.find( 'input[type=text], .et_pb_contact_field[data-type="checkbox"], .et_pb_contact_field[data-type="radio"], textarea, select' ),
+							$this_inputs = $this_contact_form.find( 'input[type=text], .et_pb_checkbox_handle, .et_pb_contact_field[data-type="radio"], textarea, select' ),
 							this_et_contact_error = false,
 							$et_contact_message = $this_contact_form.closest( '.et_pb_contact_form_container' ).find( '.et-pb-contact-message' ),
 							et_message = '',
@@ -2734,22 +2747,19 @@
 
 						$this_inputs.removeClass( 'et_contact_error' );
 
+						var hidden_fields = [];
+
 						$this_inputs.each( function(){
-							var $this_el      = $( this );
-							var $this_wrapper = false;
+							var $this_el        = $( this );
+							var $this_wrapper   = false;
 
-							// Prevent field processing if that field is not visible (conditional logic)
-							if ( ! $this_el.is(':visible') ) {
-								return;
-							}
-
-							if ( 'checkbox' === $this_el.data('type') ) {
-								$this_el      = $this_el.find('input[type="checkbox"]');
+							if ( 'checkbox' === $this_el.data('field_type') ) {
 								$this_wrapper = $this_el.parents('.et_pb_contact_field');
+								$this_wrapper.removeClass( 'et_contact_error' );
 							}
 
 							if ( 'radio' === $this_el.data('type') ) {
-								$this_el = $this_el.find('input[type="radio"]');
+								$this_el      = $this_el.find('input[type="radio"]');
 								$this_wrapper = $this_el.parents('.et_pb_contact_field');
 							}
 
@@ -2773,7 +2783,6 @@
 									var $firstRadio = $this_wrapper.find('input[type="radio"]:first');
 
 									required_mark = typeof $firstRadio.data( 'required_mark' ) !== 'undefined' ? $firstRadio.data( 'required_mark' ) : 'not_required';
-									original_id   = typeof $firstRadio.data( 'original_id' ) !== 'undefined' ? $firstRadio.data( 'original_id' ) : '';
 
 									this_val = '';
 									if ( $this_wrapper.find('input[type="radio"]:checked') ) {
@@ -2781,24 +2790,57 @@
 									}
 								}
 
-								this_label = $this_wrapper.find('.et_pb_contact_form_label').text();
-								this_id = $this_wrapper.find('input[type="radio"]:first').attr('name');
+								this_label  = $this_wrapper.find('.et_pb_contact_form_label').text();
+								this_id     = $this_wrapper.find('input[type="radio"]:first').attr('name');
+								original_id = $this_wrapper.attr('data-id');
 
 								if ( 0 === $this_wrapper.find('input[type="radio"]:checked').length ) {
 									unchecked = true;
 								}
 							}
 
-							// checkbox field value adjustment
+							// radio field properties adjustment
 							if ( 'checkbox' === field_type ) {
-								var $checkbox = $this_el;
-								var $handle   = $checkbox.siblings('[data-checked][data-unchecked]');
+								this_val = '';
 
-								this_id       = $handle.attr('id');
-								this_val      = $checkbox.prop('checked') ? $handle.data('checked') : $handle.data('unchecked');
-								unchecked     = ! $checkbox.prop('checked');
+								if ( 0 !== $this_wrapper.find( 'input[type="checkbox"]').length ) {
+									field_type = 'checkbox';
 
-								$handle.val( this_val );
+									var $checkboxHandle = $this_wrapper.find('.et_pb_checkbox_handle');
+
+									required_mark = typeof $checkboxHandle.data( 'required_mark' ) !== 'undefined' ? $checkboxHandle.data( 'required_mark' ) : 'not_required';
+
+									if ( $this_wrapper.find('input[type="checked"]:checked') ) {
+										this_val = [];
+										$this_wrapper.find('input[type="checkbox"]:checked').each(function() {
+											this_val.push( $(this).val() );
+										});
+
+										this_val = this_val.join(', ');
+									}
+								}
+
+								$this_wrapper.find('.et_pb_checkbox_handle').val(this_val);
+
+								this_label  = $this_wrapper.find('.et_pb_contact_form_label').text();
+								this_id     = $this_wrapper.find('.et_pb_checkbox_handle').attr('name');
+								original_id = $this_wrapper.attr('data-id');
+
+								if ( 0 === $this_wrapper.find('input[type="checkbox"]:checked').length ) {
+									unchecked = true;
+								}
+							}
+
+							// Store the labels of the conditionally hidden fields so that they can be
+							// removed later if a custom message pattern is enabled
+							if ( ! $this_el.is(':visible') && 'hidden' !== $this_el.attr('type') && 'radio' !== $this_el.attr('type') ) {
+								hidden_fields.push( original_id );
+								return;
+							}
+
+							if ( ( 'hidden' === $this_el.attr('type') || 'radio' === $this_el.attr('type') ) && ! $this_el.parents('.et_pb_contact_field').is(':visible') ) {
+								hidden_fields.push( original_id );
+								return;
 							}
 
 							// add current field data into array of inputs
@@ -2808,6 +2850,7 @@
 
 							// add error message for the field if it is required and empty
 							if ( 'required' === required_mark && ( '' === this_val || true === unchecked ) ) {
+
 								if ( false === $this_wrapper ) {
 									$this_el.addClass( 'et_contact_error' );
 								} else {
@@ -2870,20 +2913,32 @@
 							var $href = $( this ).attr( 'action' ),
 								form_data = $( this ).serializeArray();
 
-							form_data.push( { 'name': 'et_pb_contact_email_fields_' + form_unique_id, 'value' : JSON.stringify( inputs_list ) } );
+							form_data.push( {
+								'name': 'et_pb_contact_email_fields_' + form_unique_id,
+								'value' : JSON.stringify( inputs_list )
+							} );
 
-							$this_contact_container.fadeTo( 'fast', 0.2 ).load( $href + ' #' + $this_contact_form.closest( '.et_pb_contact_form_container' ).attr( 'id' ), form_data, function( responseText ) {
-								if ( ! $( responseText ).find( '.et_pb_contact_error_text').length ) {
+							if ( hidden_fields.length > 0 ) {
+								form_data.push( {
+									'name': 'et_pb_contact_email_hidden_fields_' + form_unique_id,
+									'value' : JSON.stringify( hidden_fields )
+								} );
+							}
 
-									et_pb_maybe_log_event( $this_contact_container, 'con_goal' );
+							$this_contact_container.removeClass('et_animated').removeAttr('style').fadeTo( 'fast', 0.2, function() {
+								$this_contact_container.load( $href + ' #' + $this_contact_form.closest( '.et_pb_contact_form_container' ).attr( 'id' ) + '> *', form_data, function( responseText ) {
+									if ( ! $( responseText ).find( '.et_pb_contact_error_text').length ) {
 
-									// redirect if redirect URL is not empty and no errors in contact form
-									if ( '' !== redirect_url ) {
-										window.location.href = redirect_url;
+										et_pb_maybe_log_event( $this_contact_container, 'con_goal' );
+
+										// redirect if redirect URL is not empty and no errors in contact form
+										if ( '' !== redirect_url ) {
+											window.location.href = redirect_url;
+										}
 									}
-								}
 
-								$this_contact_container.fadeTo( 'fast', 1 );
+									$this_contact_container.fadeTo( 'fast', 1 );
+								} );
 							} );
 						}
 
@@ -3187,50 +3242,89 @@
 				}
 
 				var $newsletter_container = $submit.closest( '.et_pb_newsletter' ),
-					$firstname = $newsletter_container.find( 'input[name="et_pb_signup_firstname"]' ),
+					$name = $newsletter_container.find( 'input[name="et_pb_signup_firstname"]' ),
 					$lastname = $newsletter_container.find( 'input[name="et_pb_signup_lastname"]' ),
 					$email = $newsletter_container.find( 'input[name="et_pb_signup_email"]' ),
 					list_id = $newsletter_container.find( 'input[name="et_pb_signup_list_id"]' ).val(),
-					$result = $newsletter_container.find( '.et_pb_newsletter_result' ).hide(),
-					service = $submit.closest( '.et_pb_newsletter_form' ).data( 'service' ) || 'mailchimp',
-					account = $newsletter_container.find( 'input[name="et_pb_signup_account_name"]' ).val();
+					$error_message = $newsletter_container.find( '.et_pb_newsletter_error' ).hide(),
+					provider = $newsletter_container.find( 'input[name="et_pb_signup_provider"]' ).val(),
+					account = $newsletter_container.find( 'input[name="et_pb_signup_account_name"]' ).val(),
+					et_email_reg = /^[\w-]+(\.[\w-]+)*@([a-z0-9-]+(\.[a-z0-9-]+)*?\.[a-z]{2,6}|(\d{1,3}\.){3}\d{1,3})(:\d{4})?$/;
 
-				$firstname.removeClass( 'et_pb_signup_error' );
+				var $success_message = $newsletter_container.find( '.et_pb_newsletter_success' );
+				var redirect_url     = $newsletter_container.data( 'redirect_url' );
+				var redirect_query   = $newsletter_container.data( 'redirect_query' );
+
+
+				$name.removeClass( 'et_pb_signup_error' );
 				$lastname.removeClass( 'et_pb_signup_error' );
 				$email.removeClass( 'et_pb_signup_error' );
+				$error_message.html('');
 
-				et_pb_remove_placeholder_text( $submit.closest( '.et_pb_newsletter_form' ) );
+				// Validate user input
+				var is_valid = true;
 
-				if ( $firstname.val() == '' || $email.val() == '' || list_id === '' ) {
-					if ( $firstname.val() == '' ) $firstname.addClass( 'et_pb_signup_error' );
+				if ( $name.length > 0 && ! $name.val() ) {
+					$name.addClass( 'et_pb_signup_error' );
+					is_valid = false;
+				}
 
-					if ( $email.val() == '' ) $email.addClass( 'et_pb_signup_error' );
+				if ( $lastname.length > 0 && ! $lastname.val() ) {
+					$lastname.addClass( 'et_pb_signup_error' );
+					is_valid = false;
+				}
 
-					if ( $firstname.val() == '' )
-						$firstname.val( $firstname.siblings( '.et_pb_contact_form_label' ).text() );
+				if ( ! et_email_reg.test( $email.val() ) ) {
+					$email.addClass( 'et_pb_signup_error' );
+					is_valid = false;
+				}
 
-					if ( $lastname.val() == '' )
-						$lastname.val( $lastname.siblings( '.et_pb_contact_form_label' ).text() );
-
-					if ( $email.val() == '' )
-						$email.val( $email.siblings( '.et_pb_contact_form_label' ).text() );
-
+				if ( ! is_valid ) {
 					return;
+				}
+
+				function get_redirect_query() {
+					var query = {};
+
+					if ( ! redirect_query ) {
+						return '';
+					}
+
+					if ( $name.length > 0 && redirect_query.indexOf( 'name' ) > -1 ) {
+						query.name = $name.val();
+					}
+
+					if ( $lastname.length > 0 && redirect_query.indexOf( 'last_name' ) > -1 ) {
+						query.last_name = $lastname.val();
+					}
+
+					if ( redirect_query.indexOf( 'email' ) > -1 ) {
+						query.email = $email.val();
+					}
+
+					if ( redirect_query.indexOf( 'ip_address' ) > -1 ) {
+						query.ip_address = $newsletter_container.data( 'ip_address' );
+					}
+
+					if ( redirect_query.indexOf( 'css_id' ) > -1 ) {
+						query.form_id = $newsletter_container.attr( 'id' );
+					}
+
+					return decodeURIComponent( $.param( query ) );
 				}
 
 				$.ajax( {
 					type: "POST",
 					url: et_pb_custom.ajaxurl,
 					dataType: "json",
-					data:
-					{
+					data: {
 						action : 'et_pb_submit_subscribe_form',
 						et_frontend_nonce : et_pb_custom.et_frontend_nonce,
 						et_list_id : list_id,
-						et_firstname : $firstname.val(),
+						et_firstname : $name.val(),
 						et_lastname : $lastname.val(),
 						et_email : $email.val(),
-						et_service : service,
+						et_provider : provider,
 						et_account: account
 					},
 					beforeSend: function() {
@@ -3240,26 +3334,41 @@
 							.find('.et_subscribe_loader')
 							.show();
 					},
-					complete: function(){
+					complete: function() {
 						$newsletter_container
 							.find( '.et_pb_newsletter_button' )
 							.removeClass( 'et_pb_button_text_loading' )
 							.find('.et_subscribe_loader')
 							.hide();
 					},
-					success: function( data ){
-						if ( data ) {
-							if ( data.error ) {
-								$result.html( data.error ).show();
-							}
-							if ( data.success ) {
-								$newsletter_container.find( '.et_pb_newsletter_form > p' ).hide();
-								$result.html( data.success ).show();
+					success: function( data ) {
+						if ( ! data ) {
+							$error_message.html( et_pb_custom.subscription_failed ).show();
+							return;
+						}
 
+						if ( data.error ) {
+							$error_message.show().append('<h2>').text( data.error );
+						}
+
+						if ( data.success ) {
+							if ( redirect_url ) {
+								et_pb_maybe_log_event( $newsletter_container, 'con_goal', function() {
+									var query = get_redirect_query();
+
+									if ( redirect_url.indexOf( '?' ) > -1 ) {
+										redirect_url += '&';
+									} else {
+										redirect_url += '?';
+									}
+
+									window.location = redirect_url + query;
+								} );
+							} else {
 								et_pb_maybe_log_event( $newsletter_container, 'con_goal' );
+								$newsletter_container.find( '.et_pb_newsletter_form > p' ).hide();
+								$success_message.show();
 							}
-						} else {
-							$result.html( et_pb_custom.subscription_failed ).show();
 						}
 					}
 				} );
@@ -3268,25 +3377,38 @@
 			window.et_fix_testimonial_inner_width = function() {
 				var window_width = $( window ).width();
 
-				if ( window_width > 767 ) {
+				if ( window_width > 959 ) {
 					$( '.et_pb_testimonial' ).each( function() {
 						if ( ! $(this).is( ':visible' ) ) {
 							return;
 						}
 
 						var $testimonial            = $(this);
-						var testimonial_width       = $testimonial.width();
 						var $portrait               = $testimonial.find( '.et_pb_testimonial_portrait' );
 						var portrait_width          = $portrait.outerWidth( true );
-						var $testimonial_inner      = $testimonial.find( '.et_pb_testimonial_description_inner' );
+						var $testimonial_descr      = $testimonial.find( '.et_pb_testimonial_description' );
 						var $outer_column           = $testimonial.closest( '.et_pb_column' );
-						var testimonial_inner_width = testimonial_width;
-						var subtract                = ! ( $outer_column.hasClass( 'et_pb_column_1_3' ) || $outer_column.hasClass( 'et_pb_column_1_4' ) || $outer_column.hasClass( 'et_pb_column_3_8' ) ) ? portrait_width : 0;
+						var testimonial_indent      = ! ( $outer_column.hasClass( 'et_pb_column_1_3' ) || $outer_column.hasClass( 'et_pb_column_1_4' ) || $outer_column.hasClass( 'et_pb_column_3_8' ) ) ? portrait_width : 0;
 
-						$testimonial_inner.width( testimonial_inner_width - subtract );
+						$testimonial_descr.css( 'margin-left', testimonial_indent );
+					} );
+				} else if ( window_width > 767 ) {
+					$( '.et_pb_testimonial' ).each( function() {
+						if ( ! $(this).is( ':visible' ) ) {
+							return;
+						}
+
+						var $testimonial            = $(this);
+						var $portrait               = $testimonial.find( '.et_pb_testimonial_portrait' );
+						var portrait_width          = $portrait.outerWidth( true );
+						var $testimonial_descr      = $testimonial.find( '.et_pb_testimonial_description' );
+						var $outer_column           = $testimonial.closest( '.et_pb_column' );
+						var testimonial_indent      = ! ( $outer_column.hasClass( 'et_pb_column_1_4' ) || $outer_column.hasClass( 'et_pb_column_3_8' ) ) ? portrait_width : 0;
+
+						$testimonial_descr.css( 'margin-left', testimonial_indent );
 					} );
 				} else {
-					$( '.et_pb_testimonial_description_inner' ).removeAttr( 'style' );
+					$( '.et_pb_testimonial_description' ).removeAttr( 'style' );
 				}
 			}
 			window.et_fix_testimonial_inner_width();
@@ -3324,7 +3446,7 @@
 							}
 						}
 					}
-				});
+				}, 2 );
 
 				// Entering video's bottom viewport
 				et_waypoint( $video_background_wrapper, {
@@ -3349,28 +3471,470 @@
 							}
 						}
 					}
-				});
+				}, 2 );
 			};
 
-			function et_waypoint( $element, options ) {
-				if ( ! $element.data( 'et_waypoint' ) ) {
-					var instances = $element.waypoint( options );
+			function et_waypoint( $element, options, max_instances ) {
+				max_instances         = max_instances || $element.data( 'et_waypoint_max_instances' ) || 1;
+				var current_instances = $element.data( 'et_waypoint' ) || [];
 
-					if ( instances && instances.length > 0 ) {
-						$element.data( 'et_waypoint', instances[0] );
+				if ( current_instances.length < max_instances ) {
+					var new_instances = $element.waypoint( options );
+
+					if ( new_instances && new_instances.length > 0 ) {
+						current_instances.push( new_instances[0] );
+						$element.data( 'et_waypoint', current_instances );
 					}
 				} else {
 					// Reinit existing
-					$element.data( 'et_waypoint' ).context.refresh();
+					for ( var i = 0; i < current_instances.length; i++ ) {
+						current_instances[i].context.refresh();
+					}
 				}
 			}
+
+			/**
+			 * Returns an offset to be used for waypoints.
+			 * @param  {element} element  The element being passed.
+			 * @param  {string} fallback String of either pixels or percent.
+			 * @return {string}          Returns either the fallback or 'bottom-in-view'
+			 */
+			function et_get_offset( element, fallback ) {
+				// cache things so we can test.
+				var section_index = element.parents('.et_pb_section').index(),
+					section_length = $('.et_pb_section').length - 1,
+					row_index = element.parents('.et_pb_row').index(),
+					row_length = element.parents('.et_pb_section').children().length - 1;
+
+				// return bottom-in-view if it is the last element otherwise return the user defined fallback
+				if ( section_index === section_length && row_index === row_length ) {
+					return 'bottom-in-view';
+				}
+				return fallback;
+			}
+
+			function et_animate_element( $element ) {
+				var animation_style            = $element.attr('data-animation-style');
+				var animation_repeat           = $element.attr('data-animation-repeat');
+				var animation_duration         = $element.attr('data-animation-duration');
+				var animation_delay            = $element.attr('data-animation-delay');
+				var animation_intensity        = $element.attr('data-animation-intensity');
+				var animation_starting_opacity = $element.attr('data-animation-starting-opacity');
+				var animation_speed_curve      = $element.attr('data-animation-speed-curve');
+
+				// Remove all the animation data attributes once the variables have been set
+				et_remove_animation_data( $element );
+
+				// Opacity can be 0 to 1 so the starting opacity is equal to the percentage number multiplied by 0.01
+				var starting_opacity = isNaN( parseInt( animation_starting_opacity ) ) ? 0 : parseInt( animation_starting_opacity ) * 0.01;
+
+				// Check if the animation speed curve is one of the allowed ones and set it to the default one if it is not
+				if ( $.inArray( animation_speed_curve, ['linear', 'ease', 'ease-in', 'ease-out', 'ease-in-out'] ) === -1 ) {
+					animation_speed_curve = 'ease-in-out';
+				}
+
+				$element.css({
+					'animation-duration'        : animation_duration,
+					'animation-delay'           : animation_delay,
+					'opacity'                   : starting_opacity,
+					'animation-timing-function' : animation_speed_curve
+				});
+
+				var intensity_css        = {};
+				var intensity_percentage = isNaN( parseInt( animation_intensity ) ) ? 50 : parseInt( animation_intensity );
+
+				// All the animations that can have intensity
+				var intensity_animations = ['slide', 'zoom', 'flip', 'fold', 'roll'];
+
+				var original_animation   = false;
+				var original_direction   = false;
+
+				// Check if current animation can have intensity
+				for ( var i = 0; i < intensity_animations.length; i++ ) {
+					var animation = intensity_animations[i];
+
+					// As the animation style is a combination of type and direction check if
+					// the current animation contains any of the allowed animation types
+					if ( ! animation_style || animation_style.substr( 0, animation.length ) !== animation ) {
+						continue;
+					}
+
+					// If it does set the original animation to the base animation type
+					var original_animation = animation;
+
+					// Get the remainder of the animation style and set it as the direction
+					var original_direction = animation_style.substr( animation.length, animation_style.length );
+
+					// If that is not empty convert it to lower case for better readability's sake
+					if ( '' !== original_direction ) {
+						original_direction = original_direction.toLowerCase();
+					}
+
+					break;
+				}
+
+				if ( original_animation !== false && original_direction !== false ) {
+					intensity_css = et_process_animation_intensity( original_animation, original_direction, intensity_percentage );
+				}
+
+				if ( ! $.isEmptyObject( intensity_css ) ) {
+					$element.css( intensity_css );
+				}
+
+				$element.addClass( 'et_animated' );
+				$element.addClass( animation_style );
+				$element.addClass( animation_repeat );
+			}
+
+			function et_process_animation_intensity( animation, direction, intensity ) {
+				var intensity_css = {};
+
+				switch( animation ) {
+					case 'slide':
+						switch( direction ) {
+							case 'top':
+								var percentage = intensity * -2;
+
+								intensity_css = {
+									transform: 'translate3d(0, ' + percentage + '%, 0)'
+								};
+
+								break;
+
+							case 'right':
+								var percentage = intensity * 2;
+
+								intensity_css = {
+									transform: 'translate3d(' + percentage + '%, 0, 0)'
+								};
+
+								break;
+
+							case 'bottom':
+								var percentage = intensity * 2;
+
+								intensity_css = {
+									transform: 'translate3d(0, ' + percentage + '%, 0)'
+								};
+
+								break;
+
+							case 'left':
+								var percentage = intensity * -2;
+
+								intensity_css = {
+									transform: 'translate3d(' + percentage + '%, 0, 0)'
+								};
+
+								break;
+
+							default:
+								var scale = ( 100 - intensity ) * 0.01;
+
+								intensity_css = {
+									transform: 'scale3d(' + scale + ', ' + scale + ', ' + scale + ')'
+								};
+								break;
+						}
+						break;
+
+					case 'zoom':
+						var scale = ( 100 - intensity ) * 0.01;
+
+						switch( direction ) {
+							case 'top':
+								intensity_css = {
+									transform: 'scale3d(' + scale + ', ' + scale + ', ' + scale + ')'
+								};
+
+								break;
+
+							case 'right':
+								intensity_css = {
+									transform: 'scale3d(' + scale + ', ' + scale + ', ' + scale + ')'
+								};
+
+								break;
+
+							case 'bottom':
+								intensity_css = {
+									transform: 'scale3d(' + scale + ', ' + scale + ', ' + scale + ')'
+								};
+
+								break;
+
+							case 'left':
+								intensity_css = {
+									transform: 'scale3d(' + scale + ', ' + scale + ', ' + scale + ')'
+								};
+
+								break;
+
+							default:
+								intensity_css = {
+									transform: 'scale3d(' + scale + ', ' + scale + ', ' + scale + ')'
+								};
+								break;
+						}
+
+						break;
+
+					case 'flip':
+						switch ( direction ) {
+							case 'right':
+								var degree = Math.ceil( ( 90 / 100 ) * intensity );
+
+								intensity_css = {
+								  transform: 'perspective(2000px) rotateY(' + degree+ 'deg)'
+								};
+								break;
+
+							case 'left':
+								var degree = Math.ceil( ( 90 / 100 ) * intensity ) * -1;
+
+								intensity_css = {
+								  transform: 'perspective(2000px) rotateY(' + degree+ 'deg)'
+								};
+								break;
+
+							case 'top':
+							default:
+								var degree = Math.ceil( ( 90 / 100 ) * intensity );
+
+								intensity_css = {
+								  transform: 'perspective(2000px) rotateX(' + degree+ 'deg)'
+								};
+								break;
+
+							case 'bottom':
+								var degree = Math.ceil( ( 90 / 100 ) * intensity ) * -1;
+
+								intensity_css = {
+								  transform: 'perspective(2000px) rotateX(' + degree+ 'deg)'
+								};
+								break;
+						}
+
+						break;
+
+					case 'fold':
+						switch( direction ) {
+							case 'top':
+								var degree = Math.ceil( ( 90 / 100 ) * intensity ) * -1;
+
+								intensity_css = {
+								  transform: 'perspective(2000px) rotateX(' + degree + 'deg)'
+								};
+
+								break;
+							case 'bottom':
+								var degree = Math.ceil( ( 90 / 100 ) * intensity );
+
+								intensity_css = {
+								  transform: 'perspective(2000px) rotateX(' + degree + 'deg)'
+								};
+
+								break;
+
+						 	case 'left':
+								var degree = Math.ceil( ( 90 / 100 ) * intensity );
+
+								intensity_css = {
+								  transform: 'perspective(2000px) rotateY(' + degree + 'deg)'
+								};
+
+								break;
+							case 'right':
+							default:
+								var degree = Math.ceil( ( 90 / 100 ) * intensity ) * -1;
+
+								intensity_css = {
+								  transform: 'perspective(2000px) rotateY(' + degree + 'deg)'
+								};
+
+								break;
+						}
+
+						break;
+
+					case 'roll':
+						switch( direction ) {
+							case 'right':
+							case 'bottom':
+								var degree = Math.ceil( ( 360 / 100 ) * intensity ) * -1;
+
+								intensity_css = {
+									transform: 'rotate3d(0, 0, 1, ' + degree + 'deg)'
+								};
+
+								break;
+							case 'top':
+							case 'left':
+								var degree = Math.ceil( ( 360 / 100 ) * intensity );
+
+								intensity_css = {
+									transform: 'rotate3d(0, 0, 1, ' + degree + 'deg)'
+								}
+
+								break;
+							default:
+								var degree = Math.ceil( ( 360 / 100 ) * intensity );
+
+								intensity_css = {
+									transform: 'rotate3d(0, 0, 1, ' + degree + 'deg)'
+								};
+
+								break;
+						}
+
+						break;
+				}
+
+				return intensity_css;
+			}
+
+			function et_has_animation_data( $element ) {
+				var has_animation = false;
+
+				if ( 'undefined' !== typeof et_animation_data && et_animation_data.length > 0 ) {
+					for ( var i = 0; i < et_animation_data.length; i++ ) {
+						var animation_entry = et_animation_data[i];
+
+						if ( ! animation_entry.class ) {
+							continue;
+						}
+
+						if ( $element.hasClass( animation_entry.class ) ) {
+							has_animation = true;
+							break;
+						}
+					}
+				}
+
+				return has_animation;
+			}
+
+			function et_remove_animation_data( $element ) {
+				var attr_name;
+				var data_attrs_to_remove = [];
+				var data_attrs           = $element.get(0).attributes;
+
+				for ( var i = 0; i < data_attrs.length; i++ ) {
+					if ( 'data-animation-' === data_attrs[i].name.substring( 0, 15 ) ) {
+						data_attrs_to_remove.push( data_attrs[i].name );
+					}
+				}
+
+				$.each( data_attrs_to_remove, function( index, attr_name ) {
+					$element.removeAttr( attr_name );
+				} );
+			};
 
 			window.et_reinit_waypoint_modules = et_pb_debounce( function() {
 					var $et_pb_circle_counter = $( '.et_pb_circle_counter' ),
 						$et_pb_number_counter = $( '.et_pb_number_counter' ),
 						$et_pb_video_background = $( '.et_pb_section_video_bg video' );
 
+				// if waypoint is available and we are not ignoring them.
 				if ( $.fn.waypoint && 'yes' !== et_pb_custom.ignore_waypoints ) {
+					if ( 'undefined' !== typeof et_animation_data && et_animation_data.length > 0 ) {
+						$('body').css('overflow-x', 'hidden');
+						$('#page-container').css('overflow-y', 'hidden');
+
+						for ( var i = 0; i < et_animation_data.length; i++ ) {
+							var animation_entry = et_animation_data[i];
+
+							if (
+								! animation_entry.class ||
+								! animation_entry.style ||
+								! animation_entry.repeat ||
+								! animation_entry.duration ||
+								! animation_entry.delay ||
+								! animation_entry.intensity ||
+								! animation_entry.starting_opacity ||
+								! animation_entry.speed_curve
+							) {
+								continue;
+							}
+
+							var $waypointed                = $('.' + animation_entry.class);
+							var animation_style            = animation_entry.style;
+							var animation_repeat           = 'once' === animation_entry.repeat ? '' : 'infinite';
+							var animation_duration         = animation_entry.duration;
+							var animation_delay            = animation_entry.delay;
+							var animation_intensity        = animation_entry.intensity;
+							var animation_starting_opacity = animation_entry.starting_opacity;
+							var animation_speed_curve      = animation_entry.speed_curve;
+
+							$waypointed.attr({
+								'data-animation-style'           : animation_style,
+								'data-animation-repeat'          : animation_repeat,
+								'data-animation-duration'        : animation_duration,
+								'data-animation-delay'           : animation_delay,
+								'data-animation-intensity'       : animation_intensity,
+								'data-animation-starting-opacity': animation_starting_opacity,
+								'data-animation-speed-curve'     : animation_speed_curve
+							});
+
+							if ( $waypointed.hasClass('et_pb_circle_counter') ) {
+								et_waypoint( $waypointed, {
+									offset: '65%',
+									handler: function() {
+										if ( $(this.element).data( 'PieChartHasLoaded' ) || typeof $(this.element).data('easyPieChart') === 'undefined' ) {
+											return;
+										}
+
+										$(this.element).data('easyPieChart').update( $(this.element).data('number-value') );
+
+										$(this.element).data( 'PieChartHasLoaded', true );
+
+										et_animate_element( $(this.element) );
+									}
+								});
+
+								// fallback to 'bottom-in-view' offset, to make sure animation applied when element is on the bottom of page and other offsets are not triggered
+								et_waypoint( $waypointed, {
+									offset: 'bottom-in-view',
+									handler: function() {
+										if ( $(this.element).data( 'PieChartHasLoaded' ) || typeof $(this.element).data('easyPieChart') === 'undefined' ) {
+											return;
+										}
+
+										$(this.element).data('easyPieChart').update( $(this.element).data('number-value') );
+
+										$(this.element).data( 'PieChartHasLoaded', true );
+
+										et_animate_element( $(this.element) );
+									}
+								});
+							} else if ( $waypointed.hasClass('et_pb_number_counter') ) {
+								et_waypoint( $waypointed, {
+									offset: '75%',
+									handler: function() {
+										$(this.element).data('easyPieChart').update( $(this.element).data('number-value') );
+										et_animate_element( $(this.element) );
+									}
+								});
+
+								// fallback to 'bottom-in-view' offset, to make sure animation applied when element is on the bottom of page and other offsets are not triggered
+								et_waypoint( $waypointed, {
+									offset: 'bottom-in-view',
+									handler: function() {
+										$(this.element).data('easyPieChart').update( $(this.element).data('number-value') );
+										et_animate_element( $(this.element) );
+									}
+								});
+							} else {
+								et_waypoint( $waypointed, {
+									offset: '100%',
+									handler: function() {
+										et_animate_element( $(this.element) );
+									}
+								} );
+							}
+						}
+					}
+
 					et_waypoint( $( '.et_pb_counter_container, .et-waypoint' ), {
 						offset: '75%',
 						handler: function() {
@@ -3386,14 +3950,29 @@
 						}
 					} );
 
+					// get all of our waypoint things.
+					var modules = $( '.et_pb_counter_container, .et-waypoint' );
+					modules.each(function(){
+						et_waypoint( $(this), {
+							offset: et_get_offset( $(this), '75%' ),
+							handler: function() {
+								// what actually triggers the animation.
+								$(this.element).addClass( 'et-animated' );
+							}
+						}, 2 );
+					});
+
+					// Set waypoint for circle counter module.
 					if ( $et_pb_circle_counter.length ) {
+						// iterate over each.
 						$et_pb_circle_counter.each(function(){
 							var $this_counter = $(this);
-							if ( ! $this_counter.is( ':visible' ) ) {
+							if ( ! $this_counter.is( ':visible' ) || et_has_animation_data( $this_counter ) ) {
 								return;
 							}
+
 							et_waypoint( $this_counter, {
-								offset: '65%',
+								offset: et_get_offset( $(this), '65%'),
 								handler: function() {
 									if ( $this_counter.data( 'PieChartHasLoaded' ) || typeof $this_counter.data('easyPieChart') === 'undefined' ) {
 										return;
@@ -3403,37 +3982,21 @@
 
 									$this_counter.data( 'PieChartHasLoaded', true );
 								}
-							});
-
-							// fallback to 'bottom-in-view' offset, to make sure animation applied when element is on the bottom of page and other offsets are not triggered
-							et_waypoint( $this_counter, {
-								offset: 'bottom-in-view',
-								handler: function() {
-									if ( $this_counter.data( 'PieChartHasLoaded' ) || typeof $this_counter.data('easyPieChart') === 'undefined' ) {
-										return;
-									}
-
-									$this_counter.data('easyPieChart').update( $this_counter.data('number-value') );
-
-									$this_counter.data( 'PieChartHasLoaded', true );
-								}
-							});
+							}, 2 );
 						});
 					}
 
+					// Set waypoint for number counter module.
 					if ( $et_pb_number_counter.length ) {
 						$et_pb_number_counter.each(function(){
 							var $this_counter = $(this);
-							et_waypoint( $this_counter, {
-								offset: '75%',
-								handler: function() {
-									$this_counter.data('easyPieChart').update( $this_counter.data('number-value') );
-								}
-							});
 
-							// fallback to 'bottom-in-view' offset, to make sure animation applied when element is on the bottom of page and other offsets are not triggered
+							if ( et_has_animation_data( $this_counter ) ) {
+								return;
+							}
+
 							et_waypoint( $this_counter, {
-								offset: 'bottom-in-view',
+								offset: et_get_offset( $(this), '75%' ),
 								handler: function() {
 									$this_counter.data('easyPieChart').update( $this_counter.data('number-value') );
 								}
@@ -3441,11 +4004,12 @@
 						});
 					}
 
+					// Set waypoint for goal module.
 					if ( $( '.et_pb_ab_goal' ).length ) {
 						var $et_pb_ab_goal = $( '.et_pb_ab_goal' );
 
 						et_waypoint( $et_pb_ab_goal, {
-							offset: '80%',
+							offset: et_get_offset( $(this), '80%'),
 							handler: function() {
 								if ( et_pb_ab_logged_status['read_goal'] || ! $et_pb_ab_goal.length || ! $et_pb_ab_goal.visible( true ) ) {
 									return;
@@ -3509,7 +4073,7 @@
 
 						et_pb_maybe_log_event( $et_pb_ab_goal, 'view_goal' );
 					}
-				}
+				} // End checking of waypoints.
 
 				if ( $et_pb_video_background.length ) {
 					$et_pb_video_background.each( function(){
@@ -3517,7 +4081,7 @@
 
 						et_pb_video_background_init( $this_video_background, this );
 					});
-				}
+				} // End of et_pb_debounce().
 			}, 100 );
 
 			function et_pb_init_ab_test() {
@@ -3582,18 +4146,22 @@
 				}
 			}
 
-			function et_pb_maybe_log_event( $goal_container, event ) {
+			function et_pb_maybe_log_event( $goal_container, event, callback ) {
 				var log_event = typeof event === 'undefined' ? 'con_goal' : event;
 
 				if ( ! $goal_container.hasClass( 'et_pb_ab_goal' ) || et_pb_ab_logged_status[ log_event ] ) {
+					if ( 'undefined' !== typeof callback ) {
+						callback();
+					}
+
 					return;
 				}
 
 				// log the event if it's not logged for current user
-				et_pb_ab_update_stats( log_event );
+				et_pb_ab_update_stats( log_event, callback );
 			}
 
-			function et_pb_ab_update_stats( record_type, set_page_id, set_subject_id, set_test_id ) {
+			function et_pb_ab_update_stats( record_type, set_page_id, set_subject_id, set_test_id, callback ) {
 				var subject_id = typeof set_subject_id === 'undefined' ? et_pb_get_subject_id() : set_subject_id,
 					page_id = typeof set_page_id === 'undefined' ? et_pb_custom.page_id : set_page_id,
 					test_id = typeof set_test_id === 'undefined' ? et_pb_custom.unique_test_id : set_test_id,
@@ -3612,7 +4180,11 @@
 						stats_data_array : stats_data,
 						et_ab_log_nonce : et_pb_custom.et_ab_log_nonce
 					}
-				});
+				}).always( function() {
+					if ( 'undefined' !== typeof callback ) {
+						callback();
+					}
+				} );
 			}
 
 			function et_pb_get_subject_id() {
@@ -3903,10 +4475,11 @@
 
 					etRecalculateOffset = true;
 
+					var $et_pb_circle_counter = $( '.et_pb_circle_counter' );
 					if ( $et_pb_circle_counter.length ) {
 						$et_pb_circle_counter.each(function(){
 							var $this_counter = $(this);
-							if ( ! $this_counter.is( ':visible' ) ) {
+							if ( ! $this_counter.is( ':visible' ) || typeof $this_counter.data('easyPieChart') === 'undefined' ) {
 								return;
 							}
 
@@ -4084,6 +4657,120 @@
 
 			} );
 
+			// get the content of next/prev page via ajax for modules which have the .et_pb_ajax_pagination_container class
+			$( 'body' ).on( 'click', '.et_pb_ajax_pagination_container .wp-pagenavi a,.et_pb_ajax_pagination_container .pagination a', function() {
+				var this_link = $( this ),
+					href = this_link.attr( 'href' ),
+					current_href = window.location.href,
+					module_classes = this_link.closest( '.et_pb_module' ).attr( 'class' ).split( ' ' ),
+					module_class_processed = '',
+					$current_module;
+
+				// global variable to store the cached content
+				window.et_pb_ajax_pagination_cache = window.et_pb_ajax_pagination_cache || [];
+
+				// construct the selector for current module
+				$.each( module_classes, function( index, value ) {
+					if ( '' !== value.trim() ) {
+						module_class_processed += '.' + value;
+					}
+				});
+
+				$current_module = $( module_class_processed );
+
+				// use cached content if it has beed retrieved already, otherwise retrieve the content via ajax
+				if ( typeof window.et_pb_ajax_pagination_cache[ href + module_class_processed ] !== 'undefined' ) {
+					$current_module.fadeTo( 'slow', 0.2, function() {
+						$current_module.find( '.et_pb_ajax_pagination_container' ).replaceWith( window.et_pb_ajax_pagination_cache[ href + module_class_processed ] );
+						et_pb_set_paginated_content( $current_module, true );
+					} );
+				} else {
+					// update cache for currently opened page if not set yet
+					if ( typeof window.et_pb_ajax_pagination_cache[ current_href + module_class_processed ] === 'undefined' ) {
+						window.et_pb_ajax_pagination_cache[ current_href + module_class_processed ] = $current_module.find( '.et_pb_ajax_pagination_container' );
+					}
+
+					$current_module.fadeTo( 'slow', 0.2 ).load( href + ' ' + module_class_processed + ' .et_pb_ajax_pagination_container', function() {
+						et_pb_set_paginated_content( $current_module, false );
+						// update cache for loaded page
+						window.et_pb_ajax_pagination_cache[ href + module_class_processed ] = $current_module.find( '.et_pb_ajax_pagination_container' );
+					});
+				}
+
+				return false;
+			});
+
+			function et_pb_set_paginated_content( $current_module, is_cache ) {
+				// Re-apply Salvattore grid to the new content if needed.
+				if ( typeof $current_module.find( '.et_pb_salvattore_content' ).attr( 'data-columns' ) !== 'undefined' ) {
+					// register grid only if the content is not from cache
+					if ( ! is_cache ) {
+						salvattore.registerGrid( $current_module.find( '.et_pb_salvattore_content' )[0] );
+					}
+					salvattore.recreateColumns( $current_module.find( '.et_pb_salvattore_content' )[0] );
+					$current_module.find( '.et_pb_post' ).css( { 'opacity' : '1' } );
+				}
+
+				// init audio module on new content
+				if ( $current_module.find( '.et_audio_container' ).length > 0 && typeof wp !== 'undefined' && typeof wp.mediaelement !== 'undefined' && typeof wp.mediaelement.initialize === 'function' ) {
+					wp.mediaelement.initialize();
+
+					$(window).trigger('resize');
+				}
+
+				// load waypoint modules such as counters and animated images
+				if ( $current_module.find( '.et-waypoint, .et_pb_circle_counter, .et_pb_number_counter' ).length > 0 ) {
+					$current_module.find( '.et-waypoint, .et_pb_circle_counter, .et_pb_number_counter' ).each( function() {
+						var $waypoint_module = $( this );
+						
+						if ( $waypoint_module.hasClass( 'et_pb_circle_counter' ) ) {
+							window.et_pb_reinit_circle_counters( $waypoint_module );
+						}
+
+						if ( $waypoint_module.hasClass( 'et_pb_number_counter' ) ) {
+							window.et_pb_reinit_number_counters( $waypoint_module );
+						}
+
+						if ( $waypoint_module.find( '.et_pb_counter_amount' ).length > 0 ) {
+							$waypoint_module.find( '.et_pb_counter_amount' ).each( function() {
+								window.et_bar_counters_init( $( this ) );
+							});
+						}
+
+						$( this ).css({ 'opacity': '1'});
+
+						window.et_reinit_waypoint_modules();
+					} );
+				}
+
+				/**
+				 * Init post gallery format
+				 */
+				if ( $current_module.find( '.et_pb_slider' ).length > 0 ) {
+					$current_module.find('.et_pb_slider').each(function() {
+						et_pb_slider_init($(this));
+					});
+				}
+
+				/**
+				 * Init post video format overlay click
+				 */
+				$current_module.on('click', '.et_pb_video_overlay', function(e) {
+					e.preventDefault();
+					et_pb_play_overlayed_video($(this));
+				})
+
+				// Re-apply fitvids to the new content.
+				$current_module.fitVids( { customSelector: "iframe[src^='http://www.hulu.com'], iframe[src^='http://www.dailymotion.com'], iframe[src^='http://www.funnyordie.com'], iframe[src^='https://embed-ssl.ted.com'], iframe[src^='http://embed.revision3.com'], iframe[src^='https://flickr.com'], iframe[src^='http://blip.tv'], iframe[src^='http://www.collegehumor.com']"} );
+
+				$current_module.fadeTo( 'slow', 1 );
+
+				// scroll to the top of the module
+				$( 'body' ).animate({
+					scrollTop: ( $current_module.offset().top - ( $( '#main-header' ).innerHeight() + $( '#top-header' ).innerHeight() + 50 ) )
+				});
+			}
+
 			window.et_pb_search_init = function( $search ) {
 				var $input_field = $search.find( '.et_pb_s' ),
 					$button = $search.find( '.et_pb_searchsubmit' ),
@@ -4224,6 +4911,16 @@
 							var field_type  = $wrapper.data('type');
 							var field_value;
 
+							/*
+								Check if the field wrapper is actually visible when including it in the rules check.
+								This avoids the scenario with a parent, child and grandchild field where the parent
+								field is changed but the grandchild remains visible, because the child one has the
+								right value, even though it is not visible
+							*/
+							if ( ! $wrapper.is(':visible') ) {
+								continue;
+							}
+
 							/* Get the proper compare value based on the field type */
 							switch( field_type ) {
 								case 'input':
@@ -4237,10 +4934,26 @@
 									field_value = $wrapper.find('input:checked').val() || '';
 									break;
 								case 'checkbox':
-									var $checkbox      = $wrapper.find(':checkbox');
-									var $checkbox_data = $wrapper.find('[data-checked][data-unchecked]');
+									/*
+										Conditional logic for checkboxes is a bit trickier since we have multiple values.
+										To address that we first check if a checked checkbox with the desired value
+										exists, which is represented by setting `field_value` to true or false.
+										Next we always set `check_value` to true so we can compare against the
+										result of the value check.
+									*/
 
-									field_value = true === $checkbox.prop('checked') ? $checkbox_data.data('checked') : $checkbox_data.data('unchecked');
+									var $checkbox   = $wrapper.find(':checkbox:checked');
+									var field_value = false;
+
+									$checkbox.each(function() {
+										if ( check_value === $(this).val() ) {
+											field_value = true;
+
+											return false;
+										}
+									});
+
+									check_value = true;
 									break;
 								case 'select':
 									field_value = $wrapper.find('select').val();
@@ -4254,6 +4967,16 @@
 							if ( 'is empty' === check_type || 'is not empty' === check_type ) {
 								check_type  = 'is empty' === check_type ? 'is' : 'is not';
 								check_value = '';
+
+								/*
+									`field_value` will always be `false` if all the checkboxes are unchecked
+									since it only changes when a checked checkbox matches the `check_value`
+									Because of `check_value` being reset to empty string we do the same
+									to `field_value` (if it is `false`) to cover the 'is empty' case
+								*/
+								if ( 'checkbox' === field_type && false === field_value ) {
+									field_value = '';
+								}
 							}
 
 							/* Check if the value IS matching (if it has to) */
@@ -4331,6 +5054,37 @@
 							$conditional_input.attr('pattern', $conditional_input.data('pattern'));
 						}
 					} );
+			}
+
+			// Adjust z-index for animated full-width menu modules
+			if ( 'undefined' !== typeof et_animation_data && et_animation_data.length > 0 ) {
+
+				// Store the maximum z-index that should be applied
+				var maxFullwidthMenuIndex = 0;
+
+				// Increase the maximum z-index by one for each module
+				for ( var i = 0; i < et_animation_data.length; i++ ) {
+					var animation_entry = et_animation_data[i];
+
+					if ( ! animation_entry.class ) {
+						continue;
+					}
+
+					if ( $('.' + animation_entry.class ).hasClass('et_pb_fullwidth_menu') ) {
+						maxFullwidthMenuIndex++;
+					}
+				}
+
+				var $fullWidthMenus = $('.et_pb_fullwidth_menu');
+
+				$fullWidthMenus.each(function() {
+					var $fullWidthMenu = $(this);
+
+					// When the animation ends apply z-index in descending order to each of the animated modules
+					$fullWidthMenu.on('webkitAnimationEnd oanimationend msAnimationEnd animationend', function() {
+						$fullWidthMenu.css('z-index', maxFullwidthMenuIndex - $fullWidthMenu.index('.et_pb_fullwidth_menu') );
+					});
+				});
 			}
 
 			/**

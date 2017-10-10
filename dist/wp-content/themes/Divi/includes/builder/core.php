@@ -1,5 +1,6 @@
 <?php
 
+
 if ( ! function_exists( 'et_builder_should_load_framework' ) ) :
 function et_builder_should_load_framework() {
 	global $pagenow;
@@ -11,15 +12,16 @@ function et_builder_should_load_framework() {
 	}
 
 	$is_admin = is_admin();
-	$required_admin_pages = array( 'edit.php', 'post.php', 'post-new.php', 'admin.php', 'customize.php', 'edit-tags.php', 'admin-ajax.php', 'export.php', 'options-permalink.php', 'themes.php' ); // list of admin pages where we need to load builder files
+	$required_admin_pages = array( 'edit.php', 'post.php', 'post-new.php', 'admin.php', 'customize.php', 'edit-tags.php', 'admin-ajax.php', 'export.php', 'options-permalink.php', 'themes.php', 'revision.php' ); // list of admin pages where we need to load builder files
 	$specific_filter_pages = array( 'edit.php', 'admin.php', 'edit-tags.php' ); // list of admin pages where we need more specific filtering
 
 	$is_edit_library_page = 'edit.php' === $pagenow && isset( $_GET['post_type'] ) && 'et_pb_layout' === $_GET['post_type'];
 	$is_role_editor_page = 'admin.php' === $pagenow && isset( $_GET['page'] ) && apply_filters( 'et_divi_role_editor_page', 'et_divi_role_editor' ) === $_GET['page'];
 	$is_import_page = 'admin.php' === $pagenow && isset( $_GET['import'] ) && 'wordpress' === $_GET['import']; // Page Builder files should be loaded on import page as well to register the et_pb_layout post type properly
+	$is_wpml_page = 'admin.php' === $pagenow && isset( $_GET['page'] ) && 'sitepress-multilingual-cms/menu/languages.php' === $_GET['page']; // Page Builder files should be loaded on WPML clone page as well to register the custom taxonomies properly
 	$is_edit_layout_category_page = 'edit-tags.php' === $pagenow && isset( $_GET['taxonomy'] ) && 'layout_category' === $_GET['taxonomy'];
 
-	if ( ! $is_admin || ( $is_admin && in_array( $pagenow, $required_admin_pages ) && ( ! in_array( $pagenow, $specific_filter_pages ) || $is_edit_library_page || $is_role_editor_page || $is_edit_layout_category_page || $is_import_page ) ) ) {
+	if ( ! $is_admin || ( $is_admin && in_array( $pagenow, $required_admin_pages ) && ( ! in_array( $pagenow, $specific_filter_pages ) || $is_edit_library_page || $is_role_editor_page || $is_edit_layout_category_page || $is_import_page || $is_wpml_page ) ) ) {
 		$should_load = true;
 	} else {
 		$should_load = false;
@@ -418,6 +420,11 @@ function et_pb_show_all_layouts() {
 				'value'   => $post_type,
 				'compare' => 'IN',
 			),
+			array(
+				'key'     => '_et_pb_layout_applicability',
+				'value'   => 'product_tour',
+				'compare' => 'NOT EXISTS',
+			),
 		),
 		'tax_query' => array(
 			array(
@@ -603,6 +610,7 @@ function et_pb_retrieve_templates( $layout_type = 'layout', $module_width = '', 
 				$categories_processed = array();
 				$row_layout = '';
 				$this_layout_type = '';
+				$this_layout_applicability = '';
 
 				if ( ! empty( $categories ) ) {
 					foreach( $categories as $category_data ) {
@@ -616,6 +624,7 @@ function et_pb_retrieve_templates( $layout_type = 'layout', $module_width = '', 
 
 				if ( 'layout' === $layout_type ) {
 					$this_layout_type = 'on' === get_post_meta( $single_post->ID, '_et_pb_predefined_layout', true ) ? 'predefined' : 'library';
+					$this_layout_applicability = get_post_meta( $single_post->ID, '_et_pb_layout_applicability', true );
 				}
 
 				// get unsynced global optoins for module
@@ -629,6 +638,7 @@ function et_pb_retrieve_templates( $layout_type = 'layout', $module_width = '', 
 					'shortcode'        => $single_post->post_content,
 					'is_global'        => $global_scope,
 					'layout_type'      => $layout_type,
+					'applicability'    => $this_layout_applicability,
 					'layouts_type'     => $this_layout_type,
 					'module_type'      => $module_type,
 					'categories'       => $categories_processed,
@@ -862,7 +872,7 @@ function et_pb_get_global_module() {
 		wp_reset_postdata();
 
 		if ( !empty( $query->post ) ) {
-			$global_shortcode['shortcode'] = $query->post->post_content;
+			$global_shortcode['shortcode'] = wpautop( $query->post->post_content );
 			$excluded_global_options = get_post_meta( $post_id, '_et_pb_excluded_global_options' );
 			$selective_sync_status = empty( $excluded_global_options ) ? '' : 'updated';
 
@@ -888,7 +898,7 @@ function et_pb_update_layout() {
 		die( -1 );
 	}
 
-	$post_id = isset( $_POST['et_template_post_id'] ) ? $_POST['et_template_post_id'] : '';
+	$post_id = isset( $_POST['et_template_post_id'] ) ? absint( $_POST['et_template_post_id'] ) : '';
 	$new_content = isset( $_POST['et_layout_content'] ) ? et_pb_builder_post_content_capability_check( $_POST['et_layout_content'] ) : '';
 	$layout_type = isset( $_POST['et_layout_type'] ) ? sanitize_text_field( $_POST['et_layout_type'] ) : '';
 
@@ -898,10 +908,16 @@ function et_pb_update_layout() {
 			'post_content' => $new_content,
 		);
 
-		wp_update_post( $update );
+		$result = wp_update_post( $update );
+
+		if ( ! $result || is_wp_error( $result ) ) {
+			wp_send_json_error();
+		}
+
+		ET_Core_PageResource::remove_static_resources( 'all', 'all' );
 
 		if ( 'module' === $layout_type && isset( $_POST['et_unsynced_options'] ) ) {
-			$unsynced_options = stripslashes( $_POST['et_unsynced_options'] );
+			$unsynced_options = sanitize_text_field( stripslashes( $_POST['et_unsynced_options'] ) );
 
 			update_post_meta( $post_id, '_et_pb_excluded_global_options', $unsynced_options );
 		}
@@ -1470,6 +1486,40 @@ function et_fb_get_nonces() {
 	return array_merge( $nonces, $fb_nonces );
 }
 
+if ( ! function_exists( 'et_builder_is_product_tour_enabled' ) ):
+function et_builder_is_product_tour_enabled() {
+	static $product_tour_enabled = null;
+
+	if ( null !== $product_tour_enabled ) {
+		return $product_tour_enabled;
+	}
+
+	if ( ! ( function_exists( 'et_fb_is_enabled' ) && et_fb_is_enabled() ) ) {
+		return $product_tour_enabled = false;
+	}
+
+	/**
+	 * Filters the on/off status of the product tour for the current user.
+	 *
+	 * @since 3.0.64
+	 *
+	 * @param string $product_tour_status_override Accepts 'on', 'off'.
+	 */
+	$product_tour_status_override = apply_filters( 'et_builder_product_tour_status_override', false );
+
+	if ( false !== $product_tour_status_override ) {
+		$product_tour_enabled = 'on' === $product_tour_status_override;
+	} else {
+		$user_id                    = (int) get_current_user_id();
+		$product_tour_settings      = et_get_option( 'product_tour_status', array() );
+		$product_tour_status_global = 'on' === et_get_option( 'et_pb_product_tour_global', 'on' );
+		$product_tour_enabled       = $product_tour_status_global && ( ! isset( $product_tour_settings[ $user_id ] ) || 'on' === $product_tour_settings[ $user_id ] );
+	}
+
+	return $product_tour_enabled;
+}
+endif;
+
 function et_pb_get_backbone_template() {
 	if ( ! wp_verify_nonce( $_POST['et_admin_load_nonce'], 'et_admin_load_nonce' ) ) {
 		die( -1 );
@@ -1498,21 +1548,26 @@ function et_builder_email_add_account() {
 	et_core_security_check( 'manage_options', 'et_builder_email_add_account_nonce' );
 
 	$provider_slug = isset( $_POST['et_provider'] ) ? sanitize_text_field( $_POST['et_provider'] ) : '';
-	$account_name  = isset( $_POST['et_account'] ) ? sanitize_text_field( $_POST['et_account'] ) : '';
-	$api_key       = isset( $_POST['et_api_key'] ) ? sanitize_text_field( $_POST['et_api_key'] ) : '';
+	$name_key      = "et_{$provider_slug}_account_name";
+	$account_name  = isset( $_POST[ $name_key ] ) ? sanitize_text_field( $_POST[ $name_key ] ) : '';
 	$is_BB         = isset( $_POST['et_bb'] );
 
-	if ( empty( $provider_slug ) || empty( $account_name ) || empty( $api_key ) ) {
+	if ( empty( $provider_slug ) || empty( $account_name ) ) {
 		et_core_die();
 	}
 
-	$result = et_core_api_email_fetch_lists( $provider_slug, $account_name, $api_key );
+	unset( $_POST[ $name_key ] );
+
+	$fields = et_builder_email_get_fields_from_post_data( $provider_slug );
+
+	if ( false === $fields  ) {
+		et_core_die();
+	}
+
+	$result = et_core_api_email_fetch_lists( $provider_slug, $account_name, $fields );
 
 	// Get data in builder format
 	$accounts_list = et_builder_email_get_lists_field_data( $provider_slug, $is_BB );
-
-	// Make sure the BB updates its cached templates
-	et_pb_force_regenerate_templates();
 
 	if ( 'success' === $result ) {
 		$result = array(
@@ -1533,6 +1588,31 @@ add_action( 'wp_ajax_et_builder_email_add_account', 'et_builder_email_add_accoun
 endif;
 
 
+if ( ! function_exists( 'et_builder_email_get_fields_from_post_data' ) ):
+function et_builder_email_get_fields_from_post_data( $provider_slug ) {
+	$fields = ET_Core_API_Email_Providers::instance()->account_fields( $provider_slug );
+	$result = array();
+
+	if ( ! $fields ) {
+		// If there are no fields to check then the check passes.
+		return $fields;
+	}
+
+	foreach ( $fields as $field_name => $field_info ) {
+		$key = "et_{$provider_slug}_{$field_name}";
+
+		if ( empty( $_POST[$key] ) && ! isset( $field_info['optional'] ) ) {
+			return false;
+		}
+
+		$result[ $field_name ] = sanitize_text_field( $_POST[ $key ] );
+	}
+
+	return $result;
+}
+endif;
+
+
 if ( ! function_exists( 'et_builder_email_get_lists_field_data' ) ):
 /**
  * Get email list data in a builder's options field format.
@@ -1544,7 +1624,7 @@ if ( ! function_exists( 'et_builder_email_get_lists_field_data' ) ):
  */
 function et_builder_email_get_lists_field_data( $provider_slug, $is_BB = false ) {
 	$signup     = new ET_Builder_Module_Signup();
-	$fields     = $signup->get_fields( 'no_cache' );
+	$fields     = $signup->get_fields();
 	$field_name = $provider_slug . '_list';
 	$field      = $fields[ $field_name ];
 
@@ -1613,7 +1693,7 @@ function et_builder_email_maybe_migrate_accounts() {
 	$builder_migrated = isset( $builder_options[ $builder_migrated_key ] );
 	$divi_migrated    = et_get_option( $divi_migrated_key, false );
 
-	$data_utils = new ET_Core_Data_Utils();
+	$data_utils = ET_Core_Data_Utils::instance();
 	$migrations = array( 'builder' => $builder_migrated, 'divi' => $divi_migrated );
 	$providers  = new ET_Core_API_Email_Providers(); // Ensure the email component group is loaded.
 
@@ -1720,42 +1800,40 @@ if ( ! function_exists( 'et_pb_submit_subscribe_form' ) ):
 function et_pb_submit_subscribe_form() {
 	et_core_security_check( '', 'et_frontend_nonce' );
 
-	$provider_slug = sanitize_text_field( $_POST['et_service'] );
-	$account_name  = sanitize_text_field( $_POST['et_account'] );
-	$args          = array(
-		'list_id'   => sanitize_text_field( $_POST['et_list_id'] ),
-		'email'     => sanitize_email( $_POST['et_email'] ),
-		'name'      => sanitize_text_field( $_POST['et_firstname'] ),
-		'last_name' => sanitize_text_field( $_POST['et_lastname'] ),
-	);
+	$providers = ET_Core_API_Email_Providers::instance();
+	$utils     = ET_Core_Data_Utils::instance();
 
-	if ( empty( $args['name'] ) ) {
-		et_core_die( esc_html__( 'Please enter first name', 'et_builder' ) );
+	$provider_slug = sanitize_text_field( $utils->array_get( $_POST, 'et_provider' ) );
+	$account_name  = sanitize_text_field( $utils->array_get( $_POST, 'et_account' ) );
+
+	if ( ! $provider = $providers->get( $provider_slug, $account_name, 'builder' ) ) {
+		et_core_die( esc_html__( 'Configuration Error: Invalid data.', 'et_builder' ) );
 	}
 
+	$args = array(
+		'list_id'   => sanitize_text_field( $utils->array_get( $_POST, 'et_list_id' ) ),
+		'email'     => sanitize_text_field( $utils->array_get( $_POST, 'et_email' ) ),
+		'name'      => sanitize_text_field( $utils->array_get( $_POST, 'et_firstname' ) ),
+		'last_name' => sanitize_text_field( $utils->array_get( $_POST, 'et_lastname' ) ),
+	);
+
 	if ( ! is_email( $args['email'] ) ) {
-		et_core_die( esc_html__( 'Incorrect email', 'et_builder' ) );
+		et_core_die( esc_html__( 'Please input a valid email address.', 'et_builder' ) );
 	}
 
 	if ( empty( $args['list_id'] ) ) {
-		et_core_die( esc_html__( 'Configuration error: List is not defined', 'et_builder' ) );
+		et_core_die( esc_html__( 'Configuration Error: No list has been selected for this form.', 'et_builder' ) );
 	}
 
 	et_builder_email_maybe_migrate_accounts();
 
-	$providers = et_core_api_email_providers();
-	$provider  = $providers->get( $provider_slug, $account_name );
-	$message   = $provider->subscribe( $args );
+	$result = $provider->subscribe( $args );
 
-	if ( 'success' === $message ) {
-		$message = sprintf( '
-			<h2 class="et_pb_subscribed">%s</h2>',
-			esc_html__( 'Subscribed - look for the confirmation email!', 'et_builder' )
-		);
-		$result  = array( 'success' => $message );
+	if ( 'success' === $result ) {
+		$result  = array( 'success' => true );
 	} else {
-		$message = esc_html__( 'Subscription Error: ', 'et_builder' ) . $message;
-		$result  = array( 'error' => $message );
+		$message = esc_html__( 'Subscription Error: ', 'et_builder' );
+		$result  = array( 'error' => $message . $result );
 	}
 
 	die( json_encode( $result ) );
@@ -2469,10 +2547,14 @@ function et_pb_detect_cache_plugins() {
 	}
 
 	if ( '1' === get_option( 'wordfenceActivated' ) ) {
-		return array(
-			'name' => 'Wordfence',
-			'page' => 'admin.php?page=WordfenceSitePerf',
-		);
+		// Wordfence removed their support of Falcon cache in v6.2.8, so we'll
+		// just check against their `cacheType` setting (if it exists).
+		if ( class_exists( 'wfConfig' ) && 'falcon' == wfConfig::get( 'cacheType' ) ) {
+			return array(
+				'name' => 'Wordfence',
+				'page' => 'admin.php?page=WordfenceSitePerf',
+			);
+		}
 	}
 
 	if ( function_exists( 'cachify_autoload' ) ) {
@@ -2804,6 +2886,11 @@ function et_pb_is_pagebuilder_used( $page_id ) {
 endif;
 
 if ( ! function_exists( 'et_fb_is_enabled' ) ) :
+/**
+ * @internal NOTE: Don't use this from outside builder code! {@see et_core_is_fb_enabled()}.
+ *
+ * @return bool
+ */
 function et_fb_is_enabled( $post_id = false ) {
 	if ( ! $post_id ) {
 		global $post;
@@ -3717,4 +3804,35 @@ function et_prevent_duplicate_item( $stringList, $delimiter ) {
 	$list = explode( $delimiter, $stringList );
 
 	return implode( $delimiter, array_unique( $list ) );
+}
+
+/**
+ * Determining whether unminified scripts should be loaded or not.
+ * @return bool
+ */
+function et_load_unminified_scripts() {
+	static $should_load = null;
+
+	if ( null === $should_load ) {
+		$is_script_debug = defined( 'SCRIPT_DEBUG' ) && SCRIPT_DEBUG;
+
+		$should_load = apply_filters( 'et_load_unminified_scripts', $is_script_debug );
+	}
+
+	return $should_load;
+}
+
+/**
+ * Determining whether unminified styles should be loaded or not
+ */
+function et_load_unminified_styles() {
+	static $should_load = null;
+
+	if ( null === $should_load ) {
+		$is_script_debug = defined( 'SCRIPT_DEBUG' ) && SCRIPT_DEBUG;
+
+		$should_load = apply_filters( 'et_load_unminified_styles', $is_script_debug );
+	}
+
+	return $should_load;
 }

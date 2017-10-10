@@ -269,7 +269,7 @@ function gformDeleteUploadedFile(formId, fieldId, deleteButton){
     parent.find(".ginput_preview").eq(fileIndex).remove();
 
     //displaying single file upload field
-    parent.find("input[type=\"file\"]").removeClass("gform_hidden");
+    parent.find('input[type="file"],.validation_message,#extensions_message_' + formId + '_' + fieldId).removeClass("gform_hidden");
 
     //displaying post image label
     parent.find(".ginput_post_image_file").show();
@@ -752,7 +752,7 @@ function gformAddListItem( addButton, max ) {
 
     // reset all inputs to empty state
     $clone
-        .find( 'input, select' ).attr( 'tabindex', tabindex )
+        .find( 'input, select, textarea' ).attr( 'tabindex', tabindex )
         .not( ':checkbox, :radio' ).val( '' );
     $clone.find( ':checkbox, :radio' ).prop( 'checked', false );
 
@@ -762,6 +762,8 @@ function gformAddListItem( addButton, max ) {
 
     gformToggleIcons( $container, max );
     gformAdjustClasses( $container );
+
+    gform.doAction( 'gform_list_post_item_add', $clone, $container );
 
 }
 
@@ -775,6 +777,8 @@ function gformDeleteListItem( deleteButton, max ) {
 
     gformToggleIcons( $container, max );
     gformAdjustClasses( $container );
+ 
+    gform.doAction( 'gform_list_post_item_delete', $container );
 
 }
 
@@ -1291,8 +1295,9 @@ function renderRecaptcha() {
 
         var $elem      = jQuery( this ),
             parameters = {
-                'sitekey': $elem.data( 'sitekey' ),
-                'theme':   $elem.data( 'theme' )
+                'sitekey':  $elem.data( 'sitekey' ),
+                'theme':    $elem.data( 'theme' ),
+	            'tabindex': $elem.data( 'tabindex' )
             };
 
         if( ! $elem.is( ':empty' ) ) {
@@ -1305,6 +1310,10 @@ function renderRecaptcha() {
 
         grecaptcha.render( this.id, parameters );
 
+	    if( parameters.tabindex ) {
+		    $elem.find( 'iframe' ).attr( 'tabindex', parameters.tabindex );
+	    }
+
         gform.doAction( 'gform_post_recaptcha_render', $elem );
 
     } );
@@ -1316,12 +1325,13 @@ function renderRecaptcha() {
 //----------------------------------------
 
 function gformValidateFileSize( field, max_file_size ) {
-	
+	var validation_element;
+
 	// Get validation message element.
 	if ( jQuery( field ).closest( 'div' ).siblings( '.validation_message' ).length > 0 ) {
-		var validation_element = jQuery( field ).closest( 'div' ).siblings( '.validation_message' );
+		validation_element = jQuery( field ).closest( 'div' ).siblings( '.validation_message' );
 	} else {
-		var validation_element = jQuery( field ).siblings( '.validation_message' );
+		validation_element = jQuery( field ).siblings( '.validation_message' );
 	}
 	
 	
@@ -1334,7 +1344,7 @@ function gformValidateFileSize( field, max_file_size ) {
 	var file = field.files[0];
 	
 	// If selected file is larger than maximum file size, set validation message and unset file selection.
-	if ( file.size > max_file_size ) {
+	if ( file && file.size > max_file_size ) {
 		
 		// Set validation message.
 		validation_element.html( file.name + " - " + gform_gravityforms.strings.file_exceeds_limit );
@@ -1649,29 +1659,34 @@ function gformValidateFileSize( field, max_file_size ) {
 //------ GENERAL FUNCTIONS -------
 //----------------------------------------
 
-function gformInitSpinner( formId, spinnerUrl ) {
+function gformInitSpinner(formId, spinnerUrl) {
 
-    if( typeof spinnerUrl == 'undefined' || ! spinnerUrl ) {
-        spinnerUrl = gform.applyFilters( "gform_spinner_url", gf_global.spinnerUrl, formId );
-    }
-
-	jQuery('#gform_' + formId).submit( function () {
-		if ( jQuery('#gform_ajax_spinner_' + formId).length == 0 ) {
-            /**
-             * Filter the element after which the AJAX spinner will be inserted.
-             *
-             * @since 2.0
-             *
-             * @param object $targetElem jQuery object containing all of the elements after which the AJAX spinner will be inserted.
-             * @param int    formId      ID of the current form.
-             */
-            var $spinnerTarget = gform.applyFilters( 'gform_spinner_target_elem', jQuery('#gform_submit_button_' + formId + ', #gform_wrapper_' + formId + ' .gform_next_button, #gform_send_resume_link_button_' + formId ), formId );
-            $spinnerTarget.after( '<img id="gform_ajax_spinner_' + formId + '"  class="gform_ajax_spinner" src="' + spinnerUrl + '" alt="" />' );
-		}
-	} );
+	jQuery('#gform_' + formId).submit(function () {
+		gformAddSpinner(formId, spinnerUrl);
+	});
 
 }
 
+function gformAddSpinner(formId, spinnerUrl) {
+
+	if (typeof spinnerUrl == 'undefined' || !spinnerUrl) {
+		spinnerUrl = gform.applyFilters('gform_spinner_url', gf_global.spinnerUrl, formId);
+	}
+
+	if (jQuery('#gform_ajax_spinner_' + formId).length == 0) {
+		/**
+		 * Filter the element after which the AJAX spinner will be inserted.
+		 *
+		 * @since 2.0
+		 *
+		 * @param object $targetElem jQuery object containing all of the elements after which the AJAX spinner will be inserted.
+		 * @param int    formId      ID of the current form.
+		 */
+		var $spinnerTarget = gform.applyFilters('gform_spinner_target_elem', jQuery('#gform_submit_button_' + formId + ', #gform_wrapper_' + formId + ' .gform_next_button, #gform_send_resume_link_button_' + formId), formId);
+		$spinnerTarget.after('<img id="gform_ajax_spinner_' + formId + '"  class="gform_ajax_spinner" src="' + spinnerUrl + '" alt="" />');
+	}
+
+}
 
 
 //----------------------------------------
