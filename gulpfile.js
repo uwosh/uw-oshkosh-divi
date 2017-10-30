@@ -21,13 +21,16 @@ const scsslint = require('gulp-scss-lint');
 const browserSync = require('browser-sync').create();
 const watch = require('gulp-watch');
 
-gulp.task('serve', function(){
+// defining the paths to the plugins
+let plugins = ['dist/wp-content/plugins/uwmpeople', 'dist/wp-content/plugins/digital-measures-shortcodes'];
+
+gulp.task('serve', function(cb){
   // Building and piping the files before browserSync init
-  runSequence('build-theme', 'bs-init');
+  runSequence('build-theme', 'build-plugins', 'bs-init', cb);
 
   // Watching all files in the src
-  return watch('src/**/*.*', function(){
-    runSequence('build-theme', 'bs-reload');
+  return watch('src/**/*.*', function(cb){
+    runSequence('build-theme', 'build-plugins', 'bs-reload', cb);
   });
 });
 
@@ -43,7 +46,7 @@ gulp.task('bs-reload', function (){
 });
 
 gulp.task('default', function(cb){
-  runSequence('build-theme');
+  runSequence('build-theme', 'build-plugins');
 });
 
 gulp.task('build-theme', function(cb) {
@@ -109,6 +112,22 @@ gulp.task('js-theme-lint', function(){
 gulp.task('theme-scss-lint', function() {
   return gulp.src('src/themes/**/style/*.scss')
     .pipe(scsslint({'config': 'config/scss-lint-config.yml'}));
+});
+
+
+// Tasks for the WordPressplugin plugin build
+gulp.task('build-plugins', function(cb){
+  runSequence('clean-plugin', 'copy-plugin', cb);
+});
+
+gulp.task('clean-plugin', function() {
+    return gulp.src(plugins)
+        .pipe(clean());
+});
+
+gulp.task('copy-plugin', function(cp) {
+  return gulp.src(['src/plugins/**'])
+        .pipe(gulp.dest('dist/wp-content/plugins/'));
 });
 
 
