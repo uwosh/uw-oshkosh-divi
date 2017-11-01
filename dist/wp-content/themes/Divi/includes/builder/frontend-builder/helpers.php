@@ -121,6 +121,7 @@ function et_fb_backend_helpers() {
 	}
 
 	$google_fonts = array_merge( array( 'Default' => array() ), et_builder_get_google_fonts() );
+	$custom_user_fonts = et_builder_get_custom_fonts();
 	$current_user = wp_get_current_user();
 	$current_url  = ( is_ssl() ? 'https://' : 'http://' ) . $_SERVER['HTTP_HOST'] . $_SERVER['REQUEST_URI'];
 
@@ -186,6 +187,10 @@ function et_fb_backend_helpers() {
 		'googleAPIKey'                 => et_pb_is_allowed( 'theme_options' ) ? get_option( 'et_google_api_settings' ) : '',
 		'googleFontsList'              => array_keys( $google_fonts ),
 		'googleFonts'                  => $google_fonts,
+		'customFonts'                  => $custom_user_fonts,
+		'removedFonts'                 => et_builder_old_fonts_mapping(),
+		'allFontWeights'               => et_builder_get_font_weight_list(),
+		'allFontFormats'               => et_pb_get_supported_font_formats(),
 		'gutterWidth'                  => et_get_option( 'gutter_width', 3 ),
 		'fontIcons'                    => et_pb_get_font_icon_symbols(),
 		'fontIconsDown'                => et_pb_get_font_down_icon_symbols(),
@@ -894,6 +899,13 @@ function et_fb_backend_helpers() {
 			),
 			'searchOptions' => esc_html__( 'Search Options', 'et_builder' ),
 		),
+		'selectControl' => array(
+			'typeToSearch' => esc_html__( 'Start Typing', 'et_builder' ),
+			'subgroups'    => array(
+				'recent'   => esc_html__( 'Recent', 'et_builder' ),
+				'uploaded' => esc_html__( 'Custom Fonts', 'et_builder' ),
+			),
+		),
 		'history' => array(
 			'modal' => array(
 				'title' => esc_html__( 'Editing History', 'et_builder' ),
@@ -911,6 +923,33 @@ function et_fb_backend_helpers() {
 				),
 			),
 			'shortcuts' => et_builder_get_shortcuts('fb'),
+		),
+		'fonts' => array(
+			'fontWeight'     => esc_html__( 'Font Weight', 'et_builder' ),
+			'fontStyle'      => esc_html__( 'Font Style', 'et_builder' ),
+			'delete'         => esc_html__( 'Delete', 'et_builder' ),
+			'deleteConfirm'  => esc_html__( 'Are You Sure Want to Delete', 'et_builder' ),
+			'confirmAction'  => esc_html__( 'Are You Sure?', 'et_builder' ),
+			'cancel'         => esc_html__( 'Cancel', 'et_builder' ),
+			'upload'         => esc_html__( 'Upload', 'et_builder' ),
+			'font'           => esc_html__( 'Font', 'et_builder' ),
+			'chooseFile'     => esc_html__( 'Choose Font Files', 'et_builder' ),
+			'supportedFiles' => esc_html__( 'Supported File Formats', 'et_builder' ),
+			'fileError'      => esc_html__( 'Unsupported File Format', 'et_builder' ),
+			'noFile'         => esc_html__( 'Drag Files Here', 'et_builder' ),
+			'fontName'       => esc_html__( 'Name Your Font', 'et_builder' ),
+			'fontNameLabel'  => esc_html__( 'Font Name', 'et_builder' ),
+			'selectedFiles'  => esc_html__( 'Selected Font Files', 'et_builder' ),
+			'weightsSupport' => esc_html__( 'Supported Font Weights', 'et_builder' ),
+			'weightsHelp'    => esc_html__( 'Choose the font weights supported by your font. Select "All" if you don\'t know this information or if your font includes all weights.', 'et_builder' ),
+			'noFilesError'   => esc_html__( 'Please Select At Least One File', 'et_builder' ),
+			'searchFonts'    => esc_html__( 'Search Fonts', 'et_builder' ),
+			'underline'      => esc_html__( 'Underline', 'et_builder' ),
+			'strikethrough'  => esc_html__( 'Strikethrough', 'et_builder' ),
+			'color'          => esc_html__( 'Color', 'et_builder' ),
+			'style'          => esc_html__( 'Style', 'et_builder' ),
+			'all'            => esc_html__( 'All', 'et_builder' ),
+			
 		),
 		'app' => array(
 			'modal' => array(

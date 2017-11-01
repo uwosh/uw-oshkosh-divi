@@ -5,7 +5,7 @@ window.wp = window.wp || {};
 /**
  * The builder version and product name will be updated by grunt release task. Do not edit!
  */
-window.et_builder_version = '3.0.79';
+window.et_builder_version = '3.0.85';
 window.et_builder_product_name = 'Divi';
 
 ( function($) {
@@ -310,6 +310,64 @@ window.et_builder_product_name = 'Divi';
 
 	}
 	et_builder_load_backbone_templates();
+
+	/**
+	 * Get value from object located at path.
+	 *
+	 * @see https://stackoverflow.com/a/15643385/2639936
+	 *
+	 * @param obj
+	 * @param path
+	 * @return {*}
+	 */
+	function get( obj, path ) {
+		return _.reduce( path.split( '.' ), function ( prev, curr ) {
+			return prev ? prev[curr] : undefined;
+		}, obj );
+	}
+
+	/**
+	 * Check if path exists in object.
+	 *
+	 * @see https://stackoverflow.com/a/42042678/2639936
+	 *
+	 * @param obj
+	 * @param path
+	 * @return {boolean}
+	 */
+	function has( obj, path ) {
+		if ( ! path ) {
+			return true;
+		}
+
+		var path_parts = path.split( '.' );
+		var first_part = _.first( path_parts );
+
+		return _.has( obj, first_part ) && has( obj[first_part], _.rest( path_parts ).join( '.' ) );
+	}
+
+	/**
+	 * Determine whether or not a string ends with another string.
+	 *
+	 * @param string
+	 * @param substring
+	 * @return {boolean}
+	 */
+	function endsWith( string, substring ) {
+		return string.substr( string.length - substring.length, string.length ) === substring;
+	}
+
+	/**
+	 * Determine whether or not a string starts with another string.
+	 *
+	 * @param string
+	 * @param substring
+	 * @return {boolean}
+	 */
+	function startsWith( string, substring ) {
+		return string.substr( 0, string.length ) === substring;
+	}
+
 
 	$( document ).ready( function() {
 
@@ -2768,6 +2826,7 @@ window.et_builder_product_name = 'Divi';
 			performSaving : function( option_tabs_selector ) {
 				var thisClass  = this,
 					attributes = {},
+					unsetAttrs = [],
 					defaults   = {},
 					options_selector = typeof option_tabs_selector !== 'undefined' && '' !== option_tabs_selector ? option_tabs_selector : 'input, select, textarea, #et_pb_content_main';
 
@@ -2830,11 +2889,13 @@ window.et_builder_product_name = 'Divi';
 						setting_value,
 						checked_values = [],
 						name = $this_el.is('#et_pb_content_main') ? 'et_pb_content_new' : $this_el.attr('id'),
-						default_value = $this_el.data('default') || '',
-						custom_css_option_value;
-
-					// convert default value to string to make sure current and default values have the same type
-					default_value = default_value + '';
+						default_value = et_pb_get_default_setting_value($this_el) || '',
+						custom_css_option_value,
+						isEqualToDefault = function (v1, v2) {
+							return $this_el.hasClass('et-pb-range-input')
+								? _.isEqual(parseFloat(v1), parseFloat(v2))
+								: _.isEqual(v1, v2);
+						};
 
 					// name attribute is used in normal html checkboxes, use it instead of ID
 					if ( $this_el.is( ':checkbox' ) ) {
@@ -2917,7 +2978,11 @@ window.et_builder_product_name = 'Divi';
 					}
 
 					// save the attribute value
-					attributes[name] = setting_value;
+					if ( ! isEqualToDefault(setting_value, default_value) ) {
+						attributes[name] = setting_value;
+					} else {
+						unsetAttrs.push(name);
+					}
 				} );
 
 				// add defaults object
@@ -2969,6 +3034,7 @@ window.et_builder_product_name = 'Divi';
 
 				// set model attributes
 				this.model.set( attributes );
+				unsetAttrs.map(this.model.unset.bind(this.model));
 			},
 
 			saveTemplate : function( event ) {
@@ -3850,37 +3916,45 @@ window.et_builder_product_name = 'Divi';
 							defaultColor : $this.data('default-color'),
 							palettes     : '' !== et_pb_options.page_color_palette ? et_pb_options.page_color_palette.split( '|' ) : et_pb_options.default_color_palette.split( '|' ),
 							change       : function( event, ui ) {
-								var $this_el      = $(this),
-									$option_container = $this_el.closest( '.et-pb-option-container' ),
-									$reset_button = $option_container.find( '.et-pb-reset-setting' ),
-									$custom_color_container = $this_el.closest( '.et-pb-custom-color-container' ),
-									$preview = $option_container.find( '.et-pb-option-preview' ),
-									has_preview = $this_el.hasClass('et-pb-color-picker-hex-has-preview'),
-									is_gradient_colorpicker = $this_el.closest('.et_pb_background-tab--gradient').length > 0,
-									current_value = $this_el.val(),
-									default_value;
+								var $this_el      = $(this);
+								var $option_container = $this_el.closest( '.et-pb-option-container' );
+								var $reset_button = $option_container.find( '.et-pb-reset-setting' );
+								var $custom_color_container = $this_el.closest( '.et-pb-custom-color-container' );
+								var $preview = $option_container.find( '.et-pb-option-preview' );
+								var has_preview = $this_el.hasClass('et-pb-color-picker-hex-has-preview');
+								var is_gradient_colorpicker = $this_el.closest('.et_pb_background-tab--gradient').length > 0;
+								var current_value = ui.color.toString().toLowerCase();
+								var default_value;
 
 								if ( $custom_color_container.length ) {
 									$custom_color_container.find( '.et-pb-custom-color-picker' ).val( ui.color.toString() );
+
+									// trigger change event if color picker inside font option for further processing
+									if ( $option_container.hasClass('et-pb-option-container--font') ) {
+										$custom_color_container.find( '.et-pb-custom-color-picker' ).trigger('change');
+									}
 								}
 
-								default_value = et_pb_get_default_setting_value( $this_el );
+								default_value = et_pb_get_default_setting_value( $this_el ).toLowerCase();
 
-								if ( current_value !== default_value ) {
-									if ( $reset_button.length  ) {
-										$reset_button.addClass( 'et-pb-reset-icon-visible' );
-									}
+								// do not apply default rules for reset button inside the font option. It has specific rules
+								if ( ! $option_container.hasClass('et-pb-option-container--font') ) {
+									if ( current_value !== default_value ) {
+										if ( $reset_button.length  ) {
+											$reset_button.addClass( 'et-pb-reset-icon-visible' );
+										}
 
-									if ( has_preview ) {
-										$preview.removeClass('et-pb-option-preview--empty');
-									}
-								} else {
-									if ( $reset_button.length  ) {
-										$reset_button.removeClass( 'et-pb-reset-icon-visible' );
-									}
+										if ( has_preview ) {
+											$preview.removeClass('et-pb-option-preview--empty');
+										}
+									} else {
+										if ( $reset_button.length  ) {
+											$reset_button.removeClass( 'et-pb-reset-icon-visible' );
+										}
 
-									if ( has_preview ) {
-										$preview.addClass('et-pb-option-preview--empty');
+										if ( has_preview ) {
+											$preview.addClass('et-pb-option-preview--empty');
+										}
 									}
 								}
 
@@ -3923,7 +3997,9 @@ window.et_builder_product_name = 'Divi';
 								if ( $this_el.hasClass( 'et-pb-is-cleared' ) ) {
 									$this_el.removeClass( 'et-pb-is-cleared' )
 								}
-							},
+								//Since this event is triggered before the input value is changed we can't use 'et_pb_setting:change'
+								$this_el.trigger('et_pb_setting:color_picker:change', [current_value]);
+              },
 							clear: function() {
 								$(this).val( et_pb_options.invalid_color );
 								$(this).closest( '.et-pb-option-container' ).find( '.et-pb-main-setting' ).val( '' );
@@ -3959,7 +4035,7 @@ window.et_builder_product_name = 'Divi';
 							return true;
 						}
 
-						if ( default_color !== $this.val() ) {
+						if ( default_color.toLowerCase() !== $this.val().toLowerCase() ) {
 							$reset_button.addClass( 'et-pb-reset-icon-visible' );
 						}
 					} );
@@ -4719,15 +4795,15 @@ window.et_builder_product_name = 'Divi';
 							defaultColor : $this.data('default-color'),
 							palettes     : '' !== et_pb_options.page_color_palette ? et_pb_options.page_color_palette.split( '|' ) : et_pb_options.default_color_palette.split( '|' ),
 							change       : function( event, ui ) {
-								var $this_el      = $(this),
-									$option_container = $this_el.closest( '.et-pb-option-container' ),
-									$reset_button = $option_container.find( '.et-pb-reset-setting' ),
-									$custom_color_container = $this_el.closest( '.et-pb-custom-color-container' ),
-									$preview = $option_container.find( '.et-pb-option-preview' ),
-									has_preview = $this_el.hasClass('et-pb-color-picker-hex-has-preview'),
-									is_gradient_colorpicker = $this_el.closest('.et_pb_background-tab--gradient').length > 0,
-									current_value = $this_el.val(),
-									default_value;
+								var $this_el      = $(this);
+								var $option_container = $this_el.closest( '.et-pb-option-container' );
+								var $reset_button = $option_container.find( '.et-pb-reset-setting' );
+								var $custom_color_container = $this_el.closest( '.et-pb-custom-color-container' );
+								var $preview = $option_container.find( '.et-pb-option-preview' );
+								var has_preview = $this_el.hasClass('et-pb-color-picker-hex-has-preview');
+								var is_gradient_colorpicker = $this_el.closest('.et_pb_background-tab--gradient').length > 0;
+								var current_value = ui.color.toString().toLowerCase();
+								var default_value;
 
 								if ( $custom_color_container.length ) {
 									$custom_color_container.find( '.et-pb-custom-color-picker' ).val( ui.color.toString() );
@@ -4737,7 +4813,7 @@ window.et_builder_product_name = 'Divi';
 									return;
 								}
 
-								default_value = et_pb_get_default_setting_value( $this_el );
+								default_value = et_pb_get_default_setting_value( $this_el ).toLowerCase();
 
 								if ( current_value !== default_value ) {
 									$reset_button.addClass( 'et-pb-reset-icon-visible' );
@@ -4794,6 +4870,9 @@ window.et_builder_product_name = 'Divi';
 								if ( $this_el.hasClass( 'et-pb-is-cleared' ) ) {
 									$this_el.removeClass( 'et-pb-is-cleared' )
 								}
+
+								// Since this event is triggered before the input value is changed we can't use 'et_pb_setting:change'
+								$this_el.trigger('et_pb_setting:color_picker:change', [current_value]);
 							},
 							width        : $this.closest( '.et-pb-option--background' ).length ? 660 : 300,
 							height       : 190,
@@ -10989,6 +11068,7 @@ window.et_builder_product_name = 'Divi';
 				$modal = $( '<div class="et_pb_modal_overlay' + on_top_class + on_top_both_actions_class + '" data-action="' + action + '"></div>' ),
 				modal_interface = $( '#et-builder-prompt-modal-' + action ).length ? $( '#et-builder-prompt-modal-' + action ).html() : $( '#et-builder-prompt-modal' ).html(),
 				modal_content = _.template( $( '#et-builder-prompt-modal-' + action + '-text' ).html() ),
+				auto_close_modal = true,
 				modal_attributes = {},
 				$yes_no_button_wrapper,
 				$yes_no_button,
@@ -11011,6 +11091,10 @@ window.et_builder_product_name = 'Divi';
 				modal_attributes.module_type = current_view.model.get( 'type' );
 			}
 
+			if ( 'delete_font' === action ) {
+				modal_attributes.font_name = cid_or_element;
+			}
+
 			if ( ! _.isUndefined( template_settings ) ) {
 				$.extend( modal_attributes, template_settings );
 			}
@@ -11018,6 +11102,57 @@ window.et_builder_product_name = 'Divi';
 			$modal.append( modal_interface );
 
 			$modal.find( '.et_pb_prompt_modal' ).prepend( modal_content( modal_attributes ) );
+
+			if ( 'upload_font' === action ) {
+				// Populate file name.
+				$modal.find( '.et-core-portability-import-form input[type="file"]' ).on( 'change', function( e ) {
+					var files = $( this ).get( 0 ).files;
+					var fonts_list = '';
+					var supported_file_formats = et_pb_options.supported_font_formats;
+
+					if ( ! _.isEmpty( files ) ) {
+						_.each( files, function( file_data ) {
+							var file_name = file_data['name'];
+
+							// check selected file format.
+							_.each(supported_file_formats, function( file_ext ) {
+								var processed_ext = '.' + file_ext;
+
+								if ( file_name.match(file_ext+'$') ) {
+									fonts_list += '<div class="et-fb-font-files-list-item" data-file_format="' + file_ext + '" data-file_name="' + file_name + '"><span class="et-fb-font-files-list-item-remove"></span>' + file_name + '</div>';
+								}
+							});
+						});
+					}
+
+					if ( '' !== fonts_list ) {
+						$( '.et-font-uploader-selected-fonts' ).html('');
+						$( '.et-font-uploader-selected-fonts' ).removeClass('et-font-uploader-hidden-field').append( fonts_list );
+					}
+				} );
+
+				// Trigger file window.
+				$modal.find( '.et-core-portability-import-form button' ).click( function( e ) {
+					e.preventDefault();
+					var $this_form = $( this ).closest( '.et-core-portability-import-form' );
+					$this_form.find( 'input[type="file"]' ).trigger( 'click' );
+				} );
+
+				$modal.on( 'click', '.et-fb-font-files-list-item-remove', function( e ) {
+					$( e.target ).closest('.et-fb-font-files-list-item').remove();
+				} );
+
+				$modal.find( '.et-font-uploader-all-weights' ).on( 'change', function( e ) {
+					var is_all_selected = $(this).prop( 'checked' );
+					var $other_weights = $modal.find( '.et-font-uploader-weight-values' );
+
+					if ( ! is_all_selected ) {
+						$other_weights.removeClass( 'et-font-uploader-hidden-section' );
+					} else {
+						$other_weights.addClass( 'et-font-uploader-hidden-section' );
+					}
+				});
+			}
 
 			if ( 'open_settings' === action ) {
 				$modal.addClass( 'et_pb_builder_settings' );
@@ -11637,9 +11772,73 @@ window.et_builder_product_name = 'Divi';
 							et_pb_create_prompt_modal( 'turn_off_ab_testing' );
 						}
 						break;
+
+					case 'delete_font' :
+						auto_close_modal = false;
+						if ( ! $( this ).hasClass('et-font-uploader-disabled' ) ) {
+							et_pb_process_user_font( 'remove', {'font_name':cid_or_element}, $prompt_modal, $( this ) );
+						}
+						break;
+
+					case 'upload_font' :
+						var font_name = $modal.find( '#et-font-uploader-name' ).val();
+						var font_files = $modal.find( '.et-core-portability-import-form input[type="file"]' ).get( 0 ).files;
+						var font_weight = $modal.find( '.et-font-uploader-all-weights' ).prop( 'checked' ) ? 'all' : '';
+						var new_font_data = {};
+						var error_message = '';
+
+						$modal.find( '.et-font-uploader-error' ).html('');
+
+						auto_close_modal = false;
+
+						// get the selected font weights if all is not selected
+						if ( 'all' !== font_weight ) {
+							var $other_weights_values = $modal.find( '.et-font-uploader-weight-values input' );
+							var valid_values = ['100', '200', '300', '400', '500', '600', '700', '800', '900' ];
+							var selected_weights = [];
+
+							$.each( $other_weights_values, function( optionIndex, $option_el ) {
+								if ( $( $option_el ).prop('checked') ) {
+									selected_weights.push( valid_values[optionIndex] );
+								}
+							});
+
+							font_weight = selected_weights.join(',');
+						}
+
+						if ( '' === font_name ) {
+							error_message += et_pb_options.font_name_error + '\n';
+						}
+
+						if ( _.isUndefined(font_files) ) {
+							error_message += et_pb_options.font_file_error + '\n';
+						}
+
+						if ( '' === font_weight ) {
+							error_message += et_pb_options.font_weight_error + '\n';
+						}
+
+						if ( '' !== error_message ) {
+							$modal.find( '.et-font-uploader-error' ).html(error_message);
+						} else {
+							new_font_data = {
+								'font_name' : font_name,
+								'font_weight' : font_weight,
+								'generic_family' : 'sans-serif',
+								'font_files' : font_files
+							};
+							
+							if ( ! $( this ).hasClass('et-font-uploader-disabled' ) ) {
+								et_pb_process_user_font( 'add', new_font_data, $prompt_modal, $( this ), cid_or_element );
+							}
+						}
+
+						break;
 				}
 
-				et_pb_close_modal( $( this ) );
+				if ( auto_close_modal ) {
+					et_pb_close_modal( $( this ) );
+				}
 			} );
 
 			$( '.et_pb_modal_overlay .et_pb_prompt_proceed_alternative' ).click( function( event ) {
@@ -11698,6 +11897,113 @@ window.et_builder_product_name = 'Divi';
 			} );
 		}
 
+		function et_pb_process_user_font( action, font_data, $modal, $button, upload_font_to ) {
+			var font_settings = {};
+
+			if ( 'add' === action ) {
+				font_settings = JSON.stringify({
+					'font_weights': font_data.font_weight,
+					'generic_family': font_data.generic_family
+				});
+			}
+
+			var form_data = new FormData();
+			var request_data = {
+				action : 'et_pb_process_custom_font',
+				et_pb_font_action : action,
+				et_fb_upload_font_nonce : et_pb_options.upload_font_nonce,
+				et_pb_font_name: font_data.font_name,
+				et_pb_font_settings: font_settings
+			};
+
+			_.each( font_data.font_files, function(single_font, index) {
+				// process only font files which were not removed from the list by user
+				var $selected_font_el = $( '.et-font-uploader-selected-fonts' ).find("[data-file_name='" + single_font.name + "']");
+
+				if ( $selected_font_el.length > 0 ) {
+					var font_ext = $selected_font_el.data('file_format');
+					request_data['et_pb_font_file_' + font_ext] = single_font;
+				}
+			});
+
+			_.each( request_data, function(value, name) {
+				form_data.append( name, value);
+			} );
+
+			$.ajax( {
+				type: "POST",
+				url: et_pb_options.ajaxurl,
+				contentType: false,
+				processData: false,
+				data: form_data,
+				beforeSend: function() {
+					$modal.append( '<div id="et_pb_loading_animation"></div>' );
+					$button.addClass('et-font-uploader-disabled');
+				},
+				complete: function() {
+					$modal.find( '#et_pb_loading_animation' ).remove();
+				},
+				success: function( data ) {
+					var result = $.parseJSON( data );
+
+					if ( ! _.isEmpty( result['error'] ) ) {
+						$button.removeClass('et-font-uploader-disabled');
+						$modal.find( '.et-font-uploader-error' ).html( result['error'] );
+					} else {
+						// update custom fonts list after font removed
+						if ( 'remove' === action && !_.isUndefined( et_pb_options.user_fonts[ font_data.font_name ] ) ) {
+							delete et_pb_options.user_fonts[ font_data.font_name ];
+							var font_item_class = '.select-option-item-' + font_data.font_name.replace(/ /g, '_');
+
+							if ( $( font_item_class ).length > 0 ) {
+								$( font_item_class ).each( function() {
+									var $current_font_item = $(this);
+									var is_selected_font = $current_font_item.hasClass('et_pb_selected_menu_item');
+									var $option_container = is_selected_font ? $current_font_item.closest( '.et-pb-option-container--font' ) : '';
+
+									$current_font_item.remove();
+
+									// reset font-family to default if currently selected font removed
+									if ( is_selected_font ) {
+										et_pb_update_recent_fonts( font_data.font_name, 'remove' );
+										et_pb_update_font_settings($option_container, 'default');
+										et_pb_setup_font_setting( $option_container, false );
+									}
+								});
+							}
+						}
+
+						if ( 'add' === action ) {
+							if ( ! _.isEmpty( result.updated_fonts ) ) {
+								et_pb_options.user_fonts = result.updated_fonts;
+								var new_font_name = result.uploaded_font;
+
+								// add new font to all custom font sections in opened modal
+								// select new font in the option where Upload font was initiated
+								if ( ! _.isUndefined( new_font_name ) ) {
+									var new_font_item_class = new_font_name.replace(/ /g, '_');
+									var $all_custom_fonts_sections = $( '.et-pb-option-subgroup-uploaded .et-pb-option-subgroup-container' );
+									var $font_item_el = '<li class="select-option-item select-option-item-custom-font select-option-item-' + new_font_item_class + '" data-value="' + new_font_name + '">' + new_font_name + '<span class="et-pb-user-font-marker"></span></li>';
+
+									if ( $all_custom_fonts_sections.length > 0 ) {
+										$all_custom_fonts_sections.append($font_item_el);
+									}
+
+									// select new font for the appropriate option
+									var $option_to_activate = _.isUndefined( upload_font_to ) ? '' : $( '[data-option_name="' + upload_font_to + '"]' ).find('.select-option-item-custom-font[data-value="' + new_font_name + '"]');
+									if ( '' !== $option_to_activate && $option_to_activate.length > 0 ) {
+										$option_to_activate.click();
+									}
+								}
+							}
+						}
+
+						et_pb_close_modal( $modal );
+					}
+				},
+			});
+		}
+
 		function et_pb_update_tracking_shortcode() {
 			var shortcode = '[et_pb_split_track id="' + et_pb_ab_js_options.test_id + '" /]';
 			setTimeout( function(){
@@ -11717,9 +12023,11 @@ window.et_builder_product_name = 'Divi';
 
 		function et_pb_close_modal( $this_button ) {
 			var $modal_overlay = $this_button.closest( '.et_pb_modal_overlay' );
+			var $body = $('body');
 
 			// Unlock body scroll
-			$('body').removeClass('et_pb_stop_scroll');
+			$body.removeClass('et_pb_stop_scroll');
+			$body.removeClass('et_pb_advanced_menu_opened');
 
 			$modal_overlay.addClass( 'et_pb_modal_closing' );
 
@@ -12093,11 +12401,16 @@ window.et_builder_product_name = 'Divi';
 			var $main_custom_margin_field   = $container.find( '.et_custom_margin_main' );
 			var $custom_margin_fields       = $container.find( '.et_custom_margin' );
 
-			var $font_select                = $container.find( 'select.et-pb-font-select' );
+			var $font_select                = $container.find( '.et-pb-option--font' );
 			var $font_style_fields          = $container.find( '.et_builder_font_style' );
+			var $font_styles_selects        = $container.find( '.et_builder_font_weight, .et_pb_font_line_style_select, .et-pb-font-line-color-value' );
+			var $font_select_placeholder    = $container.find( '.et_pb_select_placeholder' );
 
-			var $text_align_selects           = $container.find( 'select.et-pb-text-align-select' );
+			var $text_align_selects          = $container.find( 'select.et-pb-text-align-select' );
 			var $text_align_button           = $container.find( '.et_builder_text_align' );
+
+			var $multiple_buttons_select	 = $container.find( '.et_pb_multiple_buttons_wrapper select' );
+			var $multiple_buttons_button     = $container.find( '.et_builder_multiple_buttons_button' );
 
 			var $range_field                = $container.find( '.et-pb-range' );
 			var $range_input                = $container.find( '.et-pb-range-input' );
@@ -12117,6 +12430,7 @@ window.et_builder_product_name = 'Divi';
 			var $options_wrapper            = $container.find( '.et_options_list:not(.et_conditional_logic)' );
 			var $conditional_logic          = $container.find( '.et_conditional_logic' );
 			var $select_animation           = $container.find( '.et_select_animation' );
+			var $presets                    = $container.find( '.et-preset-container' );
 			var $background_fields          = $container.find( '.et-pb-option--background, .et-pb-option--background-field' );
 			var $regular_input              = $container.find( 'input.regular-text.et_pb_setting_mobile' );
 			var hidden_class                = 'et_pb_hidden';
@@ -12137,6 +12451,8 @@ window.et_builder_product_name = 'Divi';
 			var $google_maps_api_button     = $container.find( '.et_pb_update_google_key' );
 
 			var $id_field                   = $container.find('#et_pb_field_id');
+
+			var $tabbed_subtoggles          = $container.find('.et_pb_contains_tabbed_subtoggle');
 
 			if ( $google_maps_api_option.length ) {
 				$google_maps_api_button.attr( 'href', et_pb_options.options_page_url );
@@ -12163,6 +12479,40 @@ window.et_builder_product_name = 'Divi';
 				$gutter_width_option.siblings( '.et-pb-main-setting' ).data( 'default', et_pb_options.page_gutter_width );
 				$gutter_width_option.data( 'default', et_pb_options.page_gutter_width );
 			}
+
+			if ( $tabbed_subtoggles.length ) {
+				$tabbed_subtoggles.each( function() {
+					var $this_section = $( this );
+					var $navigation = $this_section.find( '.subtoggle_tabs_nav' ); 
+					
+					// do not proceed if no navigation found
+					if ( $navigation.length < 1 || $navigation.find( '.subtoggle_tabs_nav_item' ).length < 1 ) {
+						return;
+					}
+
+					var navigation_item_width = ( 100/$navigation.find( '.subtoggle_tabs_nav_item' ).length ) + '%';
+
+					// adjust width of navigation tabs to fill the width of settings modal
+					$navigation.find( '.subtoggle_tabs_nav_item' ).css( { 'width' : navigation_item_width } );
+
+					// automatically open the first tab on load
+					$( $navigation.find( '.subtoggle_tabs_nav_item a' )[0] ).addClass( 'et-bb-active-sub-tab' );
+					$( $this_section.find( '.et_pb_tabbed_subtoggle' )[0] ).addClass( 'et-bb-active-subtoggle' );
+
+					$navigation.find( '.subtoggle_tabs_nav_item a' ).click( function( event ) {
+						event.preventDefault();
+
+						var $clicked_button = $( this );
+						var clicked_button_id = $clicked_button.data( 'tab_id' );
+
+						$this_section.find( '.subtoggle_tabs_nav_item a' ).removeClass( 'et-bb-active-sub-tab' );
+						$clicked_button.addClass( 'et-bb-active-sub-tab' );
+
+						$this_section.find( '.et_pb_tabbed_subtoggle' ).removeClass( 'et-bb-active-subtoggle' )
+						$this_section.find( "[data-tab_id='" + clicked_button_id + "']" ).addClass( 'et-bb-active-subtoggle' );
+					});
+				});
+			} 
 
 			if ( $mobile_settings_tabs.length ) {
 				$mobile_settings_tabs.each( function() {
@@ -12997,6 +13347,47 @@ window.et_builder_product_name = 'Divi';
 				})
 			});
 
+			$presets.each(function() {
+				var $this = $(this);
+				var $style = $this.find('input[type="hidden"]');
+				var active_class = 'et-preset-active';
+				var change_value = function(id, value){
+					var el = $this.closest('.et-pb-options-toggle-container').find('#et_pb_' + id);
+					el.val(value);
+					el.trigger('change');
+				};
+				var update_presets = function () {
+					$this.find('.et-preset').removeClass(active_class);
+					$this.find('.et-preset[data-value="' + $style.val() + '"]').addClass(active_class);
+				};
+
+				$this.on('click', '.et-preset', function(event) {
+					var $preset = $(this);
+					var type = $preset.attr('data-value').trim();
+					var fields = {};
+					event.preventDefault();
+
+					if ( $preset.hasClass(active_class) ) {
+						return;
+					}
+
+					$this.find('.et-preset').removeClass(active_class);
+
+					$preset.addClass(active_class);
+					$style.val( type ).trigger('change');
+
+					try	{
+						fields = JSON.parse($preset.attr('data-fields'));
+					} catch(e){
+						fields = [];
+					}
+
+					$.each(fields, change_value);
+				});
+				$style.on('change', update_presets);
+				update_presets();
+			});
+
 			$yes_no_button.click( function() {
 				var $this_el = $( this ),
 					$this_select = $this_el.closest( '.et_pb_yes_no_button_wrapper' ).find( 'select' );
@@ -13362,58 +13753,121 @@ window.et_builder_product_name = 'Divi';
 
 			$font_style_fields.click( function() {
 				var $this_el = $(this);
+				var $options_container = $this_el.closest('.et_builder_font_styles');
+				var related_options = [['uppercase', 'capitalize'], ['underline', 'line_through']];
+				var button_name = $this_el.data('button_name');
+				var $main_container = $this_el.closest( '.et-pb-option-container--font' );
 
 				$this_el.toggleClass( 'et_font_style_active' );
 
-				$font_select.trigger( 'change' );
+				// Option can affect other options, i.e. enabling one option from set disables other options
+				// Check if one of the related options enabled and disable others
+				_.forEach( related_options, function(options_set) {
+					if ( -1 !== _.indexOf( options_set, button_name ) ) {
+						_.forEach( options_set, function(related_option) {
+							if ( related_option !== button_name ) {
+								$options_container.find('.et_builder_' + related_option + '_font').removeClass( 'et_font_style_active' );
+							}
+						});
+					}
+				});
+
+				et_pb_update_font_settings( $this_el.closest( '.et-pb-option-container--font' ) );
+				et_pb_setup_font_setting( $this_el.closest( '.et-pb-option--font' ) );
 
 				return false;
 			} );
-
-			$font_select.change( function() {
-				var $this_el           = $(this),
-					$main_option       = $this_el.siblings( 'input.et-pb-font-select' ),
-					$style_options     = $this_el.siblings( '.et_builder_font_styles' ),
-					$bold_option       = $style_options.find( '.et_builder_bold_font' ),
-					$italic_option     = $style_options.find( '.et_builder_italic_font' ),
-					$uppercase_option  = $style_options.find( '.et_builder_uppercase_font' ),
-					$underline_option  = $style_options.find( '.et_builder_underline_font' ),
-					style_active_class = 'et_font_style_active',
-					font_name          = $this_el.val(),
-					result             = '';
-
-				result += font_name !== 'default' ? $.trim( font_name ) : '';
-
-				result += '|';
-
-				if ( $bold_option.hasClass( style_active_class ) ) {
-					result += 'on';
-				}
-
-				result += '|';
-
-				if ( $italic_option.hasClass( style_active_class ) ) {
-					result += 'on';
-				}
-
-				result += '|';
-
-				if ( $uppercase_option.hasClass( style_active_class ) ) {
-					result += 'on';
-				}
-
-				result += '|';
-
-				if ( $underline_option.hasClass( style_active_class ) ) {
-					result += 'on';
-				}
-
-				$main_option.val( result ).trigger( 'change' );
+			
+			$font_styles_selects.change( function() {
+				et_pb_update_font_settings( $(this).closest( '.et-pb-option-container--font' ) );
 			} );
+
+			$font_select.on( 'click', '.et-pb-settings-option-select li', function( event ) {
+				var $this_el          = $(this),
+					$menu_container   = $this_el.closest( '.et-pb-option--font' ),
+					$menu_items       = $menu_container.find( '.et-pb-settings-option-select-advanced' ),
+					menu_value        = $this_el.data('value');
+
+				if ( ! _.isUndefined(menu_value) ) {
+					if ( $( event.target ).closest( '.et-pb-user-font-marker' ).length > 0 ) {
+						et_pb_create_prompt_modal( 'delete_font', menu_value );
+						return;
+					}
+
+					et_pb_update_font_settings( $menu_container, menu_value );
+					et_pb_close_advanced_menu( $menu_items );
+
+					if ( 'default' !== menu_value ) {
+						et_pb_update_recent_fonts( menu_value );
+					}
+
+					et_pb_setup_font_setting( $menu_container, false );
+				}
+			} );
+
+			$font_select.on( 'click', '.et-pb-font-upload-button', function( event ) {
+				var option_name = $( event.target ).closest( '.et-pb-option--font' ).data('option_name');
+				et_pb_create_prompt_modal( 'upload_font', option_name );
+			});
+
+			$font_select.on( 'input', '.et-pb-menu-filter', function() {
+				var search_text = $( this ).val();
+				var $menu_options = $( this ).closest( '.et-pb-settings-option-select-advanced' );
+				var $menu_items = $menu_options.find('.select-option-item');
+
+				if ( '' !== search_text ) {
+					$menu_options.addClass('et_pb_menu_search_active');
+				} else {
+					$menu_options.removeClass('et_pb_menu_search_active');
+				}
+
+				$menu_items.removeClass('et_pb_hidden_item');
+
+				// filter menu items depending on search string
+				var filtered_items = _.filter($menu_items, function(item){ return ( -1 === $( item ).text().toLowerCase().search( search_text.toLowerCase() ) ) });
+
+				$( filtered_items ).addClass('et_pb_hidden_item');
+			});
 
 			$font_select.each( function() {
-				et_pb_setup_font_setting( $(this), false );
+				et_pb_setup_font_setting( $(this), false, true );
 			} );
+
+			$font_select_placeholder.click( function() {
+				var $this_placeholder = $( this );
+				var $menu_container = $this_placeholder.closest( '.et-pb-select-font-outer' );
+				var $menu_options = $menu_container.find( '.et-pb-settings-option-select-advanced' );
+				var $menu_items = $menu_options.find('.select-option-item');
+				var $search_field = $menu_container.find( '.et-pb-menu-filter' );
+
+				// open menu and reset all classes
+				$menu_options.addClass('et_pb_menu_active');
+				$menu_options.removeClass('et_pb_menu_search_active');
+				$menu_items.removeClass('et_pb_hidden_item');
+				$search_field.val('');
+				$menu_options.animate({
+					scrollTop: 0
+				}, 0);
+
+				// set the menu position and size
+				var menu_position = $this_placeholder.offset();
+				var window_height = $( window ).height();
+				var window_scroll = $( window ).scrollTop();
+				var safety_space = 50; // some space to move the menu away from the edge
+				var max_height = 500 > window_height ? ( window_height - safety_space ) : 500;
+				var top_position = menu_position.top - window_scroll - 20;
+				var bottom_space = window_height - top_position;
+				
+				if ( bottom_space < max_height ) {
+					top_position -= ( max_height - bottom_space ) + safety_space;
+				} else {
+					max_height = bottom_space - safety_space;
+				}
+
+				$menu_options.css({'top' : top_position, 'maxHeight' : max_height});
+
+				$( 'body' ).addClass('et_pb_advanced_menu_opened');
+			});
 
 			$text_align_selects.each( function() {
 				var $text_align_select = $(this),
@@ -13459,6 +13913,37 @@ window.et_builder_product_name = 'Divi';
 				return false;
 			} );
 
+			$multiple_buttons_select.each( function() {
+				var $select_el       = $(this);
+				
+				$select_el.trigger( 'et_pb_setting:change' );
+			} );
+
+			$multiple_buttons_select.change( function() {
+				var $select_el       = $(this),
+					select_val       = $select_el.find( 'option[selected]' ).length ? $select_el.val() : '',
+					$container       = $select_el.closest( '.et-pb-option-container' ),
+					$selected_button =  select_val !== '' ? $container.find( '.et_builder_' + select_val + '_button' ) : false;
+
+				if ( $selected_button ) {
+					$container.find( '.et_builder_multiple_buttons_button' ).removeClass( 'et_builder_multiple_buttons_button_active' );
+					$selected_button.addClass( 'et_builder_multiple_buttons_button_active' );
+					$select_el.trigger( 'et_pb_setting:change' );
+				}
+			} );
+
+			$multiple_buttons_button.click(function() {
+				var $button = $(this),
+					activeClassName = 'et_builder_multiple_buttons_button_active',
+					$container = $button.closest( '.et-pb-option-container' ),
+					newValue = $button.data( 'value' ),
+					$select = $container.find( 'select' );
+
+				$select.val( newValue ).trigger('change');
+
+				return false;
+			} );
+
 			$range_field.on( 'input change', function() {
 				var $this_el          = $(this),
 					this_device       = typeof $this_el.data( 'device' ) === 'undefined' ? 'all' : $this_el.data( 'device' ),
@@ -13489,7 +13974,6 @@ window.et_builder_product_name = 'Divi';
 				$range_input.val( range_value ).trigger( 'et_pb_setting:change' );
 
 				et_pb_update_mobile_defaults( $this_el, range_value );
-
 			} );
 
 			if ( $range_field.length ) {
@@ -13568,15 +14052,44 @@ window.et_builder_product_name = 'Divi';
 						this_device       = typeof $this_el.data( 'device' ) === 'undefined' ? 'all' : $this_el.data( 'device' ),
 						$option_container = $this_el.closest( '.et-pb-option-container' ),
 						$reset_button    = $option_container.find( '.et-pb-reset-setting' ),
-						is_range_option  = $this_el.hasClass( 'et-pb-range' );
+						is_range_option  = $this_el.hasClass( 'et-pb-range' ),
+						is_font_option  = $this_el.hasClass( 'et-pb-font-select' ),
+						is_preset  = $this_el.hasClass( 'et-presets' ) || $this_el.hasClass( 'et_select_animation' );
 
 					var $current_element = is_range_option && 'all' === this_device ? $this_el.siblings( '.et-pb-range-input' ) : $this_el;
 
+					if (is_preset) {
+						$current_element = $this_el.children('input');
+					}
+
 					$current_element = is_range_option && 'all' !== this_device ? $this_el.siblings( '.et-pb-range-input.et_pb_setting_mobile_' + this_device ) : $current_element;
 
-					var default_value    = et_pb_get_default_setting_value( $current_element ),
-						current_value    = $current_element.val(),
-						$mobile_toggle   = $option_container.find( '.et-pb-mobile-settings-toggle' );
+					var default_value    = et_pb_get_default_setting_value( $current_element ).toLowerCase();
+					var current_value    = $current_element.val().toLowerCase();
+					var $mobile_toggle   = $option_container.find( '.et-pb-mobile-settings-toggle' );
+
+					// specific actions required for reset buttons in Font option
+					if ( is_font_option ) {
+						var font_settings = current_value.split('|');
+
+						$reset_button.each( function() {
+							var $this_button = $( this );
+							var font_setting_id = 0;
+							
+							if ( $this_button.hasClass('et_pb_reset_weight') ) {
+								font_setting_id = 1;
+							}
+
+							if ( '' !== font_settings[ font_setting_id ] ) {
+								$this_button.addClass( 'et-pb-reset-icon-visible' );
+							} else {
+								$this_button.removeClass( 'et-pb-reset-icon-visible' );
+							}
+
+						});
+
+						return;
+					}
 
 					if ( $current_element.hasClass( 'et_pb_setting_mobile' ) && ! $current_element.hasClass( 'et_pb_setting_mobile_active' ) ) {
 						// make the mobile toggle icon visible if any option is not default
@@ -13856,8 +14369,9 @@ window.et_builder_product_name = 'Divi';
 							tablet: $field_wrapper.find( '#' + responsive_desktop_name + '_tablet' ).val(),
 							phone: $field_wrapper.find( '#' + responsive_desktop_name + '_phone' ).val()
 						},
-						last_edited = $field_wrapper.find( '#' + responsive_desktop_name + '_last_edited' ).val(),
-						is_responsive = last_edited.split('|')[0] === 'on';
+						$last_edited = $field.closest('.et_pb_modal_settings_container_step2').length ? $field_wrapper.find( 'input[id="data.' + responsive_desktop_name + '_last_edited"]' ) : $field_wrapper.find( '#' + responsive_desktop_name + '_last_edited' ),
+						last_edited = $last_edited.val(),
+						is_responsive = 'string' === typeof last_edited ? last_edited.split('|')[0] === 'on' : false;
 
 					_.forEach( affects, function( affect ) {
 						var $affected_field = $( '#et_pb_' + affect ),
@@ -13947,6 +14461,83 @@ window.et_builder_product_name = 'Divi';
 			});
 		}
 
+		function et_pb_update_font_settings($option_container, font_family) {
+			var	$main_option         = $option_container.find( 'input.et-pb-font-select' ),
+				main_option_val      = $main_option.val().split('|'),
+				bold_option          = $option_container.find( '.et_builder_font_weight' ).val(),
+				$style_options       = $option_container.find( '.et_builder_font_styles' ),
+				$line_color_option   = $option_container.find( '.et-pb-font-line-color-value' ),
+				$line_style_option   = $option_container.find( '.et_pb_font_line_style_select' ),
+				$italic_option       = $style_options.find( '.et_builder_italic_font' ),
+				$uppercase_option    = $style_options.find( '.et_builder_uppercase_font' ),
+				$underline_option    = $style_options.find( '.et_builder_underline_font' ),
+				$capitalize_option   = $style_options.find( '.et_builder_capitalize_font' ),
+				$line_through_option = $style_options.find( '.et_builder_line_through_font' ),
+				style_active_class   = 'et_font_style_active',
+				font_name            = _.isUndefined( font_family ) ? main_option_val[0] : font_family,
+				result               = '';
+
+			result += font_name !== 'default' ? $.trim( font_name ) : '';
+
+			result += '|';
+
+			if ( '400' !== bold_option ) {
+				result += bold_option;
+			}
+
+			result += '|';
+
+			if ( $italic_option.hasClass( style_active_class ) ) {
+				result += 'on';
+			}
+
+			result += '|';
+
+			if ( $uppercase_option.hasClass( style_active_class ) ) {
+				result += 'on';
+			}
+
+			result += '|';
+
+			if ( $underline_option.hasClass( style_active_class ) ) {
+				result += 'on';
+			}
+
+			result += '|';
+
+			if ( $capitalize_option.hasClass( style_active_class ) ) {
+				result += 'on';
+			}
+
+			result += '|';
+
+			if ( $line_through_option.hasClass( style_active_class ) ) {
+				result += 'on';
+			}
+
+			result += '|';
+
+			if ( '' !== $line_color_option.val() ) {
+				result += $line_color_option.val();
+			}
+
+			result += '|';
+
+			if ( 'solid' !== $line_style_option.val() ) {
+				result += $line_style_option.val();
+			}
+
+			$main_option.val( result ).trigger( 'change' );
+		}
+
+		function et_pb_close_advanced_menu( $menu ) {
+			var $menu_container   = $menu.closest( '.et-pb-option--font' ),
+				$menu_placeholder = $menu_container.find( '.et_pb_select_placeholder' );
+
+			$menu.removeClass('et_pb_menu_active');
+			$( 'body' ).removeClass('et_pb_advanced_menu_opened');
+		}
+
 		// check the range slider boundaries against the provided value and extend min or max boundary if needed
 		function et_pb_check_range_boundaries( $range_slider, slider_value, update_step ) {
 			var slider_max = parseFloat( $range_slider.attr( 'max' ) ),
@@ -14021,6 +14612,14 @@ window.et_builder_product_name = 'Divi';
 
 			// need to check for 'undefined' type instead of $element.data( default_data_name ) || '' because default value maybe 0
 			default_value = typeof $element.data( default_data_name ) !== 'undefined' ? $element.data( default_data_name ) : '';
+
+			if (_.isArray(default_value) && default_value.length > 0) {
+				var target = $element.closest('.et-pb-options-toggle-container').find('#et_pb_' + default_value[0]);
+				var values = default_value[1] || {};
+
+				default_value = values['' + target.val()];
+			}
+
 			// convert any type to string
 			default_value = default_value + '';
 
@@ -14150,13 +14749,15 @@ window.et_builder_product_name = 'Divi';
 					$this_el = $option_container.find( '.et-pb-reset-setting' );
 				}
 
-				$this_el.hide();
+				$this_el.removeClass( 'et-pb-reset-icon-visible' );
 
 				return;
 			}
 
 			if ( $main_setting.hasClass( 'et-pb-font-select' ) ) {
-				et_pb_setup_font_setting( $main_setting, true );
+				var reset_option = $this_el.hasClass('et_pb_reset_weight') ? 'weight' : 'font';
+				et_pb_setup_font_setting( $option_container, reset_option );
+				return;
 			}
 
 			if ( $main_setting.hasClass( 'et-pb-range' ) ) {
@@ -14177,6 +14778,11 @@ window.et_builder_product_name = 'Divi';
 			if ( $main_setting.hasClass('et_select_animation') ) {
 				$main_setting.find('.et_animation_button > a.et_active_animation').removeClass('et_active_animation');
 				$main_setting.find('.et_animation_button:first > a').addClass('et_active_animation');
+			}
+
+			if ( $main_setting.hasClass('et-presets') ) {
+				// When presets control is resetted, remove the active class and add it to its first preset
+				$main_setting.find('.et-preset').removeClass('et-preset-active').first().addClass('et-preset-active');
 			}
 		}
 
@@ -14322,41 +14928,73 @@ window.et_builder_product_name = 'Divi';
 			}
 		}
 
-		function et_pb_setup_font_setting( $element, reset ) {
-			var $this_el           = $element,
-				$container         = $this_el.parent('.et-pb-option-container'),
-				$options_container = $this_el.closest( '.et-pb-options-tab' ),
-				$main_option       = $container.find( 'input.et-pb-font-select' ),
-				$select_option     = $container.find( 'select.et-pb-font-select' ),
-				$style_options     = $container.find( '.et_builder_font_styles' ),
-				$bold_option       = $style_options.find( '.et_builder_bold_font' ),
-				$italic_option     = $style_options.find( '.et_builder_italic_font' ),
-				$uppercase_option  = $style_options.find( '.et_builder_uppercase_font' ),
-				$underline_option  = $style_options.find( '.et_builder_underline_font' ),
-				style_active_class = 'et_font_style_active',
-				font_value         = $.trim( $main_option.val() ),
-				all_caps_option    = typeof $main_option.data( 'old-option-ref' ) !== 'undefined' && '' !== $main_option.data( 'old-option-ref' ) ? $main_option.data( 'old-option-ref' ) : '',
-				$all_caps_el       = '' !== all_caps_option ? $options_container.find( '.et-pb-option-' + all_caps_option ) : '',
-				$all_caps_input    = '' !== $all_caps_el && $all_caps_el.length ? $all_caps_el.find( 'input' ) : '',
+		function et_pb_setup_font_setting( $container, reset, initial_setup ) {
+			var $options_container     = $container.closest( '.et-pb-options-tab' ),
+				$font_option_container = $container.find('.et-pb-select-font-outer'),
+				$main_option           = $container.find( 'input.et-pb-font-select' ),
+				$select_option         = $container.find( '.et-pb-settings-option-select-advanced' ),
+				$style_options         = $container.find( '.et_builder_font_styles' ),
+				$select_placeholder    = $container.find( '.et_pb_select_placeholder' ),
+				$bold_option           = $container.find( '.et_builder_font_weight' ),
+				$line_color_option     = $container.find( '.et_pb_font_line_color' ),
+				$line_style_option     = $container.find( '.et_pb_font_line_style_select' ),
+				$font_style_options    = $container.find( '.et_pb_font_style_container' ),
+				$italic_option         = $style_options.find( '.et_builder_italic_font' ),
+				$uppercase_option      = $style_options.find( '.et_builder_uppercase_font' ),
+				$underline_option      = $style_options.find( '.et_builder_underline_font' ),
+				$capitalize_option     = $style_options.find( '.et_builder_capitalize_font' ),
+				$line_through_option   = $style_options.find( '.et_builder_line_through_font' ),
+				style_active_class     = 'et_font_style_active',
+				font_value             = $.trim( $main_option.val() ),
+				all_caps_option        = typeof $main_option.data( 'old-option-ref' ) !== 'undefined' && '' !== $main_option.data( 'old-option-ref' ) ? $main_option.data( 'old-option-ref' ) : '',
+				$all_caps_el           = '' !== all_caps_option ? $options_container.find( '.et-pb-option-' + all_caps_option ) : '',
+				$all_caps_input        = '' !== $all_caps_el && $all_caps_el.length ? $all_caps_el.find( 'input' ) : '',
+				selected_font          = 'default',
+				recent_items           = et_pb_get_recent_fonts( $select_option ),
+				weight_value           = '400',
+				is_underline           = false,
+				is_strikethrough       = false,
+				selected_font_item,
 				font_values;
 
 			if ( reset ) {
-				font_value = $.trim( $main_option.attr('data-default') );
+				font_values = font_value.split('|');
+
+				if ( 'weight' === reset ) {
+					font_values[1] = '';
+				} else {
+					font_values[0] = '';
+				}
+				font_value = font_values.join('|');
+			}
+
+			if ( initial_setup ) {
+				// update the label for Font Weight and Font Style options to include the group label
+				var $font_weight_container = $container.find('.et_pb_font_weight_container');
+				var $style_label = $font_style_options.find('label');
+				var $weight_label = $font_weight_container.find('label');
+
+				var group_header = $font_option_container.data('group_label');
+
+				$style_label.html( group_header + ' ' + $style_label.html() );
+				$weight_label.html( group_header + ' ' + $weight_label.html() );
+
+				// update reset buttons location and data
+				var $reset_button = $container.find( '.et-pb-reset-setting' );
+				var $reset_button_weight = $reset_button.clone();
+
+				$font_option_container.append( $reset_button.addClass('et_pb_reset_font') );
+				$font_weight_container.append( $reset_button_weight.addClass('et_pb_reset_weight') );
 			}
 
 			if ( font_value !== '' ) {
 				font_values = font_value.split( '|' );
+				selected_font = font_values[0] !== '' ? font_values[0] : 'default';
 
-				if ( font_values[0] !== '' ) {
-					$select_option.val( font_values[0] );
-				} else {
-					$select_option.prop( 'selectedIndex', 0 );
-				}
+				$select_placeholder.html(_.escape(selected_font));
 
-				if ( font_values[1] === 'on' ) {
-					$bold_option.addClass( style_active_class );
-				} else {
-					$bold_option.removeClass( style_active_class );
+				if ( font_values[1] !== '' ) {
+					weight_value = 'on' === font_values[1] ? '700' : font_values[1];
 				}
 
 				if ( font_values[2] === 'on' ) {
@@ -14373,15 +15011,98 @@ window.et_builder_product_name = 'Divi';
 
 				if ( font_values[4] === 'on' ) {
 					$underline_option.addClass( style_active_class );
+					is_underline = true;
 				} else {
 					$underline_option.removeClass( style_active_class );
 				}
+
+				if ( ! _.isUndefined( font_values[5] ) && font_values[5] === 'on' ) {
+					$capitalize_option.addClass( style_active_class );
+				} else {
+					$capitalize_option.removeClass( style_active_class );
+				}
+
+				if ( ! _.isUndefined( font_values[6] ) && font_values[6] === 'on' ) {
+					$line_through_option.addClass( style_active_class );
+					is_strikethrough = true;
+				} else {
+					$line_through_option.removeClass( style_active_class );
+				}
+
+				if (  ! _.isUndefined( font_values[7] ) && font_values[7] !== '' ) {
+					$line_color_option.find('.et-pb-custom-color-container').removeClass('et_pb_hidden');
+					$line_color_option.find('.et-pb-custom-color-button').addClass('et_pb_hidden');
+					$line_color_option.find('.et-pb-color-picker-hex-alpha').wpColorPicker( 'color', font_values[7] );
+				}
+
+				if ( ! _.isUndefined( font_values[8] ) && font_values[8] !== '' ) {
+					$line_style_option.val( font_values[8] );
+				} 
 			} else {
-				$select_option.prop( 'selectedIndex', 0 );
-				$bold_option.removeClass( style_active_class );
+				$select_placeholder.html(_.escape(selected_font));
 				$italic_option.removeClass( style_active_class );
 				$uppercase_option.removeClass( style_active_class );
 				$underline_option.removeClass( style_active_class );
+				$capitalize_option.removeClass( style_active_class );
+				$line_through_option.removeClass( style_active_class );
+			}
+
+			// hide line color and line style options if underline and strikethrough are not selected
+			if ( ! is_underline && ! is_strikethrough ) {
+				$container.find( '.et_pb_font_line_settings' ).addClass('et_pb_hidden');
+				$container.find('.et-pb-option-container').removeClass( 'et_pb_fonts_long' );
+			} else {
+				var line_group_header = $font_option_container.data('group_label');
+
+				// construct the label for line style options dynamically
+				$container.find( '.et_pb_font_line_settings label' ).each( function() {
+					var $this_label = $( this );
+					var label_text = is_underline ? $this_label.data('underline_label') : $this_label.data('strikethrough_label');
+
+					$this_label.html(line_group_header + ' ' + label_text);
+				});
+
+				$container.find( '.et_pb_font_line_settings' ).removeClass('et_pb_hidden');
+				$container.find('.et-pb-option-container').addClass( 'et_pb_fonts_long' );
+			}
+
+			var supported_weigths = get_supported_weights( selected_font );
+
+			// make all the options accessible
+			$bold_option.find( 'option' ).removeClass('et_pb_unsupported_option');
+
+			// hide unsupported font-weight options for selected font
+			$bold_option.find( 'option' ).each( function() {
+				var $option_el = $( this );
+
+				// hide option if it doesn't exist in the list of supported options
+				if ( -1 === _.indexOf( supported_weigths, $option_el.val() ) ) {
+					$option_el.addClass('et_pb_unsupported_option');
+
+					// reset selected option to default
+					if (weight_value === $option_el.val()) {
+						weight_value = '400';
+					}
+				}
+			});
+
+			$bold_option.find('option[value="' + weight_value + '"]').prop('selected', true);
+
+			// mark the selected font and prepend it to the beginning of menu.
+			$selected_font_item = $select_option.find( '.select-option-item-' + selected_font.replace( / /g, '_' ) );
+			$select_option.find( '.et_pb_selected_menu_item' ).removeClass('et_pb_selected_menu_item');
+			$selected_font_item.addClass( 'et_pb_selected_menu_item' );
+			$select_option.find('.et_pb_selected_item_container').html(_.escape($selected_font_item.text()));
+
+			if ( ! _.isEmpty( recent_items ) ) {
+				$select_option.find('.et-pb-recent-fonts').removeClass('et_pb_hidden_subgroup');
+				$select_option.find('.et-pb-recent-fonts ul').html('');
+				_.each( recent_items, function( item ) {
+					var $recent_element = '<li class="select-option-item select-option-item-recent-font select-option-item-' + item.replace( / /g, '_' ) + '" data-value="' + item + '">' + item + '</li>';
+					$select_option.find('.et-pb-recent-fonts ul').append($recent_element);
+				});
+			} else {
+				$select_option.find('.et-pb-recent-fonts').addClass('et_pb_hidden_subgroup');
 			}
 
 			// backward compatibility for obsolete "all caps" option
@@ -14397,6 +15118,88 @@ window.et_builder_product_name = 'Divi';
 				// reset the value for obsolete "all caps" option to remove it from shortcode
 				$all_caps_input.val( '' );
 			}
+
+			// update option value after reset
+			if ( reset ) {
+				$main_option.val(font_values.join('|')).trigger( 'et_pb_setting:change' );
+			}
+		}
+
+		function get_supported_weights( selected_font ) {
+			var google_fonts_data = et_pb_options.google_fonts;
+			var user_fonts_data = et_pb_options.user_fonts;
+			var selected_font_data = _.isUndefined( user_fonts_data[ selected_font ] ) ? false : user_fonts_data[ selected_font ];
+			var supported_options = _.keys( et_pb_options.supported_font_weights );
+			var processedWeights = {};
+
+			// return list of supported weights for Default font
+			if ( 'default' === selected_font.toLowerCase() ) {
+				return ['300', '400', '600', '700', '800'];
+			}
+
+			// try to retrieve font data from google fonts if it was not retrieved from User fonts
+			if ( ! selected_font_data ) {
+				selected_font_data = _.isUndefined( google_fonts_data[ selected_font ] ) ? false : google_fonts_data[ selected_font ];
+			}
+
+			if ( ! selected_font_data || _.isUndefined( selected_font_data.styles ) ) {
+				return supported_options;
+			}
+
+			return _.intersection( _.union( ['400', '700'], selected_font_data.styles.split(',') ), supported_options );
+		}
+
+		function et_pb_update_recent_fonts( item_name, action ) {
+			// don't add default font to the recent items
+			if ( 'default' === item_name ) {
+				return;
+			}
+
+			var recent_items = wpCookies.get( 'et-pb-recent-items-font_family' );
+			recent_items = ! _.isUndefined( recent_items ) && ! _.isNull( recent_items ) ? recent_items.split('|') : [];
+
+			if ( 'remove' === action ) {
+				if ( -1 === _.indexOf( recent_items, item_name ) ) {
+					return;
+				}
+				delete recent_items[ item_name ];
+			} else if ( -1 === _.indexOf( recent_items, item_name ) ) {
+				if ( recent_items.length >= 3 ) {
+					// remove last item in array
+					recent_items = recent_items.slice(0, 2);
+				}
+				// prepend the new item at the beginning of array
+				recent_items = _.union( [ item_name ], recent_items );
+			} else {
+				return;
+			}
+
+
+			var secure = ( 'https:' === window.location.protocol );
+			var cookie_expires = 365*24*60*60*1000;
+
+			// save the list of most recent items to cookies
+			wpCookies.set( 'et-pb-recent-items-font_family', recent_items.join('|'), cookie_expires, et_pb_options.cookie_path, false, secure );
+		}
+
+		function et_pb_get_recent_fonts( $menu ) {
+			// get the list of most recent items from cookies
+			var recent_items = wpCookies.get( 'et-pb-recent-items-font_family' );
+			recent_items = ! _.isUndefined( recent_items ) && ! _.isNull( recent_items ) ? recent_items.split('|') : [];
+
+			if ( _.isEmpty( recent_items ) ) {
+				return [];
+			}
+
+			var recent_items_processed = [];
+
+			_.each( recent_items, function( item ) {
+				if ( $menu.find( '.select-option-item-' + item.replace( / /g, '_' ) ).length > 0 ) {
+					recent_items_processed.push( item );
+				}
+			});
+
+			return recent_items_processed;
 		}
 
 		function et_pb_hide_active_color_picker( container ) {
@@ -15639,63 +16442,6 @@ window.et_builder_product_name = 'Divi';
 		}
 
 		/**
-		 * Get value from object located at path.
-		 *
-		 * @see https://stackoverflow.com/a/15643385/2639936
-		 *
-		 * @param obj
-		 * @param path
-		 * @return {*}
-		 */
-		function get( obj, path ) {
-			return _.reduce( path.split( '.' ), function( prev, curr ) {
-				return prev ? prev[curr] : undefined;
-			}, obj );
-		}
-
-		/**
-		 * Check if path exists in object.
-		 *
-		 * @see https://stackoverflow.com/a/42042678/2639936
-		 *
-		 * @param obj
-		 * @param path
-		 * @return {boolean}
-		 */
-		function has( obj, path ) {
-			if( ! path ) {
-				return true;
-			}
-
-			var path_parts = path.split( '.' );
-			var first_part = _.first( path_parts );
-
-			return _.has( obj, first_part ) && has( obj[first_part], _.rest( path_parts ).join( '.' ) );
-		}
-
-		/**
-		 * Determine whether or not a string ends with another string.
-		 *
-		 * @param string
-		 * @param substring
-		 * @return {boolean}
-		 */
-		function endsWith( string, substring ) {
-			return string.substr( string.length - substring.length, string.length ) === substring;
-		}
-
-		/**
-		 * Determine whether or not a string starts with another string.
-		 *
-		 * @param string
-		 * @param substring
-		 * @return {boolean}
-		 */
-		function startsWith( string, substring ) {
-			return string.substr( 0, string.length ) === substring;
-		}
-
-		/**
 		 * Removes extra <p> and <br> tags from shortcode similar to et_pb_fix_shortcodes from /includes/builder/functions.php
 		 * @return {string}
 		 */
@@ -16475,6 +17221,14 @@ window.et_builder_product_name = 'Divi';
 				}
 			}, 250 );
 		} );
+
+		$(window).on( 'mousedown', function( event ) {
+			var $opened_custom_menu = $( '.et-pb-settings-option-select-advanced.et_pb_menu_active' );
+			// close opened menu if exist
+			if ( $( event.target ).closest('.et-pb-settings-option-select-advanced').length < 1 && $opened_custom_menu.length > 0 ) {
+				et_pb_close_advanced_menu( $opened_custom_menu );
+			}
+		} );
 	} );
 
 } )(jQuery);
@@ -16517,9 +17271,18 @@ window.et_builder_product_name = 'Divi';
 				tabs: {},
 				padding: {},
 				yes_no_button: {},
+				multiple_buttons: {},
 				font_buttons: {},
 				text_align_buttons: {},
-				select: {}
+				select: {},
+				font_line_styles: {},
+				animation_buttons: {},
+				user_fonts: et_pb_options.user_fonts,
+				font_weights: et_pb_options.supported_font_weights,
+				options_icons: et_pb_options.all_svg_icons,
+				background_tabs_nav: {},
+				background_gradient_buttons: {},
+				option_preview_buttons: {}
 		};
 
 		window.et_builder_template_options = et_builder_template_options;
@@ -16542,10 +17305,17 @@ window.et_builder_product_name = 'Divi';
 		ET_PageBuilder.Events.on('et-advanced-module-settings:render', adv_setting_form_category_select_update_hidden );
 
 		et_builder = {
-			fonts_template: function() {
-				var template = $('#et-builder-google-fonts-options-items').html();
+			fonts_template: function( options ) {
+				var template = _.template( $('#et-builder-google-fonts-options-items').html() );
+				template_processed = template( window.et_builder_template_options.user_fonts );
 
-				return template;
+				return template_processed;
+			},
+			fonts_weight_template: function( options ) {
+				var template = _.template( $('#et-builder-font-weight-items').html() );
+				template_processed = template( window.et_builder_template_options.font_weights );
+
+				return template_processed;
 			},
 			font_icon_list_template: function(){
 				var template = $('#et-builder-font-icon-list-items').html();

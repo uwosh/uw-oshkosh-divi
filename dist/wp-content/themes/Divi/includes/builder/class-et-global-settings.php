@@ -198,10 +198,10 @@ class ET_Global_Settings {
 			'et_pb_cta-background_blend'                      => $background_image_defaults['blend'],
 
 			'et_pb_divider-show_divider'                      => 'off',
-			'et_pb_divider-divider_style'                     => 'none',
+			'et_pb_divider-divider_style'                     => 'solid',
 			'et_pb_divider-divider_weight'                    => '1',
 			'et_pb_divider-height'                            => '1',
-			'et_pb_divider-divider_position'                  => 'none',
+			'et_pb_divider-divider_position'                  => 'top',
 
 			'et_pb_filterable_portfolio-hover_overlay_color'  => 'rgba(255,255,255,0.9)',
 			'et_pb_filterable_portfolio-title_font_size'      => '18',

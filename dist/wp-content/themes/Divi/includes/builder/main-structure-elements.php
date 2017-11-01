@@ -134,9 +134,9 @@ class ET_Builder_Section extends ET_Builder_Structure_Element {
 						'title'       => esc_html__( 'Background', 'et_builder' ),
 						'sub_toggles' => array(
 							'main'     => '',
-							'column_1' => esc_html__( 'Column 1', 'et_builder' ),
-							'column_2' => esc_html__( 'Column 2', 'et_builder' ),
-							'column_3' => esc_html__( 'Column 3', 'et_builder' ),
+							'column_1' => array( 'name' => esc_html__( 'Column 1', 'et_builder' ) ),
+							'column_2' => array( 'name' => esc_html__( 'Column 2', 'et_builder' ) ),
+							'column_3' => array( 'name' => esc_html__( 'Column 3', 'et_builder' ) ),
 						),
 					),
 				),
@@ -152,9 +152,9 @@ class ET_Builder_Section extends ET_Builder_Structure_Element {
 						'title'       => esc_html__( 'Spacing', 'et_builder' ),
 						'sub_toggles' => array(
 							'main'     => '',
-							'column_1' => esc_html__( 'Column 1', 'et_builder' ),
-							'column_2' => esc_html__( 'Column 2', 'et_builder' ),
-							'column_3' => esc_html__( 'Column 3', 'et_builder' ),
+							'column_1' => array( 'name' => esc_html__( 'Column 1', 'et_builder' ) ),
+							'column_2' => array( 'name' => esc_html__( 'Column 2', 'et_builder' ) ),
+							'column_3' => array( 'name' => esc_html__( 'Column 3', 'et_builder' ) ),
 						),
 						'priority'   => 70,
 					),
@@ -166,18 +166,18 @@ class ET_Builder_Section extends ET_Builder_Structure_Element {
 						'title'  => esc_html__( 'CSS ID & Classes', 'et_builder' ),
 						'sub_toggles' => array(
 							'main'     => '',
-							'column_1' => esc_html__( 'Column 1', 'et_builder' ),
-							'column_2' => esc_html__( 'Column 2', 'et_builder' ),
-							'column_3' => esc_html__( 'Column 3', 'et_builder' ),
+							'column_1' => array( 'name' => esc_html__( 'Column 1', 'et_builder' ) ),
+							'column_2' => array( 'name' => esc_html__( 'Column 2', 'et_builder' ) ),
+							'column_3' => array( 'name' => esc_html__( 'Column 3', 'et_builder' ) ),
 						),
 					),
 					'custom_css' => array(
 						'title'  => esc_html__( 'Custom CSS', 'et_builder' ),
 						'sub_toggles' => array(
 							'main'     => '',
-							'column_1' => esc_html__( 'Column 1', 'et_builder' ),
-							'column_2' => esc_html__( 'Column 2', 'et_builder' ),
-							'column_3' => esc_html__( 'Column 3', 'et_builder' ),
+							'column_1' => array( 'name' => esc_html__( 'Column 1', 'et_builder' ) ),
+							'column_2' => array( 'name' => esc_html__( 'Column 2', 'et_builder' ) ),
+							'column_3' => array( 'name' => esc_html__( 'Column 3', 'et_builder' ) ),
 						),
 					),
 				),
@@ -1248,6 +1248,24 @@ class ET_Builder_Section extends ET_Builder_Structure_Element {
 
 	}
 
+	public function process_box_shadow( $function_name ) {
+		$boxShadow = ET_Builder_Module_Fields_Factory::get( 'BoxShadow' );
+		$style = $boxShadow->get_value( $this->shortcode_atts );
+
+		if ( empty( $style ) || $style === 'none' ) {
+			return;
+		}
+
+		if ( strpos( $style, 'inset' ) === false ) {
+			self::set_style( $function_name, $boxShadow->get_style(
+				sprintf( '.%1$s', self::get_module_order_class( $function_name ) ),
+				$this->shortcode_atts,
+				array( 'always_overlay' => true )
+			) );
+		} else {
+			parent::process_box_shadow( $function_name );
+		}
+	}
 }
 new ET_Builder_Section;
 
@@ -1297,10 +1315,10 @@ class ET_Builder_Row extends ET_Builder_Structure_Element {
 						'title'       => esc_html__( 'Background', 'et_builder' ),
 						'sub_toggles' => array(
 							'main'     => '',
-							'column_1' => esc_html__( 'Column 1', 'et_builder' ),
-							'column_2' => esc_html__( 'Column 2', 'et_builder' ),
-							'column_3' => esc_html__( 'Column 3', 'et_builder' ),
-							'column_4' => esc_html__( 'Column 4', 'et_builder' ),
+							'column_1' => array( 'name' => esc_html__( 'Column 1', 'et_builder' ) ),
+							'column_2' => array( 'name' => esc_html__( 'Column 2', 'et_builder' ) ),
+							'column_3' => array( 'name' => esc_html__( 'Column 3', 'et_builder' ) ),
+							'column_4' => array( 'name' => esc_html__( 'Column 4', 'et_builder' ) ),
 						),
 					),
 				),
@@ -1315,10 +1333,10 @@ class ET_Builder_Row extends ET_Builder_Structure_Element {
 						'title'       => esc_html__( 'Spacing', 'et_builder' ),
 						'sub_toggles' => array(
 							'main'     => '',
-							'column_1' => esc_html__( 'Column 1', 'et_builder' ),
-							'column_2' => esc_html__( 'Column 2', 'et_builder' ),
-							'column_3' => esc_html__( 'Column 3', 'et_builder' ),
-							'column_4' => esc_html__( 'Column 4', 'et_builder' ),
+							'column_1' => array( 'name' => esc_html__( 'Column 1', 'et_builder' ) ),
+							'column_2' => array( 'name' => esc_html__( 'Column 2', 'et_builder' ) ),
+							'column_3' => array( 'name' => esc_html__( 'Column 3', 'et_builder' ) ),
+							'column_4' => array( 'name' => esc_html__( 'Column 4', 'et_builder' ) ),
 						),
 						'priority' => 70,
 					),
@@ -1330,20 +1348,20 @@ class ET_Builder_Row extends ET_Builder_Structure_Element {
 						'title'  => esc_html__( 'CSS ID & Classes', 'et_builder' ),
 						'sub_toggles' => array(
 							'main'     => '',
-							'column_1' => esc_html__( 'Column 1', 'et_builder' ),
-							'column_2' => esc_html__( 'Column 2', 'et_builder' ),
-							'column_3' => esc_html__( 'Column 3', 'et_builder' ),
-							'column_4' => esc_html__( 'Column 4', 'et_builder' ),
+							'column_1' => array( 'name' => esc_html__( 'Column 1', 'et_builder' ) ),
+							'column_2' => array( 'name' => esc_html__( 'Column 2', 'et_builder' ) ),
+							'column_3' => array( 'name' => esc_html__( 'Column 3', 'et_builder' ) ),
+							'column_4' => array( 'name' => esc_html__( 'Column 4', 'et_builder' ) ),
 						),
 					),
 					'custom_css' => array(
 						'title'  => esc_html__( 'Custom CSS', 'et_builder' ),
 						'sub_toggles' => array(
 							'main'     => '',
-							'column_1' => esc_html__( 'Column 1', 'et_builder' ),
-							'column_2' => esc_html__( 'Column 2', 'et_builder' ),
-							'column_3' => esc_html__( 'Column 3', 'et_builder' ),
-							'column_4' => esc_html__( 'Column 4', 'et_builder' ),
+							'column_1' => array( 'name' => esc_html__( 'Column 1', 'et_builder' ) ),
+							'column_2' => array( 'name' => esc_html__( 'Column 2', 'et_builder' ) ),
+							'column_3' => array( 'name' => esc_html__( 'Column 3', 'et_builder' ) ),
+							'column_4' => array( 'name' => esc_html__( 'Column 4', 'et_builder' ) ),
 						),
 					),
 				),
@@ -2667,6 +2685,7 @@ class ET_Builder_Row extends ET_Builder_Structure_Element {
 			'et_pb_column_css' => $et_pb_column_css,
 		);
 
+
 		$current_row_position = $et_pb_rendering_column_content ? 'internal_row' : 'regular_row';
 
 		$et_pb_all_column_settings[ $current_row_position ] = $internal_columns_settings_array;
@@ -2778,9 +2797,9 @@ class ET_Builder_Row extends ET_Builder_Structure_Element {
 
 		$output = sprintf(
 			'<div%4$s class="%2$s%6$s%7$s">
+				%1$s
 				%8$s
 				%5$s
-				%1$s
 			</div> <!-- .%3$s -->',
 			$inner_content,
 			esc_attr( $module_class ),
@@ -4018,7 +4037,8 @@ class ET_Builder_Column extends ET_Builder_Structure_Element {
 			$et_pb_all_column_settings_inner,
 			$et_specialty_column_type,
 			$et_pb_rendering_column_content,
-			$et_pb_rendering_column_content_row;
+			$et_pb_rendering_column_content_row,
+			$et_pb_column_completion;
 
 		$is_specialty_column = 'et_pb_column_inner' !== $function_name && '' !== $specialty_columns;
 
@@ -4050,6 +4070,24 @@ class ET_Builder_Column extends ET_Builder_Structure_Element {
 			$keep_column_padding_mobile = $et_pb_all_column_settings_inner[ $current_row_position ]['keep_column_padding_mobile'];
 			$column_parallax = isset( $et_pb_all_column_settings_inner[ $current_row_position ] ) && isset( $et_pb_all_column_settings_inner[ $current_row_position ]['et_pb_column_parallax'] ) ? $et_pb_all_column_settings_inner[ $current_row_position ]['et_pb_column_parallax'] : '';
 		}
+
+		// Get column type value in array
+		$column_type = explode( '_', $type );
+
+		// Just in case for some reason column shortcode has no `type` attribute and causes unexpected $column_type values
+		if ( isset( $column_type[0] ) && isset( $column_type[1] ) ) {
+			// Get column progress.
+			$column_progress = intval( $column_type[0] ) / intval( $column_type[1] );
+
+			if ( 0 === $array_index ) {
+				$et_pb_column_completion = $column_progress;
+			} else {
+				$et_pb_column_completion = $et_pb_column_completion + $column_progress;
+			}
+		}
+
+		// Last column is when sum of column type value equals to 1
+		$is_last_column = 1 == $et_pb_column_completion;
 
 		$background_color = isset( $backgrounds_array[$array_index]['color'] ) ? $backgrounds_array[$array_index]['color'] : '';
 		$background_img = isset( $backgrounds_array[$array_index]['image'] ) ? $backgrounds_array[$array_index]['image'] : '';
@@ -4285,7 +4323,7 @@ class ET_Builder_Column extends ET_Builder_Structure_Element {
 		$class .= $is_specialty_column ? ' et_pb_specialty_column' : '';
 
 		$output = sprintf(
-			'<div class="et_pb_column %1$s%3$s%6$s"%5$s>
+			'<div class="et_pb_column %1$s%3$s%6$s%8$s"%5$s>
 				%7$s
 				%4$s
 				%2$s
@@ -4303,7 +4341,8 @@ class ET_Builder_Column extends ET_Builder_Structure_Element {
 			),
 			'' !== $custom_css_id ? sprintf( ' id="%1$s"', esc_attr( $custom_css_id ) ) : '',
 			'' !== $video_background ? ' et_pb_section_video et_pb_preload' : '',
-			$video_background
+			$video_background,
+			$is_last_column ? ' et-last-child' : ''
 		);
 
 		return $output;

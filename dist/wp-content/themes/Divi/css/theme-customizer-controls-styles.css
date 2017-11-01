@@ -90,6 +90,9 @@ li#customize-control-et_divi-et_pb_sidebar-remove_border{ margin-top: 20px !impo
   .et_filter_text:before { content: ''; width: 0; height: 0; border-color: #ccc transparent; border-style: solid; border-width: 6px 6px 0; position: absolute; top: 18px; right: 8px; z-index: 1; }
   .et_select_image_options, .et_filter_text { background: #fff; border: 1px solid #dfdfdf; -moz-border-radius: 3px; -webkit-border-radius: 3px; border-radius: 3px; }
   .et_filter_text, .et_select_image_options li { display: block; padding: 5px 10px; text-indent: -9999px; background-repeat: no-repeat; height: 30px; background-image: url(images/all-fonts.png); margin-bottom: 0; }
+  .et_google_font_custom_select { text-decoration: none; color: #555d66; }
+  .et_google_font_custom_select:hover { color: #555d66; }
+  .et_google_font_custom_select .et_filter_text { text-indent: 0; background-image: none; }
   .et_select_image_active, .et_select_image_options li:hover { background-color: #effbff; }
 
 /* ET_Select_Image + footer columns */
