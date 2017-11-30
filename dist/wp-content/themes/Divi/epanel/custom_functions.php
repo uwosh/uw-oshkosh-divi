@@ -151,17 +151,15 @@ function et_epanel_handle_custom_css_output( $css, $stylesheet ) {
 		$resource_slug .= '-preview';
 	}
 
-	if ( ! $unified_styles ) {
-		$post_id = 'global';
-	} else if ( function_exists( 'et_fb_is_enabled' ) && et_fb_is_enabled() ) {
+	if ( function_exists( 'et_fb_is_enabled' ) && et_fb_is_enabled() ) {
 		$resource_slug .= '-vb';
 	}
 
-	$styles_manager = et_core_page_resource_get( $resource_owner, $resource_slug, $post_id, 30 );
-
 	if ( ! $unified_styles ) {
-		$styles_manager->forced_inline = $forced_inline;
+		$post_id = 'global';
 	}
+
+	$styles_manager = et_core_page_resource_get( $resource_owner, $resource_slug, $post_id, 30 );
 
 	if ( $styles_manager->forced_inline || ! $styles_manager->has_file() ) {
 		$styles_manager->set_data( $css, 30 );
@@ -189,6 +187,8 @@ if ( ! function_exists( 'et_get_option' ) ) {
 	function et_get_option( $option_name, $default_value = '', $used_for_object = '', $force_default_value = false, $is_global_setting = false, $global_setting_main_name = '', $global_setting_sub_name = '' ){
 		global $et_theme_options, $shortname;
 
+		$et_one_row_option_name = '';
+
 		if ( $is_global_setting ) {
 			$option_value = '';
 
@@ -204,6 +204,8 @@ if ( ! function_exists( 'et_get_option' ) ) {
 				$et_theme_options = get_option( $et_theme_options_name );
 			}
 			$option_value = isset( $et_theme_options[$option_name] ) ? $et_theme_options[$option_name] : false;
+
+			$et_one_row_option_name = $et_theme_options_name . '_' . $option_name;
 		} else {
 			$option_value = get_option( $option_name );
 		}
@@ -215,6 +217,10 @@ if ( ! function_exists( 'et_get_option' ) ) {
 
 		if ( '' != $used_for_object && in_array( $used_for_object, array( 'page', 'category' ) ) && is_array( $option_value ) )
 			$option_value = et_generate_wpml_ids( $option_value, $used_for_object );
+
+		if ( ! empty( $et_one_row_option_name ) ) {
+			$option_value = apply_filters( 'et_get_option_' . $et_one_row_option_name, $option_value, $et_one_row_option_name );
+		}
 
 		return $option_value;
 	}
@@ -343,7 +349,8 @@ if ( ! function_exists( 'et_wp_trim_words' ) ) {
 	function et_wp_trim_words( $text, $num_words = 55, $more = null ) {
 		if ( null === $more )
 			$more = esc_html__( '&hellip;' );
-		$original_text = $text;
+		// Completely remove icons so that unicode hex entities representing the icons do not get included in words.
+		$text = preg_replace( '/<span class="et-pb-icon .*<\/span>/', '', $text );
 		$text = wp_strip_all_tags( $text );
 
 		$text = trim( preg_replace( "/[\n\r\t ]+/", ' ', $text ), ' ' );

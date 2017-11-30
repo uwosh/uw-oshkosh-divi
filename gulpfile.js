@@ -21,13 +21,16 @@ const scsslint = require('gulp-scss-lint');
 const browserSync = require('browser-sync').create();
 const watch = require('gulp-watch');
 
-gulp.task('serve', function(){
+// defining the paths to the plugins
+// let plugins = ['dist/wp-content/plugins/uwmpeople', 'dist/wp-content/plugins/digital-measures-shortcodes'];
+
+gulp.task('serve', function(cb){
   // Building and piping the files before browserSync init
-  runSequence('build-theme', 'bs-init');
+  runSequence('default', 'bs-init', cb);
 
   // Watching all files in the src
-  return watch('src/**/*.*', function(){
-    runSequence('build-theme', 'bs-reload');
+  return watch('src/**/*.*', function(cb){
+    runSequence('build-theme', 'bs-reload', cb);
   });
 });
 
@@ -43,12 +46,12 @@ gulp.task('bs-reload', function (){
 });
 
 gulp.task('default', function(cb){
-  runSequence('build-theme');
+  runSequence('build-theme', cb);
 });
 
 gulp.task('build-theme', function(cb) {
   runSequence('clean-theme',
-    ['style-theme', 'js-theme', 'images-theme', 'php-theme'],
+    ['style-theme', 'js-theme', 'images-theme', 'theme-screenshot', 'php-theme'],
     ['js-theme-lint', 'theme-scss-lint'],
     cb);
 });
@@ -87,6 +90,12 @@ gulp.task('images-theme', function(){
       .pipe(gulp.dest('dist/wp-content/themes/'));
 });
 
+gulp.task('theme-screenshot', function(){
+  return gulp.src('src/themes/uw-oshkosh-divi/screenshot.png')
+    .pipe(imagemin())
+    .pipe(gulp.dest('dist/wp-content/themes/uw-oshkosh-divi/'))
+});
+
 gulp.task('php-theme', function(){
   return gulp.src('src/themes/**/**/*.php')
       .pipe(gulp.dest('dist/wp-content/themes/'));
@@ -106,59 +115,17 @@ gulp.task('theme-scss-lint', function() {
 });
 
 
-// // Tasks for the WordPressplugin plugin build
-// gulp.task('build-plugin', function(cb) {
-//   runSequence('plugin-clean', ['plugin-style', 'plugin-js', 'plugin-images', 'plugin-php'], ['plugin-js-lint', 'plugin-scss-lint'], cb);
+// Tasks for the WordPressplugin plugin build
+// gulp.task('build-plugins', function(cb){
+//   runSequence('clean-plugin', 'copy-plugin', cb);
 // });
-//
-// // Tasks for WordPress theme build
-// gulp.task('plugin-clean', function() {
-//     return gulp.src('dist/wp-content/plugins/')
+
+// gulp.task('clean-plugin', function() {
+//     return gulp.src(plugins)
 //         .pipe(clean());
 // });
-//
-// // Building the CSS
-// gulp.task('plugin-style', function () {
-//   return gulp.src('src/plugins/**/*.scss')
-//     .pipe(sass().on('error', sass.logError))
-//     .pipe(autoprefixer({
-//       browsers: ['last 2 versions']
-//     }))
-//     .pipe(cleanCSS({
-//           keepSpecialComments: 1
-//       }))
-//     .pipe(gulp.dest('dist/wp-content/plugins/'));
-// });
-//
-// gulp.task('plugin-js', function(){
-//   return gulp.src('src/plugins/**/js/**/*.js')
-//       .pipe(babel({
-//         presets: ['es2015']
-//       }))
-//       .pipe(uglify())
-//       .pipe(gulp.dest('dist/wp-content/plugins/'));
-// });
-//
-// gulp.task('plugin-images', function(){
-//   return gulp.src('src/plugins/**/img/**/*')
-//       .pipe(imagemin())
-//       .pipe(gulp.dest('dist/wp-content/plugins/'));
-// });
-//
-// gulp.task('plugin-php', function(){
-//   return gulp.src('src/plugins/**/**/*.php')
-//       .pipe(gulp.dest('dist/wp-content/plugins/'));
-// });
-//
-// gulp.task('plugin-js-lint', function(){
-//   return gulp.src('src/plugins/**/js/*.js')
-//       .pipe(jshint({
-//         'esversion': 6
-//       }))
-//       .pipe(jshint.reporter('default'));
-// });
-//
-// gulp.task('plugin-scss-lint', function() {
-//   return gulp.src('src/plugins/**/style/*.scss')
-//     .pipe(scsslint({'config': 'config/scss-lint-config.yml'}));
+
+// gulp.task('copy-plugin', function(cp) {
+//   return gulp.src(['src/plugins/**'])
+//         .pipe(gulp.dest('dist/wp-content/plugins/'));
 // });

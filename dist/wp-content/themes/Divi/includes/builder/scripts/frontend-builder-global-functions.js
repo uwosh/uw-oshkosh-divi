@@ -1,3 +1,4 @@
+/*! ET frontend-builder-global-functions.js */
 (function($){
 	window.et_pb_smooth_scroll = function( $target, $top_section, speed, easing ) {
 		var $window_width = $( window ).width();
@@ -238,5 +239,24 @@
 				$tab_controls.css( 'min-height', max_height );
 			}
 		});
+	}
+
+	window.et_pb_box_shadow_apply_overlay = function (el) {
+		var pointerEventsSupport = document.body.style.pointerEvents !== undefined
+			&&
+			//For some reasons IE 10 tells that supports pointer-events, but it doesn't
+			(document.documentMode === undefined || document.documentMode >= 11);
+
+		if (pointerEventsSupport) {
+			$(el).each(function () {
+				if (! $(this).children('.box-shadow-overlay').length) {
+					$(this)
+						.addClass('has-box-shadow-overlay')
+						.prepend('<div class="box-shadow-overlay"></div>');
+				}
+			});
+		} else {
+			$(el).addClass('.et-box-shadow-no-overlay');
+		}
 	}
 })(jQuery);

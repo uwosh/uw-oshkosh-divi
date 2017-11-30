@@ -29,6 +29,16 @@ class ET_Global_Settings {
 			'line_height'    => '1.7em',
 		);
 
+		$background_gradient_defaults = array(
+			'start'            => '#2b87da',
+			'end'              => '#29c4a9',
+			'type'             => 'linear',
+			'direction'        => '180deg',
+			'direction_radial' => 'center',
+			'start_position'   => '0%',
+			'end_position'     => '100%',
+		);
+
 		$background_image_defaults = array(
 			'size'     => 'cover',
 			'position' => 'center',
@@ -44,6 +54,14 @@ class ET_Global_Settings {
 			'all_buttons_font_style'                          => '',
 			'all_buttons_border_radius_hover'                 => '3',
 			'all_buttons_spacing_hover'                       => '0',
+
+			'all_background_gradient_start'                   => $background_gradient_defaults['start'],
+			'all_background_gradient_end'                     => $background_gradient_defaults['end'],
+			'all_background_gradient_type'                    => $background_gradient_defaults['type'],
+			'all_background_gradient_direction'               => $background_gradient_defaults['direction'],
+			'all_background_gradient_direction_radial'        => $background_gradient_defaults['direction_radial'],
+			'all_background_gradient_start_position'          => $background_gradient_defaults['start_position'],
+			'all_background_gradient_end_position'            => $background_gradient_defaults['end_position'],
 
 			'et_pb_accordion-toggle_font_size'                => '16',
 			'et_pb_accordion-toggle_font_style'               => '',
@@ -180,10 +198,10 @@ class ET_Global_Settings {
 			'et_pb_cta-background_blend'                      => $background_image_defaults['blend'],
 
 			'et_pb_divider-show_divider'                      => 'off',
-			'et_pb_divider-divider_style'                     => 'none',
+			'et_pb_divider-divider_style'                     => 'solid',
 			'et_pb_divider-divider_weight'                    => '1',
 			'et_pb_divider-height'                            => '1',
-			'et_pb_divider-divider_position'                  => 'none',
+			'et_pb_divider-divider_position'                  => 'top',
 
 			'et_pb_filterable_portfolio-hover_overlay_color'  => 'rgba(255,255,255,0.9)',
 			'et_pb_filterable_portfolio-title_font_size'      => '18',
@@ -311,7 +329,7 @@ class ET_Global_Settings {
 			'et_pb_post_title-meta_font_size'                 => $font_defaults['size'],
 			'et_pb_post_title-meta_line_height'               => '1em',
 			'et_pb_post_title-meta_letter_spacing'            => $font_defaults['letter_spacing'],
-			'et_pb_post_title-parallax_effect'                => 'off',
+			'et_pb_post_title-parallax'                       => 'off',
 			'et_pb_post_title-background_size'                => $background_image_defaults['size'],
 			'et_pb_post_title-background_position'            => $background_image_defaults['position'],
 			'et_pb_post_title-background_repeat'              => $background_image_defaults['repeat'],

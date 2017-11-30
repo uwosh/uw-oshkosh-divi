@@ -17,6 +17,11 @@ function et_fb_redirect_post_location( $location ) {
 }
 add_filter( 'redirect_post_location', 'et_fb_redirect_post_location' );
 
+/**
+ * @internal NOTE: Don't use this from outside builder code! {@see et_core_is_fb_enabled()}.
+ *
+ * @return bool
+ */
 function et_fb_enabled() {
 	if ( defined( 'ET_FB_ENABLED' ) ) {
 		return ET_FB_ENABLED;
@@ -100,10 +105,4 @@ require_once ET_BUILDER_DIR . 'frontend-builder/helpers.php';
 require_once ET_BUILDER_DIR . 'frontend-builder/rtl.php';
 
 do_action( 'et_fb_framework_loaded' );
-
-if ( 'on' === et_get_option( 'divi_disable_translations', 'off' ) ) {
-	add_filter( 'locale_stylesheet_uri', 'et_fb_remove_rtl_stylesheet' );
-	add_filter( 'language_attributes',   'et_fb_remove_html_rtl_dir' );
-}
-
 et_fb_fix_plugin_conflicts();

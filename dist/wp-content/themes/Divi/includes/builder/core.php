@@ -1,5 +1,6 @@
 <?php
 
+
 if ( ! function_exists( 'et_builder_should_load_framework' ) ) :
 function et_builder_should_load_framework() {
 	global $pagenow;
@@ -11,15 +12,16 @@ function et_builder_should_load_framework() {
 	}
 
 	$is_admin = is_admin();
-	$required_admin_pages = array( 'edit.php', 'post.php', 'post-new.php', 'admin.php', 'customize.php', 'edit-tags.php', 'admin-ajax.php', 'export.php', 'options-permalink.php', 'themes.php' ); // list of admin pages where we need to load builder files
+	$required_admin_pages = array( 'edit.php', 'post.php', 'post-new.php', 'admin.php', 'customize.php', 'edit-tags.php', 'admin-ajax.php', 'export.php', 'options-permalink.php', 'themes.php', 'revision.php' ); // list of admin pages where we need to load builder files
 	$specific_filter_pages = array( 'edit.php', 'admin.php', 'edit-tags.php' ); // list of admin pages where we need more specific filtering
 
 	$is_edit_library_page = 'edit.php' === $pagenow && isset( $_GET['post_type'] ) && 'et_pb_layout' === $_GET['post_type'];
 	$is_role_editor_page = 'admin.php' === $pagenow && isset( $_GET['page'] ) && apply_filters( 'et_divi_role_editor_page', 'et_divi_role_editor' ) === $_GET['page'];
 	$is_import_page = 'admin.php' === $pagenow && isset( $_GET['import'] ) && 'wordpress' === $_GET['import']; // Page Builder files should be loaded on import page as well to register the et_pb_layout post type properly
+	$is_wpml_page = 'admin.php' === $pagenow && isset( $_GET['page'] ) && 'sitepress-multilingual-cms/menu/languages.php' === $_GET['page']; // Page Builder files should be loaded on WPML clone page as well to register the custom taxonomies properly
 	$is_edit_layout_category_page = 'edit-tags.php' === $pagenow && isset( $_GET['taxonomy'] ) && 'layout_category' === $_GET['taxonomy'];
 
-	if ( ! $is_admin || ( $is_admin && in_array( $pagenow, $required_admin_pages ) && ( ! in_array( $pagenow, $specific_filter_pages ) || $is_edit_library_page || $is_role_editor_page || $is_edit_layout_category_page || $is_import_page ) ) ) {
+	if ( ! $is_admin || ( $is_admin && in_array( $pagenow, $required_admin_pages ) && ( ! in_array( $pagenow, $specific_filter_pages ) || $is_edit_library_page || $is_role_editor_page || $is_edit_layout_category_page || $is_import_page || $is_wpml_page ) ) ) {
 		$should_load = true;
 	} else {
 		$should_load = false;
@@ -418,6 +420,11 @@ function et_pb_show_all_layouts() {
 				'value'   => $post_type,
 				'compare' => 'IN',
 			),
+			array(
+				'key'     => '_et_pb_layout_applicability',
+				'value'   => 'product_tour',
+				'compare' => 'NOT EXISTS',
+			),
 		),
 		'tax_query' => array(
 			array(
@@ -603,6 +610,7 @@ function et_pb_retrieve_templates( $layout_type = 'layout', $module_width = '', 
 				$categories_processed = array();
 				$row_layout = '';
 				$this_layout_type = '';
+				$this_layout_applicability = '';
 
 				if ( ! empty( $categories ) ) {
 					foreach( $categories as $category_data ) {
@@ -616,6 +624,7 @@ function et_pb_retrieve_templates( $layout_type = 'layout', $module_width = '', 
 
 				if ( 'layout' === $layout_type ) {
 					$this_layout_type = 'on' === get_post_meta( $single_post->ID, '_et_pb_predefined_layout', true ) ? 'predefined' : 'library';
+					$this_layout_applicability = get_post_meta( $single_post->ID, '_et_pb_layout_applicability', true );
 				}
 
 				// get unsynced global optoins for module
@@ -629,6 +638,7 @@ function et_pb_retrieve_templates( $layout_type = 'layout', $module_width = '', 
 					'shortcode'        => $single_post->post_content,
 					'is_global'        => $global_scope,
 					'layout_type'      => $layout_type,
+					'applicability'    => $this_layout_applicability,
 					'layouts_type'     => $this_layout_type,
 					'module_type'      => $module_type,
 					'categories'       => $categories_processed,
@@ -862,7 +872,7 @@ function et_pb_get_global_module() {
 		wp_reset_postdata();
 
 		if ( !empty( $query->post ) ) {
-			$global_shortcode['shortcode'] = $query->post->post_content;
+			$global_shortcode['shortcode'] = wpautop( $query->post->post_content );
 			$excluded_global_options = get_post_meta( $post_id, '_et_pb_excluded_global_options' );
 			$selective_sync_status = empty( $excluded_global_options ) ? '' : 'updated';
 
@@ -888,7 +898,7 @@ function et_pb_update_layout() {
 		die( -1 );
 	}
 
-	$post_id = isset( $_POST['et_template_post_id'] ) ? $_POST['et_template_post_id'] : '';
+	$post_id = isset( $_POST['et_template_post_id'] ) ? absint( $_POST['et_template_post_id'] ) : '';
 	$new_content = isset( $_POST['et_layout_content'] ) ? et_pb_builder_post_content_capability_check( $_POST['et_layout_content'] ) : '';
 	$layout_type = isset( $_POST['et_layout_type'] ) ? sanitize_text_field( $_POST['et_layout_type'] ) : '';
 
@@ -898,10 +908,16 @@ function et_pb_update_layout() {
 			'post_content' => $new_content,
 		);
 
-		wp_update_post( $update );
+		$result = wp_update_post( $update );
+
+		if ( ! $result || is_wp_error( $result ) ) {
+			wp_send_json_error();
+		}
+
+		ET_Core_PageResource::remove_static_resources( 'all', 'all' );
 
 		if ( 'module' === $layout_type && isset( $_POST['et_unsynced_options'] ) ) {
-			$unsynced_options = stripslashes( $_POST['et_unsynced_options'] );
+			$unsynced_options = sanitize_text_field( stripslashes( $_POST['et_unsynced_options'] ) );
 
 			update_post_meta( $post_id, '_et_pb_excluded_global_options', $unsynced_options );
 		}
@@ -970,6 +986,35 @@ function et_pb_delete_layout() {
 }
 add_action( 'wp_ajax_et_pb_delete_layout', 'et_pb_delete_layout' );
 
+/**
+ * Enables zlib compression if needed/supported.
+ */
+function et_builder_enable_zlib_compression() {
+	// If compression is already enabled, do nothing
+	if ( 1 === intval( ini_get( 'zlib.output_compression' ) ) ) {
+		return;
+	}
+
+	// We need to be sure no content has been pushed yet before enabling compression
+	// to avoid decoding errors. To do so, we flush buffer and then check header_sent
+	while ( ob_get_level() ) {
+		ob_end_flush();
+	}
+
+	if ( headers_sent() ) {
+		// Something has been sent already, could be PHP notices or other plugin output
+		return;
+	}
+
+	// We use ob_gzhandler because less prone to errors with WP
+	if ( function_exists( 'ob_gzhandler' ) ) {
+		// Faster compression, requires less cpu/memory
+		@ini_set( 'zlib.output_compression_level', 1 );
+
+		ob_start( 'ob_gzhandler' );
+	}
+}
+
 function et_pb_get_backbone_templates() {
 	if ( ! wp_verify_nonce( $_POST['et_admin_load_nonce'], 'et_admin_load_nonce' ) ) {
 		die( -1 );
@@ -983,6 +1028,8 @@ function et_pb_get_backbone_templates() {
 	$start_from = isset( $_POST['et_templates_start_from'] ) ? sanitize_text_field( $_POST['et_templates_start_from'] ) : 0;
 	$amount = ET_BUILDER_AJAX_TEMPLATES_AMOUNT;
 
+	// Enable zlib compression
+	et_builder_enable_zlib_compression();
 	// get the portion of templates
 	$result = json_encode( ET_Builder_Element::output_templates( $post_type, $start_from, $amount ) );
 
@@ -1465,10 +1512,45 @@ function et_fb_get_nonces() {
 		'moduleEmailOptinFetchLists'    => wp_create_nonce( 'et_builder_email_fetch_lists_nonce' ),
 		'moduleEmailOptinAddAccount'    => wp_create_nonce( 'et_builder_email_add_account_nonce' ),
 		'moduleEmailOptinRemoveAccount' => wp_create_nonce( 'et_builder_email_remove_account_nonce' ),
+		'uploadFontNonce'               => wp_create_nonce( 'et_fb_upload_font_nonce' ),
 	);
 
 	return array_merge( $nonces, $fb_nonces );
 }
+
+if ( ! function_exists( 'et_builder_is_product_tour_enabled' ) ):
+function et_builder_is_product_tour_enabled() {
+	static $product_tour_enabled = null;
+
+	if ( null !== $product_tour_enabled ) {
+		return $product_tour_enabled;
+	}
+
+	if ( ! ( function_exists( 'et_fb_is_enabled' ) && et_fb_is_enabled() ) ) {
+		return $product_tour_enabled = false;
+	}
+
+	/**
+	 * Filters the on/off status of the product tour for the current user.
+	 *
+	 * @since 3.0.64
+	 *
+	 * @param string $product_tour_status_override Accepts 'on', 'off'.
+	 */
+	$product_tour_status_override = apply_filters( 'et_builder_product_tour_status_override', false );
+
+	if ( false !== $product_tour_status_override ) {
+		$product_tour_enabled = 'on' === $product_tour_status_override;
+	} else {
+		$user_id                    = (int) get_current_user_id();
+		$product_tour_settings      = et_get_option( 'product_tour_status', array() );
+		$product_tour_status_global = 'on' === et_get_option( 'et_pb_product_tour_global', 'on' );
+		$product_tour_enabled       = $product_tour_status_global && ( ! isset( $product_tour_settings[ $user_id ] ) || 'on' === $product_tour_settings[ $user_id ] );
+	}
+
+	return $product_tour_enabled;
+}
+endif;
 
 function et_pb_get_backbone_template() {
 	if ( ! wp_verify_nonce( $_POST['et_admin_load_nonce'], 'et_admin_load_nonce' ) ) {
@@ -1498,21 +1580,26 @@ function et_builder_email_add_account() {
 	et_core_security_check( 'manage_options', 'et_builder_email_add_account_nonce' );
 
 	$provider_slug = isset( $_POST['et_provider'] ) ? sanitize_text_field( $_POST['et_provider'] ) : '';
-	$account_name  = isset( $_POST['et_account'] ) ? sanitize_text_field( $_POST['et_account'] ) : '';
-	$api_key       = isset( $_POST['et_api_key'] ) ? sanitize_text_field( $_POST['et_api_key'] ) : '';
+	$name_key      = "et_{$provider_slug}_account_name";
+	$account_name  = isset( $_POST[ $name_key ] ) ? sanitize_text_field( $_POST[ $name_key ] ) : '';
 	$is_BB         = isset( $_POST['et_bb'] );
 
-	if ( empty( $provider_slug ) || empty( $account_name ) || empty( $api_key ) ) {
+	if ( empty( $provider_slug ) || empty( $account_name ) ) {
 		et_core_die();
 	}
 
-	$result = et_core_api_email_fetch_lists( $provider_slug, $account_name, $api_key );
+	unset( $_POST[ $name_key ] );
+
+	$fields = et_builder_email_get_fields_from_post_data( $provider_slug );
+
+	if ( false === $fields  ) {
+		et_core_die();
+	}
+
+	$result = et_core_api_email_fetch_lists( $provider_slug, $account_name, $fields );
 
 	// Get data in builder format
 	$accounts_list = et_builder_email_get_lists_field_data( $provider_slug, $is_BB );
-
-	// Make sure the BB updates its cached templates
-	et_pb_force_regenerate_templates();
 
 	if ( 'success' === $result ) {
 		$result = array(
@@ -1533,6 +1620,31 @@ add_action( 'wp_ajax_et_builder_email_add_account', 'et_builder_email_add_accoun
 endif;
 
 
+if ( ! function_exists( 'et_builder_email_get_fields_from_post_data' ) ):
+function et_builder_email_get_fields_from_post_data( $provider_slug ) {
+	$fields = ET_Core_API_Email_Providers::instance()->account_fields( $provider_slug );
+	$result = array();
+
+	if ( ! $fields ) {
+		// If there are no fields to check then the check passes.
+		return $fields;
+	}
+
+	foreach ( $fields as $field_name => $field_info ) {
+		$key = "et_{$provider_slug}_{$field_name}";
+
+		if ( empty( $_POST[$key] ) && ! isset( $field_info['optional'] ) ) {
+			return false;
+		}
+
+		$result[ $field_name ] = sanitize_text_field( $_POST[ $key ] );
+	}
+
+	return $result;
+}
+endif;
+
+
 if ( ! function_exists( 'et_builder_email_get_lists_field_data' ) ):
 /**
  * Get email list data in a builder's options field format.
@@ -1544,7 +1656,7 @@ if ( ! function_exists( 'et_builder_email_get_lists_field_data' ) ):
  */
 function et_builder_email_get_lists_field_data( $provider_slug, $is_BB = false ) {
 	$signup     = new ET_Builder_Module_Signup();
-	$fields     = $signup->get_fields( 'no_cache' );
+	$fields     = $signup->get_fields();
 	$field_name = $provider_slug . '_list';
 	$field      = $fields[ $field_name ];
 
@@ -1613,7 +1725,7 @@ function et_builder_email_maybe_migrate_accounts() {
 	$builder_migrated = isset( $builder_options[ $builder_migrated_key ] );
 	$divi_migrated    = et_get_option( $divi_migrated_key, false );
 
-	$data_utils = new ET_Core_Data_Utils();
+	$data_utils = ET_Core_Data_Utils::instance();
 	$migrations = array( 'builder' => $builder_migrated, 'divi' => $divi_migrated );
 	$providers  = new ET_Core_API_Email_Providers(); // Ensure the email component group is loaded.
 
@@ -1720,42 +1832,40 @@ if ( ! function_exists( 'et_pb_submit_subscribe_form' ) ):
 function et_pb_submit_subscribe_form() {
 	et_core_security_check( '', 'et_frontend_nonce' );
 
-	$provider_slug = sanitize_text_field( $_POST['et_service'] );
-	$account_name  = sanitize_text_field( $_POST['et_account'] );
-	$args          = array(
-		'list_id'   => sanitize_text_field( $_POST['et_list_id'] ),
-		'email'     => sanitize_email( $_POST['et_email'] ),
-		'name'      => sanitize_text_field( $_POST['et_firstname'] ),
-		'last_name' => sanitize_text_field( $_POST['et_lastname'] ),
-	);
+	$providers = ET_Core_API_Email_Providers::instance();
+	$utils     = ET_Core_Data_Utils::instance();
 
-	if ( empty( $args['name'] ) ) {
-		et_core_die( esc_html__( 'Please enter first name', 'et_builder' ) );
+	$provider_slug = sanitize_text_field( $utils->array_get( $_POST, 'et_provider' ) );
+	$account_name  = sanitize_text_field( $utils->array_get( $_POST, 'et_account' ) );
+
+	if ( ! $provider = $providers->get( $provider_slug, $account_name, 'builder' ) ) {
+		et_core_die( esc_html__( 'Configuration Error: Invalid data.', 'et_builder' ) );
 	}
 
+	$args = array(
+		'list_id'   => sanitize_text_field( $utils->array_get( $_POST, 'et_list_id' ) ),
+		'email'     => sanitize_text_field( $utils->array_get( $_POST, 'et_email' ) ),
+		'name'      => sanitize_text_field( $utils->array_get( $_POST, 'et_firstname' ) ),
+		'last_name' => sanitize_text_field( $utils->array_get( $_POST, 'et_lastname' ) ),
+	);
+
 	if ( ! is_email( $args['email'] ) ) {
-		et_core_die( esc_html__( 'Incorrect email', 'et_builder' ) );
+		et_core_die( esc_html__( 'Please input a valid email address.', 'et_builder' ) );
 	}
 
 	if ( empty( $args['list_id'] ) ) {
-		et_core_die( esc_html__( 'Configuration error: List is not defined', 'et_builder' ) );
+		et_core_die( esc_html__( 'Configuration Error: No list has been selected for this form.', 'et_builder' ) );
 	}
 
 	et_builder_email_maybe_migrate_accounts();
 
-	$providers = et_core_api_email_providers();
-	$provider  = $providers->get( $provider_slug, $account_name );
-	$message   = $provider->subscribe( $args );
+	$result = $provider->subscribe( $args );
 
-	if ( 'success' === $message ) {
-		$message = sprintf( '
-			<h2 class="et_pb_subscribed">%s</h2>',
-			esc_html__( 'Subscribed - look for the confirmation email!', 'et_builder' )
-		);
-		$result  = array( 'success' => $message );
+	if ( 'success' === $result ) {
+		$result  = array( 'success' => true );
 	} else {
-		$message = esc_html__( 'Subscription Error: ', 'et_builder' ) . $message;
-		$result  = array( 'error' => $message );
+		$message = esc_html__( 'Subscription Error: ', 'et_builder' );
+		$result  = array( 'error' => $message . $result );
 	}
 
 	die( json_encode( $result ) );
@@ -2469,10 +2579,14 @@ function et_pb_detect_cache_plugins() {
 	}
 
 	if ( '1' === get_option( 'wordfenceActivated' ) ) {
-		return array(
-			'name' => 'Wordfence',
-			'page' => 'admin.php?page=WordfenceSitePerf',
-		);
+		// Wordfence removed their support of Falcon cache in v6.2.8, so we'll
+		// just check against their `cacheType` setting (if it exists).
+		if ( class_exists( 'wfConfig' ) && 'falcon' == wfConfig::get( 'cacheType' ) ) {
+			return array(
+				'name' => 'Wordfence',
+				'page' => 'admin.php?page=WordfenceSitePerf',
+			);
+		}
 	}
 
 	if ( function_exists( 'cachify_autoload' ) ) {
@@ -2804,6 +2918,11 @@ function et_pb_is_pagebuilder_used( $page_id ) {
 endif;
 
 if ( ! function_exists( 'et_fb_is_enabled' ) ) :
+/**
+ * @internal NOTE: Don't use this from outside builder code! {@see et_core_is_fb_enabled()}.
+ *
+ * @return bool
+ */
 function et_fb_is_enabled( $post_id = false ) {
 	if ( ! $post_id ) {
 		global $post;
@@ -2919,15 +3038,17 @@ function et_builder_set_content_activation( $post_id = false ) {
 
 if ( ! function_exists( 'et_builder_get_font_family' ) ) :
 function et_builder_get_font_family( $font_name, $use_important = false ) {
-	$fonts = et_builder_get_fonts();
+	$user_fonts = et_builder_get_custom_fonts();
+	$fonts = isset( $user_fonts[ $font_name ] ) ? $user_fonts : et_builder_get_fonts();
+	$removed_fonts_mapping = et_builder_old_fonts_mapping();
 
 	$font_style = $font_weight = '';
 
 	$font_name_ms = isset( $fonts[ $font_name ] ) && isset( $fonts[ $font_name ]['add_ms_version'] ) ? "'{$font_name} MS', " : "";
 
-	if ( isset( $fonts[ $font_name ]['parent_font'] ) ){
-		$font_style = $fonts[ $font_name ]['styles'];
-		$font_name = $fonts[ $font_name ]['parent_font'];
+	if ( isset( $removed_fonts_mapping[ $font_name ] ) && isset( $removed_fonts_mapping[ $font_name ]['parent_font'] ) ) {
+		$font_style = $removed_fonts_mapping[ $font_name ]['styles'];
+		$font_name = $removed_fonts_mapping[ $font_name ]['parent_font'];
 	}
 
 	if ( '' !== $font_style ) {
@@ -2936,7 +3057,7 @@ function et_builder_get_font_family( $font_name, $use_important = false ) {
 
 	$style = sprintf( 'font-family: \'%1$s\', %5$s%2$s%3$s;%4$s',
 		esc_html( $font_name ),
-		isset( $fonts[ $font_name ] ) ? et_builder_get_websafe_font_stack( $fonts[ $font_name ]['type'] ) : "",
+		isset( $fonts[ $font_name ] ) ? et_builder_get_websafe_font_stack( $fonts[ $font_name ]['type'] ) : 'sans-serif',
 		( $use_important ? ' !important' : '' ),
 		$font_weight,
 		$font_name_ms
@@ -2964,7 +3085,7 @@ endif;
 
 if ( ! function_exists( 'et_builder_get_websafe_font_stack' ) ) :
 function et_builder_get_websafe_font_stack( $type = 'sans-serif' ) {
-	$font_stack = '';
+	$font_stack = $type;
 
 	switch ( $type ) {
 		case 'sans-serif':
@@ -3027,435 +3148,99 @@ function et_builder_get_websafe_fonts() {
 }
 endif;
 
-if ( ! function_exists( 'et_builder_get_google_fonts' ) ) :
-function et_builder_get_google_fonts() {
-	$google_fonts = array(
-		'Abel' => array(
-			'styles' 		=> '400',
-			'character_set' => 'latin',
-			'type'			=> 'sans-serif',
-		),
-		'Amatic SC' => array(
-			'styles' 		=> '400,700',
-			'character_set' => 'latin,latin-ext',
-			'type'			=> 'cursive',
-		),
-		'Arimo' => array(
-			'styles' 		=> '400,400italic,700italic,700',
-			'character_set' => 'latin,cyrillic-ext,latin-ext,greek-ext,cyrillic,greek,vietnamese',
-			'type'			=> 'sans-serif',
-		),
-		'Arvo' => array(
-			'styles' 		=> '400,400italic,700,700italic',
-			'character_set' => 'latin',
-			'type'			=> 'serif',
-		),
-		'Bevan' => array(
-			'styles' 		=> '400',
-			'character_set' => 'latin',
-			'type'			=> 'cursive',
-		),
-		'Bitter' => array(
-			'styles' 		=> '400,400italic,700',
-			'character_set' => 'latin,latin-ext',
-			'type'			=> 'serif',
-		),
-		'Black Ops One' => array(
-			'styles' 		=> '400',
-			'character_set' => 'latin,latin-ext',
-			'type'			=> 'cursive',
-		),
-		'Boogaloo' => array(
-			'styles' 		=> '400',
-			'character_set' => 'latin',
-			'type'			=> 'cursive',
-		),
-		'Bree Serif' => array(
-			'styles' 		=> '400',
-			'character_set' => 'latin,latin-ext',
-			'type'			=> 'serif',
-		),
-		'Calligraffitti' => array(
-			'styles' 		=> '400',
-			'character_set' => 'latin',
-			'type'			=> 'cursive',
-		),
-		'Cantata One' => array(
-			'styles' 		=> '400',
-			'character_set' => 'latin,latin-ext',
-			'type'			=> 'serif',
-		),
-		'Cardo' => array(
-			'styles' 		=> '400,400italic,700',
-			'character_set' => 'latin,greek-ext,greek,latin-ext',
-			'type'			=> 'serif',
-		),
-		'Changa One' => array(
-			'styles' 		=> '400,400italic',
-			'character_set' => 'latin',
-			'type'			=> 'cursive',
-		),
-		'Cherry Cream Soda' => array(
-			'styles' 		=> '400',
-			'character_set' => 'latin',
-			'type'			=> 'cursive',
-		),
-		'Chewy' => array(
-			'styles' 		=> '400',
-			'character_set' => 'latin',
-			'type'			=> 'cursive',
-		),
-		'Comfortaa' => array(
-			'styles' 		=> '400,300,700',
-			'character_set' => 'latin,cyrillic-ext,greek,latin-ext,cyrillic',
-			'type'			=> 'cursive',
-		),
-		'Coming Soon' => array(
-			'styles' 		=> '400',
-			'character_set' => 'latin',
-			'type'			=> 'cursive',
-		),
-		'Covered By Your Grace' => array(
-			'styles' 		=> '400',
-			'character_set' => 'latin',
-			'type'			=> 'cursive',
-		),
-		'Crafty Girls' => array(
-			'styles' 		=> '400',
-			'character_set' => 'latin',
-			'type'			=> 'cursive',
-		),
-		'Crete Round' => array(
-			'styles' 		=> '400,400italic',
-			'character_set' => 'latin,latin-ext',
-			'type'			=> 'serif',
-		),
-		'Crimson Text' => array(
-			'styles' 		=> '400,400italic,600,600italic,700,700italic',
-			'character_set' => 'latin',
-			'type'			=> 'serif',
-		),
-		'Cuprum' => array(
-			'styles' 		=> '400,400italic,700italic,700',
-			'character_set' => 'latin,latin-ext,cyrillic',
-			'type'			=> 'sans-serif',
-		),
-		'Dancing Script' => array(
-			'styles' 		=> '400,700',
-			'character_set' => 'latin,vietnamese,latin-ext',
-			'type'			=> 'cursive',
-		),
-		'Dosis' => array(
-			'styles' 		=> '400,200,300,500,600,700,800',
-			'character_set' => 'latin,latin-ext',
-			'type'			=> 'sans-serif',
-		),
-		'Droid Sans' => array(
-			'styles' 		=> '400,700',
-			'character_set' => 'latin',
-			'type'			=> 'sans-serif',
-		),
-		'Droid Serif' => array(
-			'styles' 		=> '400,400italic,700,700italic',
-			'character_set' => 'latin',
-			'type'			=> 'serif',
-		),
-		'Francois One' => array(
-			'styles' 		=> '400',
-			'character_set' => 'latin,latin-ext',
-			'type'			=> 'sans-serif',
-		),
-		'Fredoka One' => array(
-			'styles' 		=> '400',
-			'character_set' => 'latin',
-			'type'			=> 'cursive',
-		),
-		'The Girl Next Door' => array(
-			'styles' 		=> '400',
-			'character_set' => 'latin',
-			'type'			=> 'cursive',
-		),
-		'Gloria Hallelujah' => array(
-			'styles' 		=> '400',
-			'character_set' => 'latin',
-			'type'			=> 'cursive',
-		),
-		'Happy Monkey' => array(
-			'styles' 		=> '400',
-			'character_set' => 'latin,latin-ext',
-			'type'			=> 'cursive',
-		),
-		'Indie Flower' => array(
-			'styles' 		=> '400',
-			'character_set' => 'latin',
-			'type'			=> 'cursive',
-		),
-		'Josefin Slab' => array(
-			'styles' 		=> '400,100,100italic,300,300italic,400italic,600,700,700italic,600italic',
-			'character_set' => 'latin',
-			'type'			=> 'serif',
-		),
-		'Judson' => array(
-			'styles' 		=> '400,400italic,700',
-			'character_set' => 'latin,vietnamese,latin-ext',
-			'type'			=> 'serif',
-		),
-		'Kreon' => array(
-			'styles' 		=> '400,300,700',
-			'character_set' => 'latin',
-			'type'			=> 'serif',
-		),
-		'Lato' => array(
-			'styles' 		=> '400,100,100italic,300,300italic,400italic,700,700italic,900,900italic',
-			'character_set' => 'latin,latin-ext',
-			'type'			=> 'sans-serif',
-		),
-		'Lato Light' => array(
-			'parent_font' => 'Lato',
-			'styles'      => '300',
-		),
-		'Leckerli One' => array(
-			'styles' 		=> '400',
-			'character_set' => 'latin',
-			'type'			=> 'cursive',
-		),
-		'Lobster' => array(
-			'styles' 		=> '400',
-			'character_set' => 'latin,cyrillic-ext,latin-ext,cyrillic',
-			'type'			=> 'cursive',
-		),
-		'Lobster Two' => array(
-			'styles' 		=> '400,400italic,700,700italic',
-			'character_set' => 'latin',
-			'type'			=> 'cursive',
-		),
-		'Lora' => array(
-			'styles' 		=> '400,400italic,700,700italic',
-			'character_set' => 'cyrillic,cyrillic-ext,vietnamese,latin,latin-ext',
-			'type'			=> 'serif',
-		),
-		'Luckiest Guy' => array(
-			'styles' 		=> '400',
-			'character_set' => 'latin',
-			'type'			=> 'cursive',
-		),
-		'Merriweather' => array(
-			'styles' 		=> '400,300,900,700',
-			'character_set' => 'cyrillic,cyrillic-ext,latin,latin-ext',
-			'type'			=> 'serif',
-		),
-		'Metamorphous' => array(
-			'styles' 		=> '400',
-			'character_set' => 'latin,latin-ext',
-			'type'			=> 'cursive',
-		),
-		'Montserrat' => array(
-			'styles' 		=> '400,700',
-			'character_set' => 'latin',
-			'type'			=> 'sans-serif',
-		),
-		'Noticia Text' => array(
-			'styles' 		=> '400,400italic,700,700italic',
-			'character_set' => 'latin,vietnamese,latin-ext',
-			'type'			=> 'serif',
-		),
-		'Nova Square' => array(
-			'styles' 		=> '400',
-			'character_set' => 'latin',
-			'type'			=> 'cursive',
-		),
-		'Nunito' => array(
-			'styles' 		=> '400,300,700',
-			'character_set' => 'vietnamese,latin,latin-ext',
-			'type'			=> 'sans-serif',
-		),
-		'Old Standard TT' => array(
-			'styles' 		=> '400,400italic,700',
-			'character_set' => 'cyrillic,cyrillic-ext,vietnamese,latin,latin-ext',
-			'type'			=> 'serif',
-		),
-		'Open Sans' => array(
-			'styles' 		=> '300italic,400italic,600italic,700italic,800italic,400,300,600,700,800',
-			'character_set' => 'latin,cyrillic-ext,greek-ext,greek,vietnamese,latin-ext,cyrillic',
-			'type'			=> 'sans-serif',
-		),
-		'Open Sans Condensed' => array(
-			'styles' 		=> '300,300italic,700',
-			'character_set' => 'latin,cyrillic-ext,latin-ext,greek-ext,greek,vietnamese,cyrillic',
-			'type'			=> 'sans-serif',
-		),
-		'Open Sans Light' => array(
-			'parent_font' => 'Open Sans',
-			'styles'      => '300',
-		),
-		'Oswald' => array(
-			'styles' 		=> '400,300,700',
-			'character_set' => 'latin,latin-ext',
-			'type'			=> 'sans-serif',
-		),
-		'Pacifico' => array(
-			'styles' 		=> '400',
-			'character_set' => 'vietnamese,latin,latin-ext',
-			'type'			=> 'cursive',
-		),
-		'Passion One' => array(
-			'styles' 		=> '400,700,900',
-			'character_set' => 'latin,latin-ext',
-			'type'			=> 'cursive',
-		),
-		'Patrick Hand' => array(
-			'styles' 		=> '400',
-			'character_set' => 'latin,vietnamese,latin-ext',
-			'type'			=> 'cursive',
-		),
-		'Permanent Marker' => array(
-			'styles' 		=> '400',
-			'character_set' => 'latin',
-			'type'			=> 'cursive',
-		),
-		'Play' => array(
-			'styles' 		=> '400,700',
-			'character_set' => 'latin,cyrillic-ext,cyrillic,greek-ext,greek,latin-ext',
-			'type'			=> 'sans-serif',
-		),
-		'Playfair Display' => array(
-			'styles' 		=> '400,400italic,700,700italic,900italic,900',
-			'character_set' => 'latin,latin-ext,cyrillic',
-			'type'			=> 'serif',
-		),
-		'Poiret One' => array(
-			'styles' 		=> '400',
-			'character_set' => 'latin,latin-ext,cyrillic',
-			'type'			=> 'cursive',
-		),
-		'PT Sans' => array(
-			'styles' 		=> '400,400italic,700,700italic',
-			'character_set' => 'latin,latin-ext,cyrillic',
-			'type'			=> 'sans-serif',
-		),
-		'PT Sans Narrow' => array(
-			'styles' 		=> '400,700',
-			'character_set' => 'latin,latin-ext,cyrillic',
-			'type'			=> 'sans-serif',
-		),
-		'PT Serif' => array(
-			'styles' 		=> '400,400italic,700,700italic',
-			'character_set' => 'latin,cyrillic',
-			'type'			=> 'serif',
-		),
-		'Raleway' => array(
-			'styles' 		=> '400,100,200,300,600,500,700,800,900',
-			'character_set' => 'latin,latin-ext',
-			'type'			=> 'sans-serif',
-		),
+if ( ! function_exists( 'et_builder_get_font_weight_list' ) ) :
+function et_builder_get_font_weight_list() {
+	$default_font_weights_list = array(
+		'100' => esc_html__( 'Thin', 'et_builder' ),
+		'200' => esc_html__( 'Ultra Light', 'et_builder' ),
+		'300' => esc_html__( 'Light', 'et_builder' ),
+		'400' => esc_html__( 'Regular', 'et_builder' ),
+		'500' => esc_html__( 'Medium', 'et_builder' ),
+		'600' => esc_html__( 'Semi Bold', 'et_builder' ),
+		'700' => esc_html__( 'Bold', 'et_builder' ),
+		'800' => esc_html__( 'Ultra Bold', 'et_builder' ),
+		'900' => esc_html__( 'Heavy', 'et_builder' ),
+	);
+
+	return apply_filters( 'et_builder_all_font_weights', $default_font_weights_list );
+}
+endif;
+
+if ( ! function_exists( 'et_builder_get_custom_fonts' ) ) :
+function et_builder_get_custom_fonts() {
+	$all_custom_fonts = get_option( 'et_uploaded_fonts', array() );
+	return apply_filters( 'et_builder_custom_fonts', $all_custom_fonts );
+}
+endif;
+
+function et_builder_old_fonts_mapping() {
+	return array(
 		'Raleway Light' => array(
 			'parent_font' => 'Raleway',
 			'styles'      => '300',
-		),
-		'Reenie Beanie' => array(
-			'styles' 		=> '400',
-			'character_set' => 'latin',
-			'type'			=> 'cursive',
-		),
-		'Righteous' => array(
-			'styles' 		=> '400',
-			'character_set' => 'latin,latin-ext',
-			'type'			=> 'cursive',
-		),
-		'Roboto' => array(
-			'styles' 		=> '400,100,100italic,300,300italic,400italic,500,500italic,700,700italic,900,900italic',
-			'character_set' => 'latin,cyrillic-ext,latin-ext,cyrillic,greek-ext,greek,vietnamese',
-			'type'			=> 'sans-serif',
-		),
-		'Roboto Condensed' => array(
-			'styles' 		=> '400,300,300italic,400italic,700,700italic',
-			'character_set' => 'latin,cyrillic-ext,latin-ext,greek-ext,cyrillic,greek,vietnamese',
-			'type'			=> 'sans-serif',
 		),
 		'Roboto Light' => array(
 			'parent_font' => 'Roboto',
 			'styles'      => '100',
 		),
-		'Rock Salt' => array(
-			'styles' 		=> '400',
-			'character_set' => 'latin',
-			'type'			=> 'cursive',
-		),
-		'Rokkitt' => array(
-			'styles' 		=> '400,700',
-			'character_set' => 'latin',
-			'type'			=> 'serif',
-		),
-		'Sanchez' => array(
-			'styles' 		=> '400,400italic',
-			'character_set' => 'latin,latin-ext',
-			'type'			=> 'serif',
-		),
-		'Satisfy' => array(
-			'styles' 		=> '400',
-			'character_set' => 'latin',
-			'type'			=> 'cursive',
-		),
-		'Schoolbell' => array(
-			'styles' 		=> '400',
-			'character_set' => 'latin',
-			'type'			=> 'cursive',
-		),
-		'Shadows Into Light' => array(
-			'styles' 		=> '400',
-			'character_set' => 'latin',
-			'type'			=> 'cursive',
-		),
-		'Source Sans Pro' => array(
-			'styles' 		=> '400,200,200italic,300,300italic,400italic,600,600italic,700,700italic,900,900italic',
-			'character_set' => 'latin,latin-ext',
-			'type'			=> 'sans-serif',
-		),
 		'Source Sans Pro Light' => array(
 			'parent_font' => 'Source Sans Pro',
 			'styles'      => '300',
 		),
-		'Special Elite' => array(
-			'styles' 		=> '400',
-			'character_set' => 'latin',
-			'type'			=> 'cursive',
+		'Lato Light' => array(
+			'parent_font' => 'Lato',
+			'styles'      => '300',
 		),
-		'Squada One' => array(
-			'styles' 		=> '400',
-			'character_set' => 'latin',
-			'type'			=> 'cursive',
-		),
-		'Tangerine' => array(
-			'styles' 		=> '400,700',
-			'character_set' => 'latin',
-			'type'			=> 'cursive',
-		),
-		'Ubuntu' => array(
-			'styles' 		=> '400,300,300italic,400italic,500,500italic,700,700italic',
-			'character_set' => 'latin,cyrillic-ext,cyrillic,greek-ext,greek,latin-ext',
-			'type'			=> 'sans-serif',
-		),
-		'Unkempt' => array(
-			'styles' 		=> '400,700',
-			'character_set' => 'latin',
-			'type'			=> 'cursive',
-		),
-		'Vollkorn' => array(
-			'styles' 		=> '400,400italic,700italic,700',
-			'character_set' => 'latin',
-			'type'			=> 'serif',
-		),
-		'Walter Turncoat' => array(
-			'styles' 		=> '400',
-			'character_set' => 'latin',
-			'type'			=> 'cursive',
-		),
-		'Yanone Kaffeesatz' => array(
-			'styles' 		=> '400,200,300,700',
-			'character_set' => 'latin,latin-ext',
-			'type'			=> 'sans-serif',
+		'Open Sans Light' => array(
+			'parent_font' => 'Open Sans',
+			'styles'      => '300',
 		),
 	);
+}
+
+if ( ! function_exists( 'et_builder_get_google_fonts' ) ) :
+function et_builder_get_google_fonts() {
+	// get hardcoded google fonts
+	require_once( ET_BUILDER_DIR . 'google-fonts-data.php' );
+	return et_pb_get_saved_google_fonts();
+
+	$google_fonts_cache = get_option( 'et_google_fonts_cache', array() );
+
+	if ( 'valid' === get_transient( 'et_google_fonts_cache_status' ) && ! empty( $google_fonts_cache ) ) {
+		return apply_filters( 'et_builder_google_fonts', $google_fonts_cache );
+	}
+
+	$google_api_key = et_pb_get_google_api_key();
+	$all_google_fonts = array();
+
+	if ( '' !== $google_api_key ) {
+		$google_fonts_api_url = sprintf( 'https://www.googleapis.com/webfonts/v1/webfonts?key=%1$s', $google_api_key );
+		$google_fonts_response = wp_remote_get( esc_url_raw( $google_fonts_api_url ) );
+
+		$all_google_fonts = is_array( $google_fonts_response ) ? json_decode( wp_remote_retrieve_body( $google_fonts_response ), true ) : array();
+	}
+
+	if ( ! empty( $all_google_fonts ) && ! empty( $all_google_fonts['items'] ) ) {
+		$google_fonts = array();
+
+		foreach ( $all_google_fonts['items'] as $font_data ) {
+			$google_fonts[ $font_data['family'] ] = array(
+				'styles'        => sanitize_text_field( implode( ',', $font_data['variants'] ) ),
+				'character_set' => sanitize_text_field( implode( ',', $font_data['subsets'] ) ),
+				'type'          => sanitize_text_field( $font_data['category'] ),
+			);
+		}
+		// save google fonts and set the cache status to be valid for next 24 hours
+		update_option( 'et_google_fonts_cache', $google_fonts );
+		set_transient( 'et_google_fonts_cache_status', 'valid', 24 * HOUR_IN_SECONDS );
+	} else if ( ! empty( $google_fonts_cache ) ) {
+		// still use cache if it's not empty and fonts update failed
+		return apply_filters( 'et_builder_google_fonts', $google_fonts_cache );
+	} else {
+		// get hardcoded google fonts
+		require_once( ET_BUILDER_DIR . 'google-fonts-data.php' );
+		$google_fonts = et_pb_get_saved_google_fonts();
+	}
 
 	return apply_filters( 'et_builder_google_fonts', $google_fonts );
 }
@@ -3571,6 +3356,167 @@ function et_fb_get_saved_templates() {
 	die( $json_templates );
 }
 add_action( 'wp_ajax_et_fb_get_saved_templates', 'et_fb_get_saved_templates' );
+
+function et_pb_get_supported_font_formats() {
+	return apply_filters( 'et_pb_supported_font_formats', array( 'eot', 'woff2', 'woff', 'ttf', 'otf' ) );
+}
+
+function et_pb_process_custom_font() {
+	et_core_security_check( 'edit_posts', 'et_fb_upload_font_nonce' );
+
+	// action "add" or "remove"
+	$action = ! empty( $_POST['et_pb_font_action'] ) ? sanitize_text_field( $_POST['et_pb_font_action'] ) : 'save';
+
+	if ( 'add' === $action ) {
+		$supported_font_files = et_pb_get_supported_font_formats();
+		$custom_font_name = ! empty( $_POST['et_pb_font_name'] ) ? sanitize_text_field( $_POST['et_pb_font_name'] ) : '';
+		$custom_font_settings = ! empty( $_POST['et_pb_font_settings'] ) ? sanitize_text_field( $_POST['et_pb_font_settings'] ) : '';
+		$custom_font_settings_processed = '' === $custom_font_settings ? array() : json_decode( str_replace( '\\', '', $custom_font_settings ), true );
+		$fonts_array = array();
+
+		foreach ( $supported_font_files as $format ) {
+			if ( isset( $_FILES['et_pb_font_file_' . $format ] ) ) {
+				$fonts_array[ $format ] = $_FILES['et_pb_font_file_' . $format ];
+			}
+		}
+
+		die( json_encode( et_pb_add_font( $fonts_array, $custom_font_name, $custom_font_settings_processed ) ) );
+	} elseif ( 'remove' === $action ) {
+		$font_slug = ! empty( $_POST['et_pb_font_name'] ) ? sanitize_text_field( $_POST['et_pb_font_name'] ) : '';
+		die( json_encode( et_pb_remove_font( $font_slug ) ) );
+	}
+}
+
+add_action( 'wp_ajax_et_pb_process_custom_font', 'et_pb_process_custom_font' );
+
+/*
+ * Save the font-file.
+ *
+ */
+function et_pb_add_font( $font_files, $font_name, $font_settings ) {
+	if ( ! isset( $font_files ) || empty( $font_files ) ) {
+		return array( 'error' => esc_html__( 'No Font File Provided', 'et_builder' ) );
+	}
+
+	// remove all special characters from the font name
+	$font_name = preg_replace( '/[^A-Za-z0-9\s\_-]/', '', $font_name );
+
+	if ( '' === $font_name ) {
+		return array( 'error' => esc_html__( 'Font Name Cannot be Empty and Cannot Contain Special Characters', 'et_builder' ) );
+	}
+
+	$google_fonts = et_builder_get_google_fonts();
+	$all_custom_fonts = get_option( 'et_uploaded_fonts', array() );
+
+	// Don't allow to add fonts with the names which already used by User Fonts or Google Fonts.
+	if ( isset( $all_custom_fonts[ $font_name ] ) || isset( $google_fonts[ $font_name ] ) ) {
+		return array( 'error' => esc_html__( 'Font With This Name Already Exists. Please Use a Different Name', 'et_builder' ) );
+	}
+
+	// set the upload Directory for builder font files
+	add_filter( 'upload_dir', 'et_pb_set_fonts_upload_dir' );
+
+	$uploaded_files_error = '';
+	$uploaded_files = array(
+		'font_file' => array(),
+		'font_url'  => array(),
+	);
+
+	foreach ( $font_files as $ext => $font_file) {
+		// Try to upload font file.
+		$upload = wp_handle_upload( $font_file, array(
+			'test_size' => false,
+			'test_form' => false,
+			'mimes'     => array(
+			  'otf'   => 'application/x-font-opentype',
+			  'ttf'   => 'application/x-font-ttf',
+			  'woff'  => 'application/font-woff',
+			  'woff2' => 'application/font-woff2',
+			  'eot'   => 'application/vnd.ms-fontobject',
+			),
+		) );
+
+		// try with different MIME types if uploading .otf file and error occurs
+		if ( 'otf' === $ext && ! empty( $upload['error'] ) ) {
+			foreach ( array( 'application/x-font-ttf', 'application/vnd.ms-opentype' ) as $mime_type ) {
+				if ( ! empty( $upload['error'] ) ) {
+					$upload = wp_handle_upload( $font_file, array(
+						'test_size' => false,
+						'test_form' => false,
+						'mimes'     => array(
+						  'otf' => $mime_type,
+						),
+					) );
+				}
+			}
+		}
+
+		if ( ! empty( $upload['error'] ) ) {
+			$uploaded_files_error = $upload['error'];
+		} else {
+			$uploaded_files['font_file'][$ext] = esc_url( $upload['file'] );
+			$uploaded_files['font_url'][$ext] = esc_url( $upload['url'] );
+		}
+	}
+
+	// Reset the upload Directory after uploading font file
+	remove_filter( 'upload_dir', 'et_pb_set_fonts_upload_dir' );
+
+	// return error if no files were uploaded
+	if ( empty( $uploaded_files['font_file'] ) && '' !== $uploaded_files_error ) {
+		return array( 'error' => $uploaded_files_error );
+	}
+
+	//organize uploaded files
+	$all_custom_fonts[ $font_name ] = array(
+		'font_file' => $uploaded_files['font_file'],
+		'font_url'  => $uploaded_files['font_url'],
+	);
+
+	if ( ! empty( $font_settings ) ) {
+		$all_custom_fonts[ $font_name ]['styles'] = ! isset( $font_settings['font_weights'] ) || 'all' === $font_settings['font_weights'] ? '100,200,300,400,500,600,700,800,900' : $font_settings['font_weights'];
+		$all_custom_fonts[ $font_name ]['type'] = isset( $font_settings['generic_family'] ) ? $font_settings['generic_family'] : 'serif';
+	}
+
+	update_option( 'et_uploaded_fonts', $all_custom_fonts );
+
+	return array( 'error' => array(), 'success' => true, 'uploaded_font' => $font_name, 'updated_fonts' => $all_custom_fonts );
+}
+
+function et_pb_remove_font( $font_name ) {
+	if ( '' === $font_name ) {
+		return array( 'error' => esc_html__( 'Font Name Cannot be Empty', 'et_builder' ) );
+	}
+
+	$all_custom_fonts = get_option( 'et_uploaded_fonts', array() );
+
+	if ( ! isset( $all_custom_fonts[ $font_name ] ) ) {
+		return array( 'error' => esc_html__( 'Font Does not Exist', 'et_builder' ) );
+	}
+
+	// remove all uploaded font files if array
+	if ( is_array( $all_custom_fonts[ $font_name ]['font_file'] ) ) {
+		foreach ( $all_custom_fonts[ $font_name ]['font_file'] as $ext => $font_file ) {
+			unlink( $font_file );
+		}
+	} else {
+		unlink( $all_custom_fonts[ $font_name ]['font_file'] );
+	}
+
+	unset( $all_custom_fonts[ $font_name ] );
+
+	update_option( 'et_uploaded_fonts', $all_custom_fonts );
+
+	return array( 'error' => array(), 'success' => true, 'updated_fonts' => $all_custom_fonts );
+}
+
+function et_pb_set_fonts_upload_dir( $directory ) {
+	$directory['path'] = $directory['basedir'] . '/et-fonts';
+	$directory['url'] = $directory['baseurl'] . '/et-fonts';
+	$directory['subdir'] = '/et-fonts';
+
+	return $directory;
+}
 
 function et_pb_get_unsynced_legacy_options( $post_type, $shortcode_data ) {
 	if ( ! isset( $shortcode_data['attrs']['saved_tabs'] ) && 'all' === $shortcode_data['attrs']['saved_tabs'] ) {
@@ -3717,4 +3663,35 @@ function et_prevent_duplicate_item( $stringList, $delimiter ) {
 	$list = explode( $delimiter, $stringList );
 
 	return implode( $delimiter, array_unique( $list ) );
+}
+
+/**
+ * Determining whether unminified scripts should be loaded or not.
+ * @return bool
+ */
+function et_load_unminified_scripts() {
+	static $should_load = null;
+
+	if ( null === $should_load ) {
+		$is_script_debug = defined( 'SCRIPT_DEBUG' ) && SCRIPT_DEBUG;
+
+		$should_load = apply_filters( 'et_load_unminified_scripts', $is_script_debug );
+	}
+
+	return $should_load;
+}
+
+/**
+ * Determining whether unminified styles should be loaded or not
+ */
+function et_load_unminified_styles() {
+	static $should_load = null;
+
+	if ( null === $should_load ) {
+		$is_script_debug = defined( 'SCRIPT_DEBUG' ) && SCRIPT_DEBUG;
+
+		$should_load = apply_filters( 'et_load_unminified_styles', $is_script_debug );
+	}
+
+	return $should_load;
 }

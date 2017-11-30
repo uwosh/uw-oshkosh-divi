@@ -121,8 +121,14 @@ function et_fb_backend_helpers() {
 	}
 
 	$google_fonts = array_merge( array( 'Default' => array() ), et_builder_get_google_fonts() );
+	$custom_user_fonts = et_builder_get_custom_fonts();
 	$current_user = wp_get_current_user();
 	$current_url  = ( is_ssl() ? 'https://' : 'http://' ) . $_SERVER['HTTP_HOST'] . $_SERVER['REQUEST_URI'];
+
+	// disable product tour on the app launch, so it won't be started next time.
+	if ( et_builder_is_product_tour_enabled() ) {
+		et_fb_disable_product_tour();
+	}
 
 	$fb_modules_array = apply_filters( 'et_fb_modules_array', ET_Builder_Element::get_modules_array( $post_type, true, true ) );
 
@@ -150,6 +156,7 @@ function et_fb_backend_helpers() {
 			'defaults'                     => array(),
 			'optionsToggles'               => array(),
 		),
+		'productTourStatus'            => et_builder_is_product_tour_enabled() ? 'on' : 'off',
 		'moduleParentShortcodes'       => ET_Builder_Element::get_parent_shortcodes( $post_type ),
 		'moduleChildShortcodes'        => ET_Builder_Element::get_child_shortcodes( $post_type ),
 		'moduleChildSlugs'             => ET_Builder_Element::get_child_slugs( $post_type ),
@@ -158,6 +165,7 @@ function et_fb_backend_helpers() {
 		'modulesCount'                 => count( $fb_modules_array ),
 		'modulesWithChildren'          => ET_Builder_Element::get_shortcodes_with_children( $post_type ),
 		'modulesShowOnCancelDropClassname' => apply_filters( 'et_fb_modules_show_on_cancel_drop_classname', array( 'et_pb_gallery', 'et_pb_filterable_portfolio') ),
+		'modulesFeaturedImageBackground' => ET_Builder_Element::get_featured_image_background_modules( $post_type ),
 		'structureModules'             => ET_Builder_Element::get_structure_modules(),
 		'et_builder_css_media_queries' => ET_Builder_Element::get_media_quries( 'for_js' ),
 		'builderOptions'               => et_builder_options(),
@@ -172,13 +180,17 @@ function et_fb_backend_helpers() {
 		'unsavedNotification'          => et_builder_get_unsaved_notification_modal(),
 		'backupLabel'                  => __( 'Backup of %s', 'et_builder' ),
 		'getTaxonomies'                => apply_filters( 'et_fb_taxonomies', array(
-			'category'                 => get_categories(),
-			'project_category'         => get_categories( array( 'taxonomy' => 'project_category' ) ),
-			'product_category'         => class_exists( 'WooCommerce' ) ? get_terms( 'product_cat' ) : '',
+			'category'                 => get_categories( array( 'hide_empty' => false ) ),
+			'project_category'         => get_categories( array( 'taxonomy' => 'project_category', 'hide_empty' => false ) ),
+			'product_category'         => class_exists( 'WooCommerce' ) ? get_terms( 'product_cat', array( 'hide_empty' => false ) ) : '',
 		) ),
 		'googleAPIKey'                 => et_pb_is_allowed( 'theme_options' ) ? get_option( 'et_google_api_settings' ) : '',
 		'googleFontsList'              => array_keys( $google_fonts ),
 		'googleFonts'                  => $google_fonts,
+		'customFonts'                  => $custom_user_fonts,
+		'removedFonts'                 => et_builder_old_fonts_mapping(),
+		'allFontWeights'               => et_builder_get_font_weight_list(),
+		'allFontFormats'               => et_pb_get_supported_font_formats(),
 		'gutterWidth'                  => et_get_option( 'gutter_width', 3 ),
 		'fontIcons'                    => et_pb_get_font_icon_symbols(),
 		'fontIconsDown'                => et_pb_get_font_down_icon_symbols(),
@@ -215,8 +227,18 @@ function et_fb_backend_helpers() {
 		'splitTestSubjects'            => false !== ( $all_subjects_raw = get_post_meta( $post_id, '_et_pb_ab_subjects' , true ) ) ? explode( ',', $all_subjects_raw ) : array(),
 		'defaults'                     => array(
 			'contactFormInputs'        => array(),
+			'backgroundOptions'        => array(
+				'type'                 => ET_Global_Settings::get_value( 'all_background_gradient_type' ),
+				'direction'            => ET_Global_Settings::get_value( 'all_background_gradient_direction' ),
+				'radialDirection'      => ET_Global_Settings::get_value( 'all_background_gradient_direction_radial' ),
+				'colorStart'           => ET_Global_Settings::get_value( 'all_background_gradient_start' ),
+				'colorEnd'             => ET_Global_Settings::get_value( 'all_background_gradient_end' ),
+				'startPosition'        => ET_Global_Settings::get_value( 'all_background_gradient_start_position' ),
+				'endPosition'          => ET_Global_Settings::get_value( 'all_background_gradient_end_position' ),
+			),
 		),
 		'saveModuleLibraryCategories'  => et_fb_prepare_library_cats(),
+		'emailNameFieldOnlyProviders'  => array_keys( ET_Builder_Module_Signup::providers()->names_by_slug( 'all', 'name_field_only' ) ),
 		'columnSettingFields'          => array(
 			'general' => array(
 				'bg_img_%s' => array(
@@ -390,7 +412,7 @@ function et_fb_backend_helpers() {
 					'option_category' => 'configuration',
 					'description'     => '',
 					'depends_show_if' => 'on',
-					'default'         => '#2b87da',
+					'default'         => ET_Global_Settings::get_value( 'all_background_gradient_start' ),
 					'depends_to'      => array(
 						'use_background_color_gradient_%s',
 					),
@@ -404,7 +426,7 @@ function et_fb_backend_helpers() {
 					'option_category' => 'configuration',
 					'description'     => '',
 					'depends_show_if' => 'on',
-					'default'         => '#29c4a9',
+					'default'         => ET_Global_Settings::get_value( 'all_background_gradient_end' ),
 					'depends_to'      => array(
 						'use_background_color_gradient_%s',
 					),
@@ -424,7 +446,7 @@ function et_fb_backend_helpers() {
 						'background_color_gradient_direction_%s',
 						'background_color_gradient_direction_radial_%s',
 					),
-					'default'         => 'linear',
+					'default'         => ET_Global_Settings::get_value( 'all_background_gradient_type' ),
 					'description'     => '',
 					'depends_show_if' => 'on',
 					'depends_to'      => array(
@@ -443,7 +465,7 @@ function et_fb_backend_helpers() {
 						'max'  => 360,
 						'step' => 1,
 					),
-					'default'         => '180deg',
+					'default'         => ET_Global_Settings::get_value( 'all_background_gradient_direction' ),
 					'validate_unit'   => true,
 					'fixed_unit'      => 'deg',
 					'fixed_range'     => true,
@@ -489,7 +511,7 @@ function et_fb_backend_helpers() {
 						'max'  => 100,
 						'step' => 1,
 					),
-					'default'         => 0,
+					'default'         => intval( ET_Global_Settings::get_value( 'all_background_gradient_start_position' ) ),
 					'validate_unit'   => true,
 					'fixed_unit'      => '%',
 					'fixed_range'     => true,
@@ -510,7 +532,7 @@ function et_fb_backend_helpers() {
 						'max'  => 100,
 						'step' => 1,
 					),
-					'default'         => 100,
+					'default'         => intval( ET_Global_Settings::get_value( 'all_background_gradient_end_position' ) ),
 					'validate_unit'   => true,
 					'fixed_unit'      => '%',
 					'fixed_range'     => true,
@@ -593,7 +615,7 @@ function et_fb_backend_helpers() {
 					'option_category' => 'layout',
 					'description'     => esc_html__( 'Adjust padding to specific values, or leave blank to use the default padding.', 'et_builder' ),
 					'tab_slug'        => 'advanced',
-					'toggle_slug'     => 'margin_padding',
+					'toggle_slug'     => 'custom_margin_padding',
 					'sub_toggle'      => 'column_%s',
 				),
 			),
@@ -650,6 +672,7 @@ function et_fb_backend_helpers() {
 				'sectionHeight' => et_get_option( 'phone_section_height' ),
 			),
 		),
+		'acceptableCSSStringValues'    => et_builder_get_acceptable_css_string_values( 'all' ),
 	);
 
 	// Internationalization.
@@ -684,7 +707,6 @@ function et_fb_backend_helpers() {
 				'secondShort' => esc_html__( 'Sec', 'et_builder' ),
 			),
 			'signup' => array(
-				'emailAddress' => esc_attr__( 'Email Address', 'et_builder' ),
 				'firstName'    => esc_attr__( 'First Name', 'et_builder' ),
 				'lastName'     => esc_attr__( 'Last Name', 'et_builder' ),
 				'name'         => esc_attr__( 'Name', 'et_builder' ),
@@ -714,6 +736,9 @@ function et_fb_backend_helpers() {
 			),
 			'socialFollow' => array(
 				'follow' => esc_html__( 'Follow', 'et_builder' ),
+			),
+			'items' => array(
+				'newItemDefaultText' => esc_html__( 'New Item', 'et_builder' ),
 			),
 		),
 		'saveButtonText'               => esc_attr__( 'Save', 'et_builder' ),
@@ -774,6 +799,16 @@ function et_fb_backend_helpers() {
 				'doesNotContain'       => esc_html__( 'does not contain', 'et_builder' ),
 				'isEmpty'              => esc_html__( 'is empty', 'et_builder' ),
 				'isNotEmpty'           => esc_html__( 'is not empty', 'et_builder' ),
+			),
+			'selectAnimation' => array(
+				'none'   => esc_html__( 'None', 'et_builder' ),
+				'fade'   => esc_html__( 'Fade', 'et_builder' ),
+				'slide'  => esc_html__( 'Slide', 'et_builder' ),
+				'bounce' => esc_html__( 'Bounce', 'et_builder' ),
+				'zoom'   => esc_html__( 'Zoom', 'et_builder' ),
+				'flip'   => esc_html__( 'Flip', 'et_builder' ),
+				'fold'   => esc_html__( 'Fold', 'et_builder' ),
+				'roll'   => esc_html__( 'Roll', 'et_builder' ),
 			),
 			'cssText'                  => esc_html__( 'CSS', 'et_builder'),
 		),
@@ -848,6 +883,7 @@ function et_fb_backend_helpers() {
 			'allCategoriesText'     => esc_html__( 'All Categories', 'et_builder' ),
 		),
 		'modals' => array(
+			'defaultTitle'   => esc_html__( 'Modal Title', 'et_builder' ),
 			'tabItemTitles'  => array(
 				'general' => esc_html__( 'General', 'et_builder' ),
 				'design'  => esc_html__( 'Design', 'et_builder' ),
@@ -862,6 +898,13 @@ function et_fb_backend_helpers() {
 				'toggles' => ET_Builder_Settings::get_toggles(),
 			),
 			'searchOptions' => esc_html__( 'Search Options', 'et_builder' ),
+		),
+		'selectControl' => array(
+			'typeToSearch' => esc_html__( 'Start Typing', 'et_builder' ),
+			'subgroups'    => array(
+				'recent'   => esc_html__( 'Recent', 'et_builder' ),
+				'uploaded' => esc_html__( 'Custom Fonts', 'et_builder' ),
+			),
 		),
 		'history' => array(
 			'modal' => array(
@@ -881,6 +924,78 @@ function et_fb_backend_helpers() {
 			),
 			'shortcuts' => et_builder_get_shortcuts('fb'),
 		),
+		'fonts' => array(
+			'fontWeight'     => esc_html__( 'Font Weight', 'et_builder' ),
+			'fontStyle'      => esc_html__( 'Font Style', 'et_builder' ),
+			'delete'         => esc_html__( 'Delete', 'et_builder' ),
+			'deleteConfirm'  => esc_html__( 'Are You Sure Want to Delete', 'et_builder' ),
+			'confirmAction'  => esc_html__( 'Are You Sure?', 'et_builder' ),
+			'cancel'         => esc_html__( 'Cancel', 'et_builder' ),
+			'upload'         => esc_html__( 'Upload', 'et_builder' ),
+			'font'           => esc_html__( 'Font', 'et_builder' ),
+			'chooseFile'     => esc_html__( 'Choose Font Files', 'et_builder' ),
+			'supportedFiles' => esc_html__( 'Supported File Formats', 'et_builder' ),
+			'fileError'      => esc_html__( 'Unsupported File Format', 'et_builder' ),
+			'noFile'         => esc_html__( 'Drag Files Here', 'et_builder' ),
+			'fontName'       => esc_html__( 'Name Your Font', 'et_builder' ),
+			'fontNameLabel'  => esc_html__( 'Font Name', 'et_builder' ),
+			'selectedFiles'  => esc_html__( 'Selected Font Files', 'et_builder' ),
+			'weightsSupport' => esc_html__( 'Supported Font Weights', 'et_builder' ),
+			'weightsHelp'    => esc_html__( 'Choose the font weights supported by your font. Select "All" if you don\'t know this information or if your font includes all weights.', 'et_builder' ),
+			'noFilesError'   => esc_html__( 'Please Select At Least One File', 'et_builder' ),
+			'searchFonts'    => esc_html__( 'Search Fonts', 'et_builder' ),
+			'underline'      => esc_html__( 'Underline', 'et_builder' ),
+			'strikethrough'  => esc_html__( 'Strikethrough', 'et_builder' ),
+			'color'          => esc_html__( 'Color', 'et_builder' ),
+			'style'          => esc_html__( 'Style', 'et_builder' ),
+			'all'            => esc_html__( 'All', 'et_builder' ),
+			
+		),
+		'app' => array(
+			'modal' => array(
+				'title'  => esc_html__( 'Builder Settings', 'et_builder' ),
+				'labels' => array(
+					'toolbar'           => esc_html__( 'Customize Builder Settings Toolbar', 'et_builder' ),
+					'view_mode'         => esc_html__( 'Builder Default Interaction Mode', 'et_builder' ),
+					'history'           => esc_html__( 'History State Interval', 'et_builder' ),
+					'modal_position'    => esc_html__( 'Settings Modal Default Position', 'et_builder' ),
+					'animation'         => esc_html__( 'Builder Interface Animations', 'et_builder' ),
+					'disabled_modules'  => esc_html__( 'Show Disabled Modules at 50%', 'et_builder' ),
+					'group_settings'    => esc_html__( 'Group Settings Into Closed Toggles', 'et_builder' ),
+				),
+				'view_mode_select' => array(
+                    '0' => esc_html__( 'Hover Mode' , 'et_builder' ),
+                    '1' => esc_html__( 'Click Mode' , 'et_builder' ),
+                    '2' => esc_html__( 'Grid Mode' , 'et_builder' ),
+				),
+				'history_intervals_select' => array(
+                    '0' => esc_html__( 'After Every Action' , 'et_builder' ),
+                    '1' => esc_html__( 'After Every 10th Action' , 'et_builder' ),
+                    '2' => esc_html__( 'After Every 20th Action' , 'et_builder' ),
+                    '3' => esc_html__( 'After Every 30th Action' , 'et_builder' ),
+                    '4' => esc_html__( 'After Every 40th Action' , 'et_builder' ),
+				),
+				'modal_default_select' => array(
+					'0' => esc_html__( 'Last Used Position', 'et_builder' ),
+					'1' => esc_html__( 'Floating Minimum Size', 'et_builder' ),
+					'2' => esc_html__( 'Fullscreen', 'et_builder' ),
+					'3' => esc_html__( 'Fixed Left Sidebar', 'et_builder' ),
+					'4' => esc_html__( 'Fixed Right Sidebar', 'et_builder' ),
+				),
+				'builder_animation_toggle' => array(
+					'on'   => esc_html__( 'On', 'et_builder' ),
+					'off'  => esc_html__( 'Off', 'et_builder' ),
+				),
+				'hide_disabled_module_toggle' => array(
+					'on'   => esc_html__( 'On', 'et_builder' ),
+					'off'  => esc_html__( 'Off', 'et_builder' ),
+				),
+				'display_modal_settings' => array(
+					'on'   => esc_html__( 'On', 'et_builder' ),
+					'off'  => esc_html__( 'Off', 'et_builder' ),
+				),
+			),
+		),
 		'sortable' => array(
 			'has_no_ab_permission'                     => esc_html__( 'You do not have permission to edit the module, row or section in this split test.', 'et_builder' ),
 			'cannot_move_goal_into_subject'            => esc_html__( 'A split testing goal cannot be moved inside of a split testing subject. To perform this action you must first end your split test.', 'et_builder' ),
@@ -899,6 +1014,11 @@ function et_fb_backend_helpers() {
 					'desktop' => esc_html__( 'Desktop View', 'et_builder' ),
 					'tablet'  => esc_html__( 'Tablet View', 'et_builder' ),
 					'phone'   => esc_html__( 'Phone View', 'et_builder' ),
+				),
+				'eventMode' => array(
+					'click' => esc_html__( 'Click Mode', 'et_builder' ),
+					'hover' => esc_html__( 'Hover Mode', 'et_builder' ),
+					'grid'  => esc_html__( 'Grid Mode', 'et_builder' ),
 				),
 				'main' => array(
 					'loadLibrary'       => esc_html__( 'Load From Library', 'et_builder' ),
@@ -990,6 +1110,7 @@ function et_fb_backend_helpers() {
 		),
 		'unsavedConfirmation' => esc_html__( 'Unsaved changes will be lost if you leave the Divi Builder at this time.', 'et_builder' ),
 		'libraryLoadError'    => esc_html__( 'Error loading Library items from server. Please refresh the page and try again.', 'et_builder' ),
+		'productTourText'     => array(),
 	);
 
 	// Pass helpers via localization.
