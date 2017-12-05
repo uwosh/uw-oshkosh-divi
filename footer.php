@@ -81,11 +81,11 @@ if ( ! is_page_template( 'page-template-blank.php' ) ) : ?>
 										<li>
 											<a href="http://www.uwosh.edu/resources/accessibility">Accessibility</a></li>
 										<li>
-											<a href="http://uwosh.edu/go/directions" target="_blank">Get Directions</a></li>
+											<a href="https://www.google.com/maps?q=University+of+Wisconsin+Oshkosh+800+Algoma+Blvd.+Oshkosh,+WI+54901&um=1&ie=UTF-8&hl=en&sa=N&tab=wl" target="_blank">Get Directions</a></li>
 										<li>
-											<a href="http://www.uwosh.edu/imc/media-relations/newsroom">Media Relations</a></li>
+											<a href="https://umc.uwosh.edu/for-media/">Media Relations</a></li>
 										<li>
-											<a href="http://www.uwosh.edu/hr/employment/">Work at UW Oshkosh</a></li>
+											<a href="https://hr.uwosh.edu/careers">Work at UW Oshkosh</a></li>
 									</ul>
 								</div>
 						</div> <!-- #footer-column-3 -->
