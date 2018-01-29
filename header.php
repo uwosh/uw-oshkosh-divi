@@ -114,6 +114,18 @@
 		$et_top_info_defined = $et_secondary_nav_items->top_info_defined;
 		?>
 
+		<div class="emergency-banner-wrapper">
+			<div class="emergency-banner-content">
+				<a class="broadcast-link" href="" target="_blank">
+					<i class="fa fa-exclamation-triangle broadcast-icon" aria-hidden="true"></i><!--
+					--><span class="broadcast-title"></span><!--
+					--><span class="broadcast-description"></span>
+				</a>
+			</div>
+		</div>
+
+		<div class="header-wrapper">
+		
 		<?php if ( $et_top_info_defined ) : ?>
 			<div id="top-header" class="<?php echo esc_attr( $secondary_nav_class ); ?>">
 				<div class="container clearfix">
@@ -255,5 +267,7 @@
 						</div> <!-- #et-top-navigation -->
 					</div> <!-- .container -->
 				</header> <!-- #main-header -->
+			
+			</div> <!-- .header-wrapper -->
 
 				<div id="et-main-area">
