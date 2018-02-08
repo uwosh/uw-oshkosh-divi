@@ -1,4 +1,4 @@
-/*
+/*! 
 Theme Name: UW Oshkosh Divi
 Theme URI: https://github.com/uwoshkosh/uw-oshkosh-divi
 Description: Divi Child Theme
@@ -563,4 +563,15 @@ form.gsc-search-box input{
 }
 .et_pb_promo_description p{
     padding-bottom:0
+}
+
+/* 404 Page */
+.angry-clash{
+    float: right;
+    height: 250px;
+    display: block;
+    margin-left: 15px;
+}
+#right-area {
+    margin-left: 15px;
 }
