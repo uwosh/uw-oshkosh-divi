@@ -124,7 +124,7 @@
 							$failure_message .= "User Browser: " . $browser_string . "\n\n";
 							$failure_message .= "This was not caused by user error, it was caused by a bad link in the webpage. It is highly suggested that you fix this bad link.";
 
-							mail($adminemail, "Invalid Link Discovered On " . $websitename, $failure_message, "From: $websitename <noreply@$website>"); // email you about problem
+							mail('wordpressadmin@uwosh.edu', "Invalid Link Discovered On " . $websitename, $failure_message, "From: $websitename <noreply@$website>"); // email you about problem
 							
 							$casemessage = "An administrator has been emailed about this problem, too."; // set a friendly message
 						}
