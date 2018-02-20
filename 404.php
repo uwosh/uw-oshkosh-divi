@@ -112,6 +112,7 @@
 						$link = $website . $_SERVER['REQUEST_URI'];
 						$link_path = parse_url($link, PHP_URL_PATH);
 						$link_path_extension = pathinfo($link_path, PATHINFO_EXTENSION);
+						$link_path_filename = pathinfo($link_path, PATHINFO_FILENAME);
 						$link_query_string = parse_url($link, PHP_URL_QUERY);
 						$unimportant_file_extensions = array("bmp", "gif", "img", "jpe", "jpeg", "jpg", "png", "tiff", "ico", "css", "js", "map");
 
@@ -127,7 +128,7 @@
 							if( !in_array( strtolower( $link_path_extension ), $unimportant_file_extensions ) && 
 								$referer_host == "uwosh.edu"  &&
 								substr( $link_query_string , 0, 6) != "author" &&
-								( $_SERVER['REQUEST_URI'] != "/wp-login.php" || $_SERVER['REQUEST_URI'] != "//wp-login.php" ) ){ // the bad link was a page, and from a uw-oshkosh site, and 404 page isn't an author attack, and the IP isn't receiving a 404 because it's blocked
+								$link_path_filename != "wp-login" ){ // the bad link was a page, and from a uw-oshkosh site, and 404 page isn't an author attack, and the IP isn't receiving a 404 because it's blocked
 									$user_agent = getBrowser();
 									$browser_string = $user_agent['name'] . " " . $user_agent['version'] . " on " .$user_agent['platform'];
 		
@@ -143,7 +144,7 @@
 									
 									$casemessage = "An administrator has been emailed about this problem, too."; // set a friendly message
 							} else{
-								$casemessage = "We are sorry about that!"; // ¯\_(ツ)_/¯
+								$casemessage = "We are sorry about that!"; // Get 'em out of here.
 							}
 						}
 
