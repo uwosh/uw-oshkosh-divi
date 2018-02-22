@@ -24,15 +24,13 @@ a{
 .desaturate:hover{
     filter:grayscale(0)
 }
-/* made some changes here dude */
 #page-container {
     padding-top: 0 !important;
+    margin-top: 0 !important;
 }
 #top-header, #main-header {
     position: static !important;
 }
-/* end of my changes here dude */
-
 header{
     z-index:999
 }
