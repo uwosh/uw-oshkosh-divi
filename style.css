@@ -434,6 +434,9 @@ form.gsc-search-box input{
 #sitemap ul li:hover{
     text-decoration:underline
 }
+#footer-column-4 iframe {
+    margin-right: 10px;
+}
 #footer-column-4 .image-wrapper{
     display:inline-block;
     padding-bottom:10px
@@ -443,6 +446,9 @@ form.gsc-search-box input{
 }
 #footer-column-4 #footer-uw-logo{
     padding-right:0
+}
+.image-wrapper {
+    vertical-align: top;
 }
 #footer-bottom{
     overflow:hidden;
