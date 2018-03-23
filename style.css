@@ -262,6 +262,9 @@ form.gsc-search-box input{
 .gsc-search-button{
     display:none
 }
+.gsc-control-wrapper-cse form.gsc-search-box.gsc-search-box-tools {
+    display: none !important;
+}
 .gsib_a{
     padding:0!important
 }
