@@ -582,3 +582,12 @@ form.gsc-search-box input{
 #right-area {
     margin-left: 15px;
 }
+
+/* Begin fix for Divi menu on posts */
+#left-area ul li ul {
+    padding: 20px 0 20px 0 !important;
+}
+#left-area nav>ul {
+    line-height: 48px;
+}
+/* End fix for Divi menu on posts */
