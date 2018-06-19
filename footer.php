@@ -39,11 +39,11 @@ if ( ! is_page_template( 'page-template-blank.php' ) ) : ?>
 					<div id="footer-body" class="row">
 						<div id="footer-column-1" class="col">
 								<p class="footer-column-header">Location</p>
-								<a href="https://maps.google.com/maps?q=University+of+Wisconsin+Oshkosh+800+Algoma+Blvd.+Oshkosh,+WI+54901&amp;um=1&amp;ie=UTF-8&amp;hl=en&amp;sa=N&amp;tab=wl" target="_blank">
-									<img src="<?php echo esc_attr(get_stylesheet_directory_uri() . '/images/footer/wismap-color.png') ?>" class="wismap pull-left desaturate">
+								<a href="https://maps.google.com/maps?q=University+of+Wisconsin+Oshkosh+800+Algoma+Blvd.+Oshkosh,+WI+54901&amp;um=1&amp;ie=UTF-8&amp;hl=en&amp;sa=N&amp;tab=wl" target="_blank" rel="noopener" aria-label="uwomap">
+									<img src="<?php echo esc_attr(get_stylesheet_directory_uri() . '/images/footer/wismap-color.png') ?>" class="wismap pull-left desaturate" alt="Wisconsin Map">>
 								</a>
 								<address id="footer-address" class="link-list">
-									<a href="https://maps.google.com/maps?q=University+of+Wisconsin+Oshkosh+800+Algoma+Blvd.+Oshkosh,+WI+54901&amp;um=1&amp;ie=UTF-8&amp;hl=en&amp;sa=N&amp;tab=wl" target="_blank">
+									<a href="https://maps.google.com/maps?q=University+of+Wisconsin+Oshkosh+800+Algoma+Blvd.+Oshkosh,+WI+54901&amp;um=1&amp;ie=UTF-8&amp;hl=en&amp;sa=N&amp;tab=wl" target="_blank" aria-label="uwoaddress">
 										<ul>
 											<li>University of Wisconsin Oshkosh</li>
 											<li class="street-address">800 Algoma Blvd.</li>
@@ -104,13 +104,13 @@ if ( ! is_page_template( 'page-template-blank.php' ) ) : ?>
 						<span>&copy;<?php echo date("Y") ?> UW Board of Regents </span>
 					</div>
 					<div id="footer-social">
-						<a href="https://www.facebook.com/uwoshkosh" target="_blank" class="footerFacebook"><i class="fa fa-facebook fa-2x desaturate" aria-hidden="true" alt="Facebook logo"></i></a>
-						<a href="https://twitter.com/uwoshkosh" target="_blank" class="footerTwitter"><i class="fa fa-twitter fa-2x desaturate" aria-hidden="true" alt="Twitter logo"></i></a>
-						<a href="http://instagram.com/uwoshkosh" target="_blank" class="footerInstagram"><i class="fa fa-instagram fa-2x desaturate" aria-hidden="true" alt="Instagram logo"></i></a>
-						<a href="http://www.youtube.com/uwosh" target="_blank" class="footerYouTube"><i class="fa fa-youtube-play fa-2x desaturate" aria-hidden="true" alt="YouTube logo"></i></a>
-						<a href="http://www.linkedin.com/edu/school?id=19693" target="_blank" class="footerLinkedIn"><i class="fa fa-linkedin fa-2x desaturate" aria-hidden="true" alt="LinkedIn logo"></i></a>
-						<a href="http://www.pinterest.com/uwoshkosh/" target="_blank" class="footerPinterest"><i class="fa fa-pinterest-p fa-2x desaturate" aria-hidden="true" alt="Pinterest logo"></i></a>
-						<a href="http://www.flickr.com/photos/uwoshkosh/sets/" target="_blank" class="footerFlickr"><i class="fa fa-flickr fa-2x desaturate" aria-hidden="true" alt="Flickr logo"></i></a>
+						<a href="https://www.facebook.com/uwoshkosh" target="_blank" rel="noopener" class="footerFacebook" aria-label="facebook"><i class="fa fa-facebook fa-2x desaturate" aria-hidden="true" alt="Facebook logo"></i></a>
+						<a href="https://twitter.com/uwoshkosh" target="_blank"   rel="noopener" class="footerTwitter" aria-label="twitter" ><i class="fa fa-twitter fa-2x desaturate" aria-hidden="true" alt="Twitter logo"></i></a>
+						<a href="http://instagram.com/uwoshkosh" target="_blank" rel="noopener" class="footerInstagram" aria-label="instagram"><i class="fa fa-instagram fa-2x desaturate" aria-hidden="true" alt="Instagram logo"></i></a>
+						<a href="http://www.youtube.com/uwosh" target="_blank" rel="noopener" class="footerYouTube" aria-label="youtube"><i class="fa fa-youtube-play fa-2x desaturate" aria-hidden="true" alt="YouTube logo"></i></a>
+						<a href="http://www.linkedin.com/edu/school?id=19693" target="_blank" rel="noopener" class="footerLinkedIn" aria-label="linkedIn"><i class="fa fa-linkedin fa-2x desaturate" aria-hidden="true" alt="LinkedIn logo"></i></a>
+						<a href="http://www.pinterest.com/uwoshkosh/" target="_blank" rel="noopener" class="footerPinterest" aria-label="pinterest"><i class="fa fa-pinterest-p fa-2x desaturate" aria-hidden="true" alt="Pinterest logo"></i></a>
+						<a href="http://www.flickr.com/photos/uwoshkosh/sets/" target="_blank" rel="noopener" class="footerFlickr" aria-label="flickr"><i class="fa fa-flickr fa-2x desaturate" aria-hidden="true" alt="Flickr logo"></i></a>
 					</div>
 			</div><!-- #footer-bottom -->
 		</div> <!-- #footer -->
