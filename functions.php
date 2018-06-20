@@ -2,13 +2,6 @@
 // Instantiate the Google Custom Search module
 require 'includes/gcs-module.php' ;
 
-// Initialize the update checker.
-require 'includes/theme-update-checker.php' ;
-$example_update_checker = new ThemeUpdateChecker(
-    'uw-oshkosh-divi',
-    'http://www.uwosh.edu/projects/wptheme/info.json'
-);
-
 // Stylesheets
 function uwo_theme_enqueue_styles() {
     wp_enqueue_style( 'parent-style', get_template_directory_uri() . '/style.css' );
