@@ -56,7 +56,7 @@
 <!--<![endif]-->
 <head>
 	<meta charset="<?php bloginfo( 'charset' ); ?>" />
-	<title><?php wp_title(); ?></title>
+	<title><?php wp_title(); ?> University of Wisconsin Oshkosh</title>
 	<?php elegant_description(); ?>
 	<?php elegant_keywords(); ?>
 	<?php elegant_canonical(); ?>
