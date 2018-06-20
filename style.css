@@ -5,7 +5,7 @@ Description: Divi Child Theme
 Author: Joseph Kerkhof
 Author URI: http://twitter.com/musicaljoeker
 Template: Divi
-Version: 1.3.4
+Version: 1.3.5
 */
 body{
     min-width:320px;
@@ -262,6 +262,9 @@ form.gsc-search-box input{
 .gsc-search-button{
     display:none
 }
+.gsc-control-wrapper-cse form.gsc-search-box.gsc-search-box-tools {
+    display: none !important;
+}
 .gsib_a{
     padding:0!important
 }
@@ -434,6 +437,9 @@ form.gsc-search-box input{
 #sitemap ul li:hover{
     text-decoration:underline
 }
+#footer-column-4 iframe {
+    margin-right: 10px;
+}
 #footer-column-4 .image-wrapper{
     display:inline-block;
     padding-bottom:10px
@@ -443,6 +449,9 @@ form.gsc-search-box input{
 }
 #footer-column-4 #footer-uw-logo{
     padding-right:0
+}
+.image-wrapper {
+    vertical-align: top;
 }
 #footer-bottom{
     overflow:hidden;
