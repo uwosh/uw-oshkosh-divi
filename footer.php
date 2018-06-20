@@ -43,19 +43,15 @@ if ( ! is_page_template( 'page-template-blank.php' ) ) : ?>
 									<img src="<?php echo esc_attr(get_stylesheet_directory_uri() . '/images/footer/wismap-color.png') ?>" class="wismap pull-left desaturate" alt="Wisconsin Map">
 								</a>
 								<address id="footer-address" class="link-list">
-									<a href="https://maps.google.com/maps?q=University+of+Wisconsin+Oshkosh+800+Algoma+Blvd.+Oshkosh,+WI+54901&amp;um=1&amp;ie=UTF-8&amp;hl=en&amp;sa=N&amp;tab=wl" target="_blank" aria-label="uwoaddress">
-										<ul>
-											<li>University of Wisconsin Oshkosh</li>
-											<li class="street-address">800 Algoma Blvd.</li>
-											<li>
-												<span class="locality">Oshkosh</span>,
-												<span class="region">WI</span>
-												<span class="postal-code">54901</span>
-											</li>
-											<li><a href="tel:9204241234">(920) 424-1234</a></li>
-										</ul>
-									</a>
-								</address><!-- #address -->
+								<a href="https://maps.google.com/maps?q=University+of+Wisconsin+Oshkosh+800+Algoma+Blvd.+Oshkosh,+WI+54901&amp;um=1&amp;ie=UTF-8&amp;hl=en&amp;sa=N&amp;tab=wl" target="_blank" aria-label="uwoaddress">
+								University of <br>
+								Wisconsin Oshkosh<br>
+								800 Algoma Blvd.<br>
+								Oshkosh,WI,54901<br>
+								</a>
+								<a href="tel:9204241234">(920) 424-1234</a>
+								</address>
+								<!-- #address -->
 						</div> <!-- #footer-column-1 -->
 						<div id="footer-column-2" class="col">
 							<p id="column-2-header" class="footer-column-header">Quick Links</p>
@@ -90,7 +86,7 @@ if ( ! is_page_template( 'page-template-blank.php' ) ) : ?>
 								</div>
 						</div> <!-- #footer-column-3 -->
 						<div id="footer-column-4" class="col">
-								<iframe style="filter: grayscale(100%)" frameborder="0" scrolling="no" allowtransparency="true" width="150" height="166" src="https://cdn.yoshki.com/iframe/54732.html"></iframe>
+								<iframe style="filter: grayscale(100%)" title="UWO Accreditation Image" frameborder="0" scrolling="no" allowtransparency="true" width="150" height="166" src="https://cdn.yoshki.com/iframe/54732.html"></iframe>
 								<a href="http://www.wisconsin.edu/" target="_blank" class="image-wrapper">
 									<img class="uw-system-img" src="<?php echo esc_attr(get_stylesheet_directory_uri() . '/images/footer/uw-system.png') ?>" id="footer-uw-logo" class="inline" alt="UW System">
 								</a>
