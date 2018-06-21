@@ -606,5 +606,12 @@ p.footer-column-header, p#column-2-header.footer-column-header, p.footer-column-
 #footer-copy > span{
     color: #DBDBDB;
 }
-
+/* comments/reply buttons */
+a.comment-reply-link.et_pb_button, input#submit.submit.et_pb_button{
+    color: #0D5D92;
+}
+/* comment text area text */
+textarea#comment{
+    color: #4F4F4F;
+}
 /* accessibility changes end */
