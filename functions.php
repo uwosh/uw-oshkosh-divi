@@ -94,3 +94,15 @@ function et_add_viewport_meta_2(){
 }
 add_action('wp_head', 'et_add_viewport_meta_2');
 ?>
+<?php
+/*
+* altering comment template to add aria-label for accessibility
+*/
+
+function wpsites_modify_comment_form_text_area($arg) {
+    $arg['comment_field'] = '<p class="comment-form-comment"><label for="comment">' . _x( 'Comment', 'noun' ) . '</label><textarea id="comment" name="comment" cols="45" rows="8" maxlength="65525" aria-label="comment" aria-required="true"></textarea></p>';
+    return $arg;
+}
+
+add_filter('comment_form_defaults', 'wpsites_modify_comment_form_text_area');
+?>
