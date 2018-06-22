@@ -94,6 +94,7 @@ function et_add_viewport_meta_2(){
 }
 add_action('wp_head', 'et_add_viewport_meta_2');
 ?>
+
 <?php
 /*
 * altering comment template to add aria-label for accessibility
