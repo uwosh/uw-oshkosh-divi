@@ -106,4 +106,24 @@ function wpsites_modify_comment_form_text_area($arg) {
 }
 
 add_filter('comment_form_defaults', 'wpsites_modify_comment_form_text_area');
+
+/*
+* altering comment fields so that they also have aria labels
+*/
+
+function accessible_comment_form_default_fields($fields){
+    $fields = [
+        'author' => '<p class="comment-form-author">' . '<label for="author">' . __( 'Name *', 'textdomain'  ) . ( $req ? ' <span class="required">*</span>' : '' ) . '</label> ' .
+                    '<input id="author" name="author" aria-label="comment author" type="text" value="' . esc_attr( $commenter['comment_author'] ) . '" size="30" maxlength="245"' . $aria_req . $html_req . ' /></p>',
+        'email'  => '<p class="comment-form-email"><label for="email">' . __( 'Email *', 'textdomain'  ) . ( $req ? ' <span class="required">*</span>' : '' ) . '</label> ' .
+                    '<input id="email" aria-label="comment author email" name="email" ' . ( $html5 ? 'type="email"' : 'type="text"' ) . ' value="' . esc_attr(  $commenter['comment_author_email'] ) . '" size="30" maxlength="100" aria-describedby="email-notes"' . $aria_req . $html_req  . ' /></p>',
+        'url'    => '<p class="comment-form-url"><label for="url">' . __( 'Website', 'textdomain'  ) . '</label> ' .
+                    '<input id="url" aria-label="comment author website url" name="url" ' . ( $html5 ? 'type="url"' : 'type="text"' ) . ' value="' . esc_attr( $commenter['comment_author_url'] ) . '" size="30" maxlength="200" /></p>',
+        'cookies' => '<p class="comment-form-cookies-consent"><input id="wp-comment-cookies-consent" name="wp-comment-cookies-consent" type="checkbox" value="yes"' . $consent . ' />' .
+                    '<label for="wp-comment-cookies-consent">' . __( 'Save my name, email, and website in this browser for the next time I comment.' ) . '</label></p>',
+    ];
+    return $fields;
+}
+add_filter('comment_form_default_fields', 'accessible_comment_form_default_fields');
+
 ?>

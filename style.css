@@ -591,7 +591,7 @@ form.gsc-search-box input{
 }
 /* End fix for Divi menu on posts */
 
-/* accessibility changes start*/
+/* Start accessibility changes */
 
 /* wp search color */
 .widget_search input#s, .widget_search input#searchsubmit{
@@ -610,8 +610,8 @@ p.footer-column-header, p#column-2-header.footer-column-header, p.footer-column-
 a.comment-reply-link.et_pb_button, input#submit.submit.et_pb_button{
     color: #0D5D92;
 }
-/* comment text area text */
-textarea#comment{
+/* comment form fields text color*/
+#commentform input[type=email], #commentform input[type=text], #commentform input[type=url], #commentform textarea{
     color: #4F4F4F;
 }
-/* accessibility changes end */
+/* End accessibility changes */
