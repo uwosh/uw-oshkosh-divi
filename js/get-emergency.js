@@ -1,7 +1,7 @@
 (function ($) {
     $(document).ready(function(){
       $.ajax({
-        url: 'https://emergency.uwosh.edu/category/broadcast/feed/',
+        url: 'https://uwosh.edu/emergency/category/broadcast/feed/',
         dataType: 'xml',
         success: function(response) {
           var json = $.xml2json(response);
