@@ -74,7 +74,7 @@ function foobar_setup() {
 ?>
 <?php
 /*
-* For accessibility a user needs to be able to zoom into a webpage, ex. cases where the user has poor eyesight, to acheive this
+* For accessibility a user needs to be able to zoom in on a webpage, ex. cases where the user has poor eyesight, to acheive this
 * we need the meta tag in the header to have "maximum-scale" > 2 and "user-scalable" cannot be disabled.
 */
 
@@ -89,17 +89,21 @@ add_action('wp_loaded', 'child_remove_parent_function');
 /*
 * replace removed function with child function that allows zooming
 */
-function et_add_viewport_meta_2(){
+function accessible_viewport_meta(){
     echo '<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=2.0, user-scalable=1" />';
 }
 add_action('wp_head', 'et_add_viewport_meta_2');
-?>
 
-<?php
 /*
-* altering comment template to add aria-label for accessibility
+* altering comment template to add aria-label for accessibility: 
+* wp looks for the comment_form default variables when it creates form fields
+* Param: $arg stands for the comment_field that is being modified
+* in this function we are writing our own version of the comment_field,
+* one that has the appropriate aria-labels describing what the field is
+* for screen readers 
+* Return: $arg with the changes that we made to the comment_field so that 
+* wp knows to use this version of the comment_field variable when creating comment_fields
 */
-
 function wpsites_modify_comment_form_text_area($arg) {
     $arg['comment_field'] = '<p class="comment-form-comment"><label for="comment">' . _x( 'Comment', 'noun' ) . '</label><textarea id="comment" name="comment" cols="45" rows="8" maxlength="65525" aria-label="comment" aria-required="true"></textarea></p>';
     return $arg;
@@ -108,7 +112,15 @@ function wpsites_modify_comment_form_text_area($arg) {
 add_filter('comment_form_defaults', 'wpsites_modify_comment_form_text_area');
 
 /*
-* altering comment fields so that they also have aria labels
+* altering comment fields so that they also have aria labels:
+* similar to the wpsites_modify_comment_form_text_area function;
+* Param: $fields represents the array of templates for form fields that 
+* accompany the comment_field when a user submits a comment on a wp site
+* in this function we are setting our own version of these form fields that match the 
+* accessibility needs w/ proper aria-labels & aria-describedby attributes
+* Return: $fields, passes the changes we made to the template for these variables for when
+* wp creates the fields author, email, url and cookies the accompany the comment field when 
+* a user submits a comment on a post
 */
 
 function accessible_comment_form_default_fields($fields){
