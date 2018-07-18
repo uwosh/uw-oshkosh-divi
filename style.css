@@ -386,27 +386,9 @@ form.gsc-search-box input {
 #footer-column-4 {
   float: left;
 }
-<<<<<<< HEAD
-#footer-body a{
-    font-style:normal
-}
-#footer-body ul{
-    list-style-type:none
-}
-#footer-column-1,#footer-column-2,#footer-column-3,#footer-column-4{
-    float:left
-}
-.footer-column-header{
-    margin-bottom:5px;
-    font-weight:700
-}
-#footer-column-1 .wismap{
-    width:40%
-=======
 .footer-column-header {
   margin-bottom: 5px;
   font-weight: 700;
->>>>>>> upstream/master
 }
 #footer-column-1 .wismap {
   width: 40%;
@@ -637,7 +619,6 @@ form.gsc-search-box input {
   line-height: 48px;
 }
 /* End fix for Divi menu on posts */
-<<<<<<< HEAD
 
 /* Start accessibility changes */
 
@@ -663,5 +644,3 @@ a.comment-reply-link.et_pb_button, input#submit.submit.et_pb_button{
     color: #4F4F4F;
 }
 /* End accessibility changes */
-=======
->>>>>>> upstream/master
