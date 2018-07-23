@@ -138,4 +138,15 @@ function accessible_comment_form_default_fields($fields){
 }
 add_filter('comment_form_default_fields', 'accessible_comment_form_default_fields');
 
+/*
+* function to alter the nav menu li id values, hopefully
+* 'empty' first step
+*/
+function change_menu_li_id($menu_item_item_id, $item, $args, $depth){
+   
+    $menu_item_item_id = $item->title;
+    return $menu_item_item_id; 
+}
+add_filter('nav_menu_item_id','change_menu_li_id', 10, 4);
+
 ?>
