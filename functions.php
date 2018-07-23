@@ -139,11 +139,31 @@ function accessible_comment_form_default_fields($fields){
 add_filter('comment_form_default_fields', 'accessible_comment_form_default_fields');
 
 /*
-* function to alter the nav menu li id values, hopefully
-* 'empty' first step
+* function to alter the nav menu <li> id values
+* 
+* Params:
+* $menu_item_item_id: string, the id that is applied to the menu item's li element
+* $item: wp_post object, the current menu item
+* $args: stdClass, an object of the wp_nav_menu() arguments
+* $depth: int, depth of menu item ex. can be used for padding
+*
+* Return:
+* $menu_item_item_id: the new id of the menu items, unique and descriptive for accessibility 
 */
 function change_menu_li_id($menu_item_item_id, $item, $args, $depth){
-   
+    /*
+    * to start the menu item id is automatically ex. menu-item-100,
+    * grab the current li based on the given $menu_item_item_id value (string)
+    */
+    $li = $dom->getElementById($menu_item_item_id);
+
+    /*
+    * get the id of the ul, of the current li 
+    */
+
+    /*
+    * set the id of each <li> to a unique id based on the navigation label and which menu they are under
+    */
     $menu_item_item_id = $item->title;
     return $menu_item_item_id; 
 }
