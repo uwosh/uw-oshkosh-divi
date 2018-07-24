@@ -165,6 +165,10 @@ function change_menu_li_id($menu_item_item_id, $item, $args, $depth){
     * set the id of each <li> to a unique id based on the navigation label and which menu they are under
     */
     $menu_item_item_id = $item->title;
+    /*
+    * replace spaces with underscores
+    */
+    $menu_item_item_id = str_replace(' ', '_', $menu_item_item_id);
     return $menu_item_item_id; 
 }
 add_filter('nav_menu_item_id','change_menu_li_id', 10, 4);
