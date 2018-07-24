@@ -165,8 +165,9 @@ function change_menu_li_id($menu_item_item_id, $item, $args, $depth){
     * set the id of each <li> to a unique id based on the navigation label and which menu they are under
     */
     $menu_item_item_id = $item->title;
-    //no & symbols
-    $menu_item_item_id = str_replace('&', '', $menu_item_item_id);
+    //no symbols
+    $symbols = array("&", "(", ")");
+    $menu_item_item_id = str_replace($symbols, '', $menu_item_item_id);
     //no spaces
     $menu_item_item_id = str_replace(' ', '_', $menu_item_item_id);
     
