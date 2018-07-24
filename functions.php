@@ -154,10 +154,21 @@ function change_menu_li_id($menu_item_item_id, $item, $args, $depth){
 
     $li = $dom->getElementById($menu_item_item_id);
 
-   
     $menu_item_item_id = $item->title;
-    $symbols = array("&", "(", ")", "+");
-    $menu_item_item_id = str_replace($symbols, '', $menu_item_item_id);
+	
+	if(strpos($menu_item_item_id, "&") !== false){
+		$menu_item_item_id = str_replace('&', '', $menu_item_item_id);
+	}
+    if(strpos($menu_item_item_id, "(") !== false){
+		$menu_item_item_id = str_replace('(', '', $menu_item_item_id);
+	}
+	if(strpos($menu_item_item_id, ")") !== false){
+		$menu_item_item_id = str_replace(')', '', $menu_item_item_id);
+	}
+	if(strpos($menu_item_item_id, "+") !== false){
+		$menu_item_item_id = str_replace('+', '', $menu_item_item_id);
+	}
+	
     $menu_item_item_id = str_replace(' ', '_', $menu_item_item_id);
     
     return $menu_item_item_id; 
