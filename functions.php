@@ -166,7 +166,7 @@ function change_menu_li_id($menu_item_item_id, $item, $args, $depth){
     */
     $menu_item_item_id = $item->title;
     //no symbols
-    $symbols = array("&", "(", ")");
+    $symbols = array("&", "(", ")", "+");
     $menu_item_item_id = str_replace($symbols, '', $menu_item_item_id);
     //no spaces
     $menu_item_item_id = str_replace(' ', '_', $menu_item_item_id);
