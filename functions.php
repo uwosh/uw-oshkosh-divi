@@ -151,28 +151,18 @@ add_filter('comment_form_default_fields', 'accessible_comment_form_default_field
 * $menu_item_item_id: the new id of the menu items, unique and descriptive for accessibility 
 */
 function change_menu_li_id($menu_item_item_id, $item, $args, $depth){
-    /*
-    * to start the menu item id is automatically ex. menu-item-100,
-    * grab the current li based on the given $menu_item_item_id value (string)
-    */
+
     $li = $dom->getElementById($menu_item_item_id);
 
-    /*
-    * get the id of the ul, of the current li 
-    */
-
-    /*
-    * set the id of each <li> to a unique id based on the navigation label and which menu they are under
-    */
+   
     $menu_item_item_id = $item->title;
-    //no symbols
     $symbols = array("&", "(", ")", "+");
     $menu_item_item_id = str_replace($symbols, '', $menu_item_item_id);
-    //no spaces
     $menu_item_item_id = str_replace(' ', '_', $menu_item_item_id);
     
     return $menu_item_item_id; 
 }
 add_filter('nav_menu_item_id','change_menu_li_id', 10, 4);
+
 
 ?>
