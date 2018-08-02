@@ -145,22 +145,23 @@ add_filter('comment_form_default_fields', 'accessible_comment_form_default_field
 * $menu_item_item_id: string, the id that is applied to the menu item's li element
 * $item: wp_post object, the current menu item
 * $args: stdClass, an object of the wp_nav_menu() arguments
+*       > args[2] is menu_id: (string) the id that is applied to the ul element which forms the menu
 * $depth: int, depth of menu item ex. can be used for padding
 *
 * Return:
 * $menu_item_item_id: the new id of the menu items, unique and descriptive for accessibility 
 */
-function change_menu_li_id($menu_item_item_id, $item, $args, $depth){
+$ids = array();
 
-    // $li = $dom->getElementById($menu_item_item_id);
+function change_menu_li_id($menu_item_item_id, $item, $args, $depth){
 
     $menu_item_item_id = $item->title;
 
     $undesirable_characters = array("&", "(", ")", "+", ",");
     $menu_item_item_id = str_replace($undesirable_characters, '', $menu_item_item_id);
     $menu_item_item_id = str_replace(" ", "_", $menu_item_item_id);
-    
-    return $menu_item_item_id; 
+
+    return $menu_item_item_id;
 }
 add_filter('nav_menu_item_id','change_menu_li_id', 10, 4);
 
