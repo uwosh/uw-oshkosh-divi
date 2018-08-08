@@ -44,7 +44,7 @@
     }
     menu_Overlap();
 
-    
+    //this function is for checking each <li> element on the page and creating a unique id by adding on the id of the parent <ul> element
     function test_li(){
       var new_id;
         $('li').each(function(){
@@ -57,6 +57,8 @@
       
               $(this).attr("id", new_id);
           }
+          //if the parent <ul> element is a sub-menu and does not have an id, we need to get a parent of a parent (the next <ul> element) to get an id for the 
+          // <li> element
           else{
               if($(this).parent().hasClass("sub-menu")) {
                   //<ul id="this_is_what_i_want">(parent) <li>(parent) <ul class="sub-menu">(parent) <li> (this)
