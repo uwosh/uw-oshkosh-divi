@@ -1,4 +1,32 @@
 <?php
+
+// Add Tribe Event Namespace
+add_filter( 'rss2_ns', 'events_rss2_namespace' );
+function events_rss2_namespace() {
+    echo 'xmlns:ev="http://purl.org/rss/2.0/modules/event/"';
+}
+
+// Add Event Date to RSS Feeds
+add_action('rss_item','tribe_rss_feed_add_eventdate');
+add_action('rss2_item','tribe_rss_feed_add_eventdate');
+add_action('commentsrss2_item','tribe_rss_feed_add_eventdate');
+function tribe_rss_feed_add_eventdate() { ?>
+
+  <ev:tribe_event_meta xmlns:ev="Event">
+  <?php if (tribe_get_start_date() !== tribe_get_end_date() ) { ?>
+
+    <ev:startdate><?php echo tribe_get_start_date(); ?></ev:startdate>
+    <ev:enddate><?php echo tribe_get_end_date(); ?></ev:enddate>
+
+  <?php } else { ?>
+
+    <ev:startdate><?php echo tribe_get_start_date(); ?></ev:startdate>
+
+  <?php } ?>
+  </ev:tribe_event_meta>
+
+<?php }
+
 // Instantiate the Google Custom Search module
 require 'includes/gcs-module.php' ;
 
