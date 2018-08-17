@@ -58,35 +58,7 @@
               $(this).attr("id", new_id);
           }
 
-          //THIS PORTION OF THE FUNCTION IS INCOMPLETE
-          //if the parent <ul> element is a sub-menu and does not have an id, we need to get a parent of a parent (the next <ul> element) to get an id for the 
-          // <li> element
-          else{
-              if($(this).parent().hasClass("sub-menu")) {
-                  //<ul id="this_is_what_i_want">(parent) <li>(parent) <ul class="sub-menu">(parent) <li> (this)
-                  var ul_li_ul = $(this).parent().parent().parent().attr("id");
-                  
-                  // var parent_class = "sub-menu";
-                    
-                  // new_id = current_li_id + "_" + parent_class; 
 
-                  // $(this).attr("id", new_id);
-
-                  //what you're trying to do here: get sub-menu parent id's, but the catch is that there are sub-menus inside of sub-menus inside etc. that need 
-                  // a parent of a parent of a parent of a parent :) 
-                  if($(this).parent().parent().parent().attr("id")){
-                    new_id = current_li_id + "_" + ul_li_ul;
-                    $(this).attr("id", new_id);
-                    console.log(ul_li_ul);
-
-                  } 
-                  else{
-                    var ul_li_ul_li = $(this).parent().parent().parent().parent().parent().attr("id");
-                    console.log(ul_li_ul_li);
-                  }
-                
-              }
-          }
         });
 
     }
