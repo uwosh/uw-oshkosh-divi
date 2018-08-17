@@ -57,6 +57,8 @@
       
               $(this).attr("id", new_id);
           }
+
+          //THIS PORTION OF THE FUNCTION IS INCOMPLETE
           //if the parent <ul> element is a sub-menu and does not have an id, we need to get a parent of a parent (the next <ul> element) to get an id for the 
           // <li> element
           else{
