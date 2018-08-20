@@ -98,4 +98,100 @@ function foobar_setup() {
   global $editor_styles;
   $editor_styles = array();
 }
+
+?>
+<?php
+/*
+* For accessibility a user needs to be able to zoom in on a webpage, ex. cases where the user has poor eyesight, to acheive this
+* we need the meta tag in the header to have "maximum-scale" > 2 and "user-scalable" cannot be disabled.
+*/
+
+/*remove the function that sets:
+* '<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0" />'
+*/
+function child_remove_parent_function(){
+    remove_action('wp_head', 'et_add_viewport_meta');
+}
+add_action('wp_loaded', 'child_remove_parent_function');
+
+/*
+* replace removed function with child function that allows zooming
+*/
+function accessible_viewport_meta(){
+    echo '<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=2.0, user-scalable=1" />';
+}
+add_action('wp_head', 'et_add_viewport_meta_2');
+
+/*
+* altering comment template to add aria-label for accessibility: 
+* wp looks for the comment_form default variables when it creates form fields
+* Param: $arg stands for the comment_field that is being modified
+* in this function we are writing our own version of the comment_field,
+* one that has the appropriate aria-labels describing what the field is
+* for screen readers 
+* Return: $arg with the changes that we made to the comment_field so that 
+* wp knows to use this version of the comment_field variable when creating comment_fields
+*/
+function wpsites_modify_comment_form_text_area($arg) {
+    $arg['comment_field'] = '<p class="comment-form-comment"><label for="comment">' . _x( 'Comment', 'noun' ) . '</label><textarea id="comment" name="comment" cols="45" rows="8" maxlength="65525" aria-label="comment" aria-required="true"></textarea></p>';
+    return $arg;
+}
+
+add_filter('comment_form_defaults', 'wpsites_modify_comment_form_text_area');
+
+/*
+* altering comment fields so that they also have aria labels:
+* similar to the wpsites_modify_comment_form_text_area function;
+* Param: $fields represents the array of templates for form fields that 
+* accompany the comment_field when a user submits a comment on a wp site
+* in this function we are setting our own version of these form fields that match the 
+* accessibility needs w/ proper aria-labels & aria-describedby attributes
+* Return: $fields, passes the changes we made to the template for these variables for when
+* wp creates the fields author, email, url and cookies the accompany the comment field when 
+* a user submits a comment on a post
+*/
+
+function accessible_comment_form_default_fields($fields){
+    $fields = [
+        'author' => '<p class="comment-form-author">' . '<label for="author">' . __( 'Name *', 'textdomain'  ) . ( $req ? ' <span class="required">*</span>' : '' ) . '</label> ' .
+                    '<input id="author" name="author" aria-label="comment author" type="text" value="' . esc_attr( $commenter['comment_author'] ) . '" size="30" maxlength="245"' . $aria_req . $html_req . ' /></p>',
+        'email'  => '<p class="comment-form-email"><label for="email">' . __( 'Email *', 'textdomain'  ) . ( $req ? ' <span class="required">*</span>' : '' ) . '</label> ' .
+                    '<input id="email" aria-label="comment author email" name="email" ' . ( $html5 ? 'type="email"' : 'type="text"' ) . ' value="' . esc_attr(  $commenter['comment_author_email'] ) . '" size="30" maxlength="100" aria-describedby="email-notes"' . $aria_req . $html_req  . ' /></p>',
+        'url'    => '<p class="comment-form-url"><label for="url">' . __( 'Website', 'textdomain'  ) . '</label> ' .
+                    '<input id="url" aria-label="comment author website url" name="url" ' . ( $html5 ? 'type="url"' : 'type="text"' ) . ' value="' . esc_attr( $commenter['comment_author_url'] ) . '" size="30" maxlength="200" /></p>',
+        'cookies' => '<p class="comment-form-cookies-consent"><input id="wp-comment-cookies-consent" name="wp-comment-cookies-consent" type="checkbox" value="yes"' . $consent . ' />' .
+                    '<label for="wp-comment-cookies-consent">' . __( 'Save my name, email, and website in this browser for the next time I comment.' ) . '</label></p>',
+    ];
+    return $fields;
+}
+add_filter('comment_form_default_fields', 'accessible_comment_form_default_fields');
+
+/*
+* function to alter the nav menu <li> id values
+* 
+* Params:
+* $menu_item_item_id: string, the id that is applied to the menu item's li element
+* $item: wp_post object, the current menu item
+* $args: stdClass, an object of the wp_nav_menu() arguments
+* $depth: int, depth of menu item ex. can be used for padding
+*
+* Return:
+* $menu_item_item_id: the new id of the menu items, unique and descriptive for accessibility 
+*/
+
+function change_menu_li_id($menu_item_item_id, $item, $args, $depth){
+
+    $dom = new DOMDocument();
+    $dom->loadHTMLFile("https://admissions.wpdev.uwosh.edu/");
+
+    $menu_item_item_id = $item->title;
+
+    $undesirable_characters = array("&", "(", ")", "+", ",", "'", "/");
+    $menu_item_item_id = str_replace($undesirable_characters, "", $menu_item_item_id);
+    $menu_item_item_id = str_replace(" ", "_", $menu_item_item_id);
+
+    return $menu_item_item_id;
+}
+add_filter('nav_menu_item_id','change_menu_li_id', 10, 4);
+
 ?>

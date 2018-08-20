@@ -43,5 +43,26 @@
       }
     }
     menu_Overlap();
+
+    //this function is for checking each <li> element on the page and creating a unique id by adding on the id of the parent <ul> element
+    function test_li(){
+      var new_id;
+        $('li').each(function(){
+          var current_li_id = $(this).attr("id");
+          
+          if($(this).parent().attr("id")){
+              var parent_id = $(this).parent().attr("id");
+              
+              new_id = current_li_id + "_" + parent_id; 
+      
+              $(this).attr("id", new_id);
+          }
+
+
+        });
+
+    }
+    test_li();
+
   });
 })(jQuery);
