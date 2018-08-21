@@ -152,10 +152,6 @@ add_filter('comment_form_default_fields', 'accessible_comment_form_default_field
 */
 
 function change_menu_li_id($menu_item_item_id, $item, $args, $depth){
-
-    $dom = new DOMDocument();
-    $dom->loadHTMLFile("https://admissions.wpdev.uwosh.edu/");
-
     $menu_item_item_id = $item->title;
 
     $undesirable_characters = array("&", "(", ")", "+", ",", "'", "/");
