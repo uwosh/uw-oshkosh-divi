@@ -101,26 +101,6 @@ function foobar_setup() {
 
 ?>
 <?php
-/*
-* For accessibility a user needs to be able to zoom in on a webpage, ex. cases where the user has poor eyesight, to acheive this
-* we need the meta tag in the header to have "maximum-scale" > 2 and "user-scalable" cannot be disabled.
-*/
-
-/*remove the function that sets:
-* '<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0" />'
-*/
-function child_remove_parent_function(){
-    remove_action('wp_head', 'et_add_viewport_meta');
-}
-add_action('wp_loaded', 'child_remove_parent_function');
-
-/*
-* replace removed function with child function that allows zooming
-*/
-function accessible_viewport_meta(){
-    echo '<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=2.0, user-scalable=1" />';
-}
-add_action('wp_head', 'et_add_viewport_meta_2');
 
 /*
 * altering comment template to add aria-label for accessibility: 

@@ -54,9 +54,8 @@
       * Simple menu: do not have a lot of depth and already have known <ul> ids
       * I'm just looping through these menus and appending the parent id onto the end of all of the <li> children
       * 
-      * note: mobile_menu combines top-menu and et-secondary-menu
       */
-      var simple_menu_ids = ["mobile_menu", "top-menu", "et-secondary-menu"];
+      var simple_menu_ids = ["top-menu", "et-secondary-menu"];
       var original_id;
       var new_id;
 
@@ -103,26 +102,23 @@
       * 
       * these functions get the  first set of children of the mobile menus and append "mobile_menu1" to their ids
       * then, they push these newly unique-ified ids to the complex_menu_ids array
+      * 
+      * mobile_menu is a combination of the full website menus top-menu and et-secondary-menu
       */
-      $("#mobile_menu1").children("li").each(function(){
-        original_id = $(this).attr("id");
-        new_id = original_id + "_mobile_menu1";
-        $(this).attr("id", new_id);
 
-        complex_menu_ids.push( $(this).attr("id") );
-        // console.log("mobile_menu1 child: " +  $(this).attr("id") );
-      });
-      $("#mobile_menu2").children("li").each(function(){
-        original_id = $(this).attr("id");
-        new_id = original_id + "_mobile_menu2";
-        $(this).attr("id", new_id);
+      var mobile_ids = ["mobile_menu", "mobile_menu1", "mobile_menu2"];
 
-        complex_menu_ids.push( $(this).attr("id") );
-        // console.log("mobile_menu2 child: " +  $(this).attr("id") );
-      });
+      for(i = 0; i < mobile_ids.length; i++){
+        $("#" + mobile_ids[i]).children("li").each(function(){
+          original_id = $(this).attr("id");
+          new_id = original_id + "_" + mobile_ids[i];
+          $(this).attr("id", new_id);
+  
+          complex_menu_ids.push( $(this).attr("id") );
+          // console.log("mobile_menu1 child: " +  $(this).attr("id") );
+        });
 
-      
-
+      }
       /*
       * Similar to the loop at the beginning of the function, this loop iterates through the complex_menu_ids array that has now been filled with unique ids
       * this loop needs to come after the ".each functions" for the fullwidth-menu-nav, mobile_menu1 and mobile_menu2 menus BECAUSE the <li>'s inside of the menus 
