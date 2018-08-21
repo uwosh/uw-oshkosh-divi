@@ -53,6 +53,8 @@
       /*
       * Simple menu: do not have a lot of depth and already have known <ul> ids
       * I'm just looping through these menus and appending the parent id onto the end of all of the <li> children
+      * 
+      * note: mobile_menu combines top-menu and et-secondary-menu
       */
       var simple_menu_ids = ["mobile_menu", "top-menu", "et-secondary-menu"];
       var original_id;
