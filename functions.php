@@ -168,7 +168,8 @@ add_filter('comment_form_default_fields', 'accessible_comment_form_default_field
 
 /*
 * function to alter the nav menu <li> id values
-* 
+* note: should probably add regex/delimiter to remove special characters 
+*
 * Params:
 * $menu_item_item_id: string, the id that is applied to the menu item's li element
 * $item: wp_post object, the current menu item
@@ -180,10 +181,6 @@ add_filter('comment_form_default_fields', 'accessible_comment_form_default_field
 */
 
 function change_menu_li_id($menu_item_item_id, $item, $args, $depth){
-
-    $dom = new DOMDocument();
-    $dom->loadHTMLFile("https://admissions.wpdev.uwosh.edu/");
-
     $menu_item_item_id = $item->title;
 
     $undesirable_characters = array("&", "(", ")", "+", ",", "'", "/");
