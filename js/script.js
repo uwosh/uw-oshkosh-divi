@@ -56,7 +56,7 @@
       * 
       * note: mobile_menu combines top-menu and et-secondary-menu
       */
-      var simple_menu_ids = ["mobile_menu", "top-menu", "et-secondary-menu"];
+      var simple_menu_ids = ["top-menu", "et-secondary-menu"];
       var original_id;
       var new_id;
 
@@ -121,6 +121,14 @@
         // console.log("mobile_menu2 child: " +  $(this).attr("id") );
       });
 
+      $("#mobile_menu").children("li").each(function(){
+        original_id = $(this).attr("id");
+        new_id = original_id + "_mobile_menu";
+        $(this).attr("id", new_id);
+
+        complex_menu_ids.push( $(this).attr("id") );
+        // console.log("mobile_menu1 child: " +  $(this).attr("id") );
+      });
       
 
       /*
