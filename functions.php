@@ -163,9 +163,9 @@ add_filter('comment_form_default_fields', 'accessible_comment_form_default_field
 function change_menu_li_id($menu_item_item_id, $item, $args, $depth){
     $menu_item_item_id = $item->title;
 
-    $undesirable_characters = array("&", "(", ")", "+", ",", "'", "/");
-    $menu_item_item_id = str_replace($undesirable_characters, "", $menu_item_item_id);
-    $menu_item_item_id = str_replace(" ", "_", $menu_item_item_id);
+    // $undesirable_characters = array("&", "(", ")", "+", ",", "'", "/");
+    $menu_item_item_id = preg_replace('/[^A-Za-z0-9\. -]/', '', $menu_item_item_id);
+    $menu_item_item_id = str_replace(' ', '_', $menu_item_item_id);
 
     return $menu_item_item_id;
 }
