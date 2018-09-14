@@ -100,10 +100,11 @@
       * mobile_menu1 is the mobile version of the first fullwidth-menu-nav menu on the page, mobile_menu2 is the mobile version of the second fullwidth-menu-nav menu on the page
       * so far, I'm operating under the assumption that there are only 2 custom menus on the page 
       * 
+      * mobile_menu is a combination of the full website menus top-menu and et-secondary-menu
+      * 
       * these functions get the  first set of children of the mobile menus and append "mobile_menu1" to their ids
       * then, they push these newly unique-ified ids to the complex_menu_ids array
       * 
-      * mobile_menu is a combination of the full website menus top-menu and et-secondary-menu
       */
 
       var mobile_ids = ["mobile_menu", "mobile_menu1", "mobile_menu2"];
@@ -120,8 +121,8 @@
 
       }
       /*
-      * Similar to the loop at the beginning of the function, this loop iterates through the complex_menu_ids array that has now been filled with unique ids
-      * this loop needs to come after the ".each functions" for the fullwidth-menu-nav, mobile_menu1 and mobile_menu2 menus BECAUSE the <li>'s inside of the menus 
+      * Similar to the loop at the beginning of this function, this loop iterates through the complex_menu_ids array that has now been filled with unique ids
+      * this loop needs to come after the ".each methods" for the fullwidth-menu-nav, and mobile menus BECAUSE the <li>'s inside of the menus 
       * were duplicates of one another
       * now that these parent <li> elements inside of these menus are not duplicates of one another, we can actually iterate through all of the <li> under them and make them unique
       * which is what this loop is doing 
