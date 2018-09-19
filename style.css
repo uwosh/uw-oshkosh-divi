@@ -64,6 +64,7 @@ header #logo {
 }
 
 @media only screen and (min-width: 981px) {
+
   .et-fixed-header#top-header,
   .et-fixed-header#top-header #et-secondary-nav li ul {
     background-color: #444;
@@ -120,6 +121,7 @@ header #logo {
   .site-title h1 {
     font-size: 24px;
   }
+
   header .container {
     white-space: normal;
   }
@@ -351,6 +353,7 @@ form.gsc-search-box input {
     right: -52px;
     width: 240px !important;
   }
+
   form.gsc-search-box input {
     width: 200px;
   }
@@ -632,23 +635,28 @@ form.gsc-search-box input {
     padding-left: 20px;
     margin-left: 0;
   }
+
   #footer-column-1 .wismap {
     display: none;
   }
+
   #footer-column-1 #footer-address {
     padding-left: 20px;
     width: 100%;
   }
+
   #footer-column-2 {
     padding-left: 10px;
     padding-right: 30px;
   }
+
   #footer-column-3 {
     padding-left: 20px;
   }
 }
 
 @media only screen and (max-width: 640px) {
+
   #footer-column-1,
   #footer-column-2,
   #footer-column-3,
@@ -656,6 +664,7 @@ form.gsc-search-box input {
     text-align: left;
     padding: 0 0 15px;
   }
+
   #footer-column-1 #footer-address,
   #footer-column-1 p,
   #footer-column-2 #footer-address,
@@ -666,27 +675,34 @@ form.gsc-search-box input {
   #footer-column-4 p {
     padding-left: 0;
   }
+
   #footer-column-1 ul,
   #footer-column-2 ul,
   #footer-column-3 ul,
   #footer-column-4 ul {
     margin: 0;
   }
+
   #footer-body {
     padding-bottom: 0;
   }
+
   #footer-column-1 {
     height: 160px;
   }
+
   #footer-column-2 p {
     width: 205px;
   }
+
   #footer-column-4 img {
     padding: 35px 14% 35px 0;
   }
+
   #footer-column-4 #footer-accredited {
     padding-left: 0;
   }
+
   #footer-bottom #footer-social a {
     padding: 15px 10px;
   }
@@ -791,3 +807,29 @@ input#submit.submit.et_pb_button {
 }
 
 /* End accessibility changes */
+
+/* Begin MENU modifications for mobile menus */
+
+.et_pb_fullwidth_menu .mobile_menu_bar {
+  text-align: left;
+}
+
+.et_pb_fullwidth_menu .mobile_menu_bar::after {
+  content: "MENU";
+  position: relative;
+  font-size: 20px;
+  top: 18px;
+  left: 7px;
+}
+
+.et_pb_fullwidth_menu.et_pb_bg_layout_light .mobile_menu_bar::before,
+.et_pb_fullwidth_menu.et_pb_bg_layout_light .mobile_menu_bar::after {
+  color: #444 !important;
+}
+
+.et_pb_fullwidth_menu.et_pb_bg_layout_dark .mobile_menu_bar::before,
+.et_pb_fullwidth_menu.et_pb_bg_layout_dark .mobile_menu_bar::after {
+  color: #fff !important;
+}
+
+/* End MENU modifications for mobile menus */
