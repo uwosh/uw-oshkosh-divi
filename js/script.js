@@ -11,7 +11,9 @@
     });
 
     // Sets the jQuery date picker to start on Sunday instead of Monday
-    $( ".selector" ).datepicker({ firstDay: 1 });
+    if(typeof ($(".selector").datepicker) === "function"){
+      $(".selector").datepicker({ firstDay: 1 });
+    }
   });
 
   $(window).load(function() {
