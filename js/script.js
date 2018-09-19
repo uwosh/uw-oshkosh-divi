@@ -9,6 +9,9 @@
     $("#et_search_icon").click(function() {
       $("#et_top_search div div form").fadeToggle("slow");
     });
+
+    // Sets the jQuery date picker to start on Sunday instead of Monday
+    $( ".selector" ).datepicker({ firstDay: 1 });
   });
 
   $(window).load(function() {
