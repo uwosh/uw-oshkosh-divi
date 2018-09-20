@@ -50,15 +50,21 @@ function plugin_options_page() {
     <!-- creation of the form -->
     <h1>Google Custom Search Settings</h1>
     <form id="gcsForm" action="" name="gcsForm" method="POST">
-      <div>
+      <div style="padding: 5px 0;">
+        <h3>***IMPORTANT***</h3>
+        <p>
+          This settings page is for Information Technology staff only and directly affects how the Google search engine works on your website. If you do not know what this is for, you should not be changing this page.
+        </p>
+      </div>
+      <div style="padding: 5px 0;">
         In the last line of the code snippet, replace this: <br />
         <code>&lt;gcse:searchbox-only&gt;&lt;/gcse:searchbox-only&gt;</code><br />
         with this:<br />
         <code>&lt;gcse:searchbox-only resultsUrl='<?php echo get_site_url(); ?>/search-results/'&gt;&lt;/gcse:searchbox-only&gt;</code><br />
         <a target="_blank" href="https://kb.uwosh.edu/internal/page.php?id=56354">Further instructions...</a>
       </div>
-      <div>
-        Enter Google Custom Search Code Below:<br />
+      <div style="padding: 5px 0;">
+        Enter the Google Custom Search code below:<br />
         <textarea type='text' name='custom_search_address'id="gcs_address" placeholder='<?php echo $placeholder; ?>'  rows="14" cols="80"><?php echo $gcs_code; ?></textarea> <br>
         <?php submit_button('Submit', 'primary','button' ) ?>
       </div>
