@@ -1,0 +1,29 @@
+{
+  "name": "uw-oshkosh-divi",
+  "version": "1.4.2",
+  "description": "UW-Oshkosh's Divi Child Theme",
+  "main": "functions.php",
+  "directories": {
+    "lib": "lib"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "prettier": "prettier"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/uwosh/uw-oshkosh-divi.git"
+  },
+  "author": "Joseph Kerkhof",
+  "license": "CDDL-1.0",
+  "bugs": {
+    "url": "https://github.com/uwosh/uw-oshkosh-divi/issues"
+  },
+  "homepage": "https://github.com/uwosh/uw-oshkosh-divi#readme",
+  "devDependencies": {
+    "@prettier/plugin-php": "^0.7.0",
+    "eslint-config-prettier": "^3.0.1",
+    "eslint-plugin-prettier": "^2.6.2",
+    "prettier": "^1.14.3"
+  }
+}

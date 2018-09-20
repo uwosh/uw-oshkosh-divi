@@ -1,0 +1,11 @@
+{
+    "[javascript]": {
+        "editor.formatOnSave": true
+    },
+    "emeraldwalk.runonsave": {
+        "commands": [{
+            "match": "\\.php$",
+            "cmd": "cd ${workspaceRoot}; npm run prettier -- ${file} --write"
+        }]
+    }
+}

@@ -8,7 +8,7 @@ if ( ! is_page_template( 'page-template-blank.php' ) ) : ?>
 
 			<footer id="main-footer">
 				<?php get_sidebar( 'footer' ); ?>
-
+ 
 
 		<?php
 			if ( has_nav_menu( 'footer-menu' ) ) : ?>

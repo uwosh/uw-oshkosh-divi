@@ -3,8 +3,11 @@
  * Template Name: No Container (Header, Footer, No Sidebar)
  */
 get_header(); ?>
-<?php if (have_posts()) : while (have_posts()) : the_post();?>
+<?php if (have_posts()):
+    while (have_posts()):
+        the_post(); ?>
   <?php the_content(); ?>
-<?php endwhile; endif; ?>
 <?php
-get_footer();
+    endwhile;
+endif; ?>
+<?php get_footer();

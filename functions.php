@@ -5,7 +5,7 @@ add_filter( 'rss2_ns', 'events_rss2_namespace' );
 function events_rss2_namespace() {
     echo 'xmlns:ev="http://purl.org/rss/2.0/modules/event/"';
 }
-
+ 
 // Add Event Date to RSS Feeds
 add_action('rss_item','tribe_rss_feed_add_eventdate');
 add_action('rss2_item','tribe_rss_feed_add_eventdate');
