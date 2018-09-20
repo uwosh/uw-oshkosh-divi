@@ -2,7 +2,7 @@
 
 add_action('admin_menu', 'plugin_admin_add_page');
 function plugin_admin_add_page() {
-  add_options_page('GCS Settings Page', 'GCS Settings', 'customize', 'gcs-plugin', 'plugin_options_page');
+  add_options_page('Google Custom Search Settings Page', 'Google Custom Search Settings', 'customize', 'gcs-plugin', 'plugin_options_page');
 }
 add_action( 'after_switch_theme', 'check_gcs_table' );
 function check_gcs_table(){
@@ -48,15 +48,21 @@ function plugin_options_page() {
       ?>
   <div>
     <!-- creation of the form -->
-    <h1>GCS Settings</h1>
+    <h1>Google Custom Search Settings</h1>
     <form id="gcsForm" action="" name="gcsForm" method="POST">
-      <p>In the last line of the code snippet and type in this attribute to the opening 	&lt;gcse:searchbox-only&gt; tag:    resultsUrl='http://????.uwosh.edu/search-results/'<br>
-        For Further Instructions<a target="_blank" href="https://kb.uwosh.edu/internal/page.php?id=56354"> Click Here</a></p><br>
-        Enter Google Custom Search Code Below:<br>
+      <div>
+        In the last line of the code snippet, replace this: <br />
+        <code>&lt;gcse:searchbox-only&gt;&lt;/gcse:searchbox-only&gt;</code><br />
+        with this:<br />
+        <code>&lt;gcse:searchbox-only resultsUrl='<?php echo get_site_url(); ?>/search-results/'&gt;&lt;/gcse:searchbox-only&gt;</code><br />
+        <a target="_blank" href="https://kb.uwosh.edu/internal/page.php?id=56354">Further instructions...</a>
+      </div>
+      <div>
+        Enter Google Custom Search Code Below:<br />
         <textarea type='text' name='custom_search_address'id="gcs_address" placeholder='<?php echo $placeholder; ?>'  rows="14" cols="80"><?php echo $gcs_code; ?></textarea> <br>
         <?php submit_button('Submit', 'primary','button' ) ?>
-      </form>
-      <br>
+      </div>
+    </form>
 
       <script type="text/javascript">
       (function($) {
