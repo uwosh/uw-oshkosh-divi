@@ -7,7 +7,7 @@
           var broadcast = response;
           if(broadcast != null) {
             // There is a broadcast
-            broadcast = broadcast[0];
+            broadcast = broadcast[0]; // grabs the most recent announcement
             var broadcast_title = broadcast.title.rendered;
             var broadcast_link = broadcast.link;
             var broadcast_categories = broadcast.categories;
