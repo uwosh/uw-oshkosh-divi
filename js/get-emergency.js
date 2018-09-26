@@ -1,20 +1,17 @@
 (function ($) {
     $(document).ready(function(){
       $.ajax({
-        url: 'https://uwosh.edu/emergency/category/broadcast/feed/',
-        dataType: 'xml',
+        url: 'https://uwosh.edu/emergency/wp-json/wp/v2/posts?categories=4',
+        dataType: 'json',
         success: function(response) {
-          var json = $.xml2json(response);
-          var broadcast = json["#document"]["rss"]["channel"]["item"];
+          var broadcast = response;
           if(broadcast != null) {
             // There is a broadcast
-            if(broadcast.length > 1) {
-              broadcast = broadcast[0];
-            }
-            var broadcast_title = broadcast["title"];
-            var broadcast_link = broadcast["link"];
-            var broadcast_categories = broadcast["category"];
-            var broadcast_description = broadcast["description"];
+            broadcast = broadcast[0]; // grabs the most recent announcement
+            var broadcast_title = broadcast.title.rendered;
+            var broadcast_link = broadcast.link;
+            var broadcast_categories = broadcast.categories;
+            var broadcast_description = $(broadcast.content.rendered).text();
             if(broadcast_description.length >= 100) {
               broadcast_description = broadcast_description.substring(0, 100) + "...";
             }
@@ -25,9 +22,9 @@
             $(".broadcast-description").html(broadcast_description);
             
             // Setting the color for the banner
-            var isInfo = $.inArray("Information", broadcast_categories) != -1 ? true : false;
-            var isWarning = $.inArray("Warning", broadcast_categories) != -1 ? true : false;
-            var isEmergency = $.inArray("Emergency", broadcast_categories) != -1 ? true : false;
+            var isInfo = $.inArray(6, broadcast_categories) != -1 ? true : false;
+            var isWarning = $.inArray(7, broadcast_categories) != -1 ? true : false;
+            var isEmergency = $.inArray(8, broadcast_categories) != -1 ? true : false;
             
             if(isEmergency) {
               $(".emergency-banner-wrapper").addClass("emergency");
