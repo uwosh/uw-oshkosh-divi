@@ -5,7 +5,7 @@
         dataType: 'json',
         success: function(response) {
           var broadcast = response;
-          if(broadcast != null) {
+          if(!$.isEmptyObject(broadcast)) {
             // There is a broadcast
             broadcast = broadcast[0]; // grabs the most recent announcement
             var broadcast_title = broadcast.title.rendered;
