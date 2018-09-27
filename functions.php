@@ -44,7 +44,6 @@ add_action( 'wp_enqueue_scripts', 'uwo_theme_enqueue_styles' );
 // Custom JavaScript
 function uwo_theme_enqueue_script(){
   wp_enqueue_script( 'custom-js', get_stylesheet_directory_uri() . '/js/script.js', array('jquery') ,'1.0', true );
-  wp_enqueue_script( 'jfeed', get_stylesheet_directory_uri() . '/lib/xml2json.js', array('jquery') ,'1.0', true );
   wp_enqueue_script( 'get-emergency', get_stylesheet_directory_uri() . '/js/get-emergency.js', array('jquery') ,'1.0', true );
 }
 add_action( 'wp_enqueue_scripts', 'uwo_theme_enqueue_script' );
