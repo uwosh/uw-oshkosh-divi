@@ -1,5 +1,7 @@
 <?php
 
+add_filter( 'the_content', 'wpautop' ); // hotfix for paragraphs not formatting properly
+
 // Add Tribe Event Namespace
 add_filter( 'rss2_ns', 'events_rss2_namespace' );
 function events_rss2_namespace() {
