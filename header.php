@@ -187,7 +187,7 @@
 		<header id="main-header" class="<?php echo esc_attr( $primary_nav_class ); ?>">
 			<div class="container clearfix">
 				<?php
-				$logo = get_stylesheet_directory_uri() . '/images/wordmark.png';
+				$logo = get_stylesheet_directory_uri() . '/assets/images/wordmark.png';
 				?>
 				<div class="image-title-wrapper">
 					<a href="http://www.uwosh.edu">
