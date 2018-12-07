@@ -47,6 +47,7 @@ add_action( 'wp_enqueue_scripts', 'uwo_theme_enqueue_styles' );
 function uwo_theme_enqueue_script(){
   wp_enqueue_script( 'custom-js', get_stylesheet_directory_uri() . '/js/script.js', array('jquery') ,'1.0', true );
   wp_enqueue_script( 'get-emergency', get_stylesheet_directory_uri() . '/js/get-emergency.js', array('jquery') ,'1.0', true );
+  wp_localize_script( 'get-emergency', 'WPURLS', array( 'siteurl' => get_option('siteurl') ) );
 }
 add_action( 'wp_enqueue_scripts', 'uwo_theme_enqueue_script' );
 
