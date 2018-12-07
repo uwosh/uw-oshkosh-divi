@@ -13,3 +13,9 @@ style.min.css
 # Images not in raw
 /assets/images/*
 !/assets/images/raw
+
+# Transpiled JS
+/assets/js/custom.js
+/assets/js/custom.min.js
+/assets/js/vendor.js
+/assets/js/vendor.min.js
