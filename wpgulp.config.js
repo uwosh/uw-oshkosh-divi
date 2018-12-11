@@ -41,9 +41,9 @@ module.exports = {
 	jsCustomFile: 'custom', // Compiled JS custom file name. Default set to custom i.e. custom.js.
 
 	// Images options.
-	imgSRC: './assets/img/raw/**/*', // Source folder of images which should be optimized and watched. You can also specify types e.g. raw/**.{png,jpg,gif} in the glob.
-	imgDST: './assets/img/', // Destination folder of optimized images. Must be different from the imagesSRC folder.
-	imgDeploy: './dist/build/assets/img/', // Destination folder for optimized images for the deployment build.
+	imgSRC: './assets/images/raw/**/*', // Source folder of images which should be optimized and watched. You can also specify types e.g. raw/**.{png,jpg,gif} in the glob.
+	imgDST: './assets/images/', // Destination folder of optimized images. Must be different from the imagesSRC folder.
+	imgDeploy: './dist/build/assets/images/', // Destination folder for optimized images for the deployment build.
 
 	// Watch files paths.
 	watchStyles: './assets/css/**/*.scss', // Path to all *.scss files inside css folder and inside them.
