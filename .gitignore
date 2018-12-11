@@ -4,6 +4,7 @@
 # Directories
 /node_modules/
 /dist/
+package-lock.json
 
 # Built CSS
 style.css
