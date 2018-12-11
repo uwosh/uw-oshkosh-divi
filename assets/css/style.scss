@@ -8,18 +8,43 @@ Template: Divi
 Version: 1.4.5
 */
 
+// Font family
+$font-family: "Open Sans",
+Arial,
+sans-serif !important;
+
+// UWO colors
+$titan-yellow: #fec424;
+$titan-grey: #444;
+
+// Utility colors
+$link: #0077ad;
+
+// Broadcast banner colors
+$broadcast-info: #0066cc;
+$broadcast-warning: #ff9900;
+$broadcast-emergency: #d91e18;
+
+// Social colors
+$facebook: #3b5998;
+$twitter: #1da1f2;
+$instagram: #f56040;
+$youtube: #cd201f;
+$linkedin: #0077b5;
+$pinterest: #bd081c;
+$flickr: #8032b0;
+
 body {
   min-width: 320px;
-  font-family: "Open Sans", Arial, sans-serif !important;
-  color: #444;
+  font-family: $font-family;
+  color: $titan-grey;
 }
 
 a {
-  color: #0077ad;
+  color: $link;
 }
 
 .desaturate {
-  -webkit-backface-visibility: hidden;
   backface-visibility: hidden;
   filter: grayscale(100%);
   transition: all 0.6s ease;
@@ -51,23 +76,23 @@ header #logo {
 #main-header .et_mobile_menu,
 #main-header .nav li ul,
 .et-search-form {
-  background-color: #fec424;
+  background-color: $titan-yellow;
 }
 
 #et-secondary-nav li ul,
 #top-header {
-  background-color: #444;
+  background-color: $titan-grey;
 }
 
 .et_pb_fullwidth_menu_0.et_pb_fullwidth_menu .nav li ul {
-  background-color: #0077ad !important;
+  background-color: $link !important;
 }
 
 @media only screen and (min-width: 981px) {
 
   .et-fixed-header#top-header,
   .et-fixed-header#top-header #et-secondary-nav li ul {
-    background-color: #444;
+    background-color: $titan-grey;
   }
 }
 
@@ -78,7 +103,7 @@ header #logo {
 }
 
 .site-title h1 {
-  font-family: "Open Sans", Arial, sans-serif !important;
+  font-family: $font-family;
   font-size: 33px;
   font-weight: 600;
 }
@@ -147,7 +172,7 @@ header #logo {
 
 .emergency-banner-wrapper {
   display: none;
-  background: #0066cc;
+  background: $broadcast-info;
   color: white;
   height: 45px;
   position: fixed;
@@ -184,11 +209,11 @@ header #logo {
 }
 
 .emergency-banner-wrapper.info {
-  background: #0066cc;
+  background: $broadcast-info;
 }
 
 .emergency-banner-wrapper.warning {
-  background: #ff9900;
+  background: $broadcast-warning;
 }
 
 .emergency-banner-wrapper.warning a {
@@ -196,7 +221,7 @@ header #logo {
 }
 
 .emergency-banner-wrapper.emergency {
-  background: #d91e18;
+  background: $broadcast-emergency;
   height: 75px;
 }
 
@@ -293,7 +318,7 @@ header #logo {
 }
 
 #top-menu a {
-  color: #444 !important;
+  color: $titan-grey !important;
 }
 
 .display-search {
@@ -301,7 +326,7 @@ header #logo {
 }
 
 form.gsc-search-box {
-  background-color: #fec424 !important;
+  background-color: $titan-yellow !important;
   border-top-color: #2ea3f2;
   border-top-style: solid;
   border-top-width: 3px;
@@ -340,7 +365,7 @@ form.gsc-search-box input {
 }
 
 .mobile_menu_bar::before {
-  color: #444;
+  color: $titan-grey;
 }
 
 .et_mobile_nav_menu .mobile_nav .mobile_menu_bar::before {
@@ -400,13 +425,13 @@ form.gsc-search-box input {
   text-align: left;
   background-color: #b0b0b0;
   clear: both;
-  color: #444;
+  color: $titan-grey;
   font-size: 15px;
 }
 
 #footer-top {
-  background-color: #fec424;
-  color: #444;
+  background-color: $titan-yellow;
+  color: $titan-grey;
   text-align: center;
   font-weight: 700;
   font-size: 16px;
@@ -457,7 +482,7 @@ form.gsc-search-box input {
 }
 
 #footer-body a {
-  color: #444;
+  color: $titan-grey;
   font-style: normal;
 }
 
@@ -524,7 +549,7 @@ form.gsc-search-box input {
 }
 
 #mobile-emergency i:hover {
-  color: #fec424;
+  color: $titan-yellow;
 }
 
 #mobile-emergency .fa-mobile {
@@ -578,7 +603,7 @@ form.gsc-search-box input {
 
 #footer-bottom {
   overflow: hidden;
-  background-color: #444;
+  background-color: $titan-grey;
   padding: 0;
   width: 100%;
 }
@@ -603,31 +628,31 @@ form.gsc-search-box input {
 }
 
 #footer-bottom #footer-social .fa-facebook:hover {
-  color: #3b5998;
+  color: $facebook;
 }
 
 #footer-bottom #footer-social .fa-twitter:hover {
-  color: #1da1f2;
+  color: $twitter;
 }
 
 #footer-bottom #footer-social .fa-instagram:hover {
-  color: #f56040;
+  color: $instagram;
 }
 
 #footer-bottom #footer-social .fa-youtube-play:hover {
-  color: #cd201f;
+  color: $youtube;
 }
 
 #footer-bottom #footer-social .fa-linkedin:hover {
-  color: #0077b5;
+  color: $linkedin;
 }
 
 #footer-bottom #footer-social .fa-pinterest-p:hover {
-  color: #bd081c;
+  color: $pinterest;
 }
 
 #footer-bottom #footer-social .fa-flickr:hover {
-  color: #8032b0;
+  color: $flickr;
 }
 
 @media only screen and (max-width: 1025px) {
@@ -824,7 +849,7 @@ input#submit.submit.et_pb_button {
 
 .et_pb_fullwidth_menu.et_pb_bg_layout_light .mobile_menu_bar::before,
 .et_pb_fullwidth_menu.et_pb_bg_layout_light .mobile_menu_bar::after {
-  color: #444 !important;
+  color: $titan-grey !important;
 }
 
 .et_pb_fullwidth_menu.et_pb_bg_layout_dark .mobile_menu_bar::before,
