@@ -1,39 +1,40 @@
 ( function( $ ) {
 	$( document ).ready( function() {
 		const site = WPURLS.siteurl;
-		const uwFox = 'https://wwwtest.uwosh.edu/uwfox';
-		const uwFDL = 'https://wwwtest.uwosh.edu/uwfdl';
+		const uwFox = 'https://uwosh.edu/uwfox';
+		const uwFDL = 'https://uwosh.edu/uwfdl';
 		const uwOshkoshCategory = 11;
 		const uwFDLCategory = 12;
 		const uwFoxCategory = 13;
 
 		function fetchEmergencies( category ) {
 			$.ajax({
-				url: 'https://wwwtest.uwosh.edu/emergency/wp-json/wp/v2/posts?categories=' + category,
+				url: 'https://uwosh.edu/emergency/wp-json/wp/v2/posts?categories=' + category,
 				dataType: 'json',
 				success: function( response ) {
 					var broadcast = response;
+					var broadcastTitle, broadcastLink, broadcastCategories, broadcastDescription, isInfo, isWarning, isEmergency;
 					if ( ! $.isEmptyObject( broadcast ) ) {
 
 						// There is a broadcast
 						broadcast = broadcast[0]; // grabs the most recent announcement
-						var broadcast_title = broadcast.title.rendered;
-						var broadcast_link = broadcast.link;
-						var broadcast_categories = broadcast.categories;
-						var broadcast_description = $( broadcast.content.rendered ).text();
-						if ( 100 <= broadcast_description.length ) {
-							broadcast_description = broadcast_description.substring( 0, 100 ) + '...';
+						broadcastTitle = broadcast.title.rendered;
+						broadcastLink = broadcast.link;
+						broadcastCategories = broadcast.categories;
+						broadcastDescription = $( broadcast.content.rendered ).text();
+						if ( 100 <= broadcastDescription.length ) {
+							broadcastDescription = broadcastDescription.substring( 0, 100 ) + '...';
 						}
 
 						// Setting the content for the notification
-						$( '.broadcast-link' ).attr( 'href', broadcast_link );
-						$( '.broadcast-title' ).html( broadcast_title + ': ' );
-						$( '.broadcast-description' ).html( broadcast_description );
+						$( '.broadcast-link' ).attr( 'href', broadcastLink );
+						$( '.broadcast-title' ).html( broadcastTitle + ': ' );
+						$( '.broadcast-description' ).html( broadcastDescription );
 
 						// Setting the color for the banner
-						var isInfo = -1 != $.inArray(6, broadcast_categories) ? true : false;
-						var isWarning = -1 != $.inArray(7, broadcast_categories) ? true : false;
-						var isEmergency = -1 != $.inArray(8, broadcast_categories) ? true : false;
+						isInfo = -1 != $.inArray( 6, broadcastCategories ) ? true : false;
+						isWarning = -1 != $.inArray( 7, broadcastCategories ) ? true : false;
+						isEmergency = -1 != $.inArray( 8, broadcastCategories ) ? true : false;
 
 						if ( isEmergency ) {
 							$( '.emergency-banner-wrapper' ).addClass( 'emergency' );
