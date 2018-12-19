@@ -187,10 +187,10 @@
 		<header id="main-header" class="<?php echo esc_attr( $primary_nav_class ); ?>">
 			<div class="container clearfix">
 				<?php
-				$logo = get_stylesheet_directory_uri() . '/images/wordmark.png';
+				$logo = get_stylesheet_directory_uri() . '/assets/images/wordmark.png';
 				?>
 				<div class="image-title-wrapper">
-					<a href="http://www.uwosh.edu">
+					<a href="https://uwosh.edu">
 						<img src="<?php echo esc_attr( $logo ); ?>" alt="University of Wisconsin Oshkosh wordmark" id="logo" />
 					</a>
 					<div class="site-title">

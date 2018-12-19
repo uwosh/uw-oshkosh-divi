@@ -1,14 +1,22 @@
-# Mac Crap
+# Mac stuff
 .DS_Store
 
 # Directories
 /node_modules/
 /dist/
+package-lock.json
 
-# Including plugins that can't be built in with Docker
-!/dist/wp-content/plugins/elegant-themes-updater/
-!/dist/wp-content/plugins/gravityforms/
-!/dist/wp-content/themes/Divi/
+# Built CSS
+style.css
+style.css.map
+style.min.css
 
-# Including Uploads
-!/dist/wp-content/uploads/
+# Images not in raw
+/assets/images/*
+!/assets/images/raw
+
+# Transpiled JS
+/assets/js/custom.js
+/assets/js/custom.min.js
+/assets/js/vendor.js
+/assets/js/vendor.min.js
