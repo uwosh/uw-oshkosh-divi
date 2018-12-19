@@ -40,7 +40,7 @@ if ( ! is_page_template( 'page-template-blank.php' ) ) : ?>
 						<div id="footer-column-1" class="col">
 								<p class="footer-column-header">Location</p>
 								<a href="https://maps.google.com/maps?q=University+of+Wisconsin+Oshkosh+800+Algoma+Blvd.+Oshkosh,+WI+54901&amp;um=1&amp;ie=UTF-8&amp;hl=en&amp;sa=N&amp;tab=wl" target="_blank" rel="noopener" aria-label="uwomap">
-									<img src="<?php echo esc_attr(get_stylesheet_directory_uri() . '/images/footer/wismap-color.png') ?>" class="wismap pull-left desaturate" alt="Wisconsin Map">
+									<img src="<?php echo esc_attr(get_stylesheet_directory_uri() . '/assets/images/footer/wismap-color.png') ?>" class="wismap pull-left desaturate" alt="Wisconsin Map">
 								</a>
 								<address id="footer-address" class="link-list">
 								<a href="https://maps.google.com/maps?q=University+of+Wisconsin+Oshkosh+800+Algoma+Blvd.+Oshkosh,+WI+54901&amp;um=1&amp;ie=UTF-8&amp;hl=en&amp;sa=N&amp;tab=wl" target="_blank" rel="noopener" aria-label="uwoaddress">
@@ -88,7 +88,7 @@ if ( ! is_page_template( 'page-template-blank.php' ) ) : ?>
 						<div id="footer-column-4" class="col">
 								<iframe style="filter: grayscale(100%)" title="UWO Accreditation Image" frameborder="0" scrolling="no" allowtransparency="true" width="150" height="166" src="https://cdn.yoshki.com/iframe/54732.html"></iframe>
 								<a href="http://www.wisconsin.edu/" target="_blank" rel="noopener" class="image-wrapper">
-									<img class="uw-system-img" src="<?php echo esc_attr(get_stylesheet_directory_uri() . '/images/footer/uw-system.png') ?>" id="footer-uw-logo" class="inline" alt="UW System">
+									<img class="uw-system-img" src="<?php echo esc_attr(get_stylesheet_directory_uri() . '/assets/images/footer/uw-system.png') ?>" id="footer-uw-logo" class="inline" alt="UW System">
 								</a>
 						</div> <!-- #footer-column-4 -->
 					</div><!-- #footer-body .row -->
