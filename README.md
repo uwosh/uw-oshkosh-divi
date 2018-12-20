@@ -18,7 +18,7 @@ Change directory (`cd`) into the installation folder you cloned and run `npm ins
 
 I recommend using [Local by Flywheel](https://local.getflywheel.com/) as a LAMP server while you develop. It's easy and free.
 
-Set up a new website at the URL specified in the wpgulp.config.js, which is, by default, set to `uwosh.local`. This can be set to whatever you want.
+Set up a new website at the URL specified in the wpgulp.config.js, which is, by default, set to `uwosh.dev`. This can be set to whatever you want.
 
 ## Commands
 
