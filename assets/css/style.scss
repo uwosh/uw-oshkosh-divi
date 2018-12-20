@@ -22,8 +22,11 @@ $link: #0077ad;
 
 // Broadcast banner colors
 $broadcast-info: #0066cc;
+$broadcast-info-border: #4CA6FF;
 $broadcast-warning: #ff9900;
+$broadcast-warning-border: #FFB84C;
 $broadcast-emergency: #d91e18;
+$broadcast-emergency-border: #FF6D69;
 
 // Social colors
 $facebook: #3b5998;
@@ -159,15 +162,40 @@ header #logo {
 }
 
 /* made some additions here dude */
+.emergency+.emergency+.header-wrapper {
+  margin-top: 150px;
+}
 
-.emergency-bumpdown {
+.info+.emergency-banner-wrapper,
+.warning+.emergency-banner-wrapper {
   margin-top: 45px;
 }
 
-@media screen and (max-width: 782px) {
-  .emergency-bumpdown {
-    margin-top: 46px;
-  }
+.emergency+.emergency-banner-wrapper {
+  margin-top: 75px;
+}
+
+.emergency+.info+.header-wrapper,
+.info+.emergency+.header-wrapper,
+.emergency+.warning+.header-wrapper,
+.warning+.emergency+.header-wrapper {
+  margin-top: 120px;
+}
+
+.info+.warning+.header-wrapper,
+.warning+.info+.header-wrapper,
+.info+.info+.header-wrapper,
+.warning+.warning+.header-wrapper {
+  margin-top: 90px;
+}
+
+.emergency+.header-wrapper {
+  margin-top: 75px;
+}
+
+.info+.header-wrapper,
+.warning+.header-wrapper {
+  margin-top: 45px;
 }
 
 .emergency-banner-wrapper {
@@ -210,10 +238,12 @@ header #logo {
 
 .emergency-banner-wrapper.info {
   background: $broadcast-info;
+  border: 3px solid $broadcast-info-border;
 }
 
 .emergency-banner-wrapper.warning {
   background: $broadcast-warning;
+  border: 3px solid $broadcast-warning-border;
 }
 
 .emergency-banner-wrapper.warning a {
@@ -222,11 +252,8 @@ header #logo {
 
 .emergency-banner-wrapper.emergency {
   background: $broadcast-emergency;
+  border: 3px solid $broadcast-emergency-border;
   height: 75px;
-}
-
-.emergency-banner-wrapper.emergency+.emergency-bumpdown {
-  margin-top: 75px;
 }
 
 @media screen and (max-width: 782px) {
@@ -239,6 +266,15 @@ header #logo {
 
 .admin-bar .emergency-banner-wrapper {
   top: 32px;
+}
+
+.admin-bar .info+.emergency-banner-wrapper,
+.admin-bar .warning+.emergency-banner-wrapper {
+  margin-top: 45px;
+}
+
+.admin-bar .emergency+.emergency-banner-wrapper {
+  margin-top: 75px;
 }
 
 @media screen and (max-width: 782px) {

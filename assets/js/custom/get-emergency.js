@@ -1,52 +1,53 @@
 ( function( $ ) {
 	$( document ).ready( function() {
 		const site = WPURLS.siteurl;
-		const uwFox = 'https://uwosh.edu/uwfox';
-		const uwFDL = 'https://uwosh.edu/uwfdl';
+		const uwFox = 'https://uwosh.dev/uwfox';
+		const uwFDL = 'https://uwosh.dev/uwfdl';
 		const uwOshkoshCategory = 11;
 		const uwFDLCategory = 12;
 		const uwFoxCategory = 13;
 
 		function fetchEmergencies( category ) {
 			$.ajax({
-				url: 'https://uwosh.edu/emergency/wp-json/wp/v2/posts?categories=' + category,
+				url: 'https://wwwtest.uwosh.edu/emergency/wp-json/wp/v2/posts?categories=' + category,
 				dataType: 'json',
 				success: function( response ) {
-					var broadcast = response;
+					var broadcasts = response.slice( 0, 2 );
 					var broadcastTitle, broadcastLink, broadcastCategories, broadcastDescription, isInfo, isWarning, isEmergency;
-					if ( ! $.isEmptyObject( broadcast ) ) {
+					if ( ! $.isEmptyObject( broadcasts ) ) {
 
-						// There is a broadcast
-						broadcast = broadcast[0]; // grabs the most recent announcement
-						broadcastTitle = broadcast.title.rendered;
-						broadcastLink = broadcast.link;
-						broadcastCategories = broadcast.categories;
-						broadcastDescription = $( broadcast.content.rendered ).text();
-						if ( 100 <= broadcastDescription.length ) {
-							broadcastDescription = broadcastDescription.substring( 0, 100 ) + '...';
-						}
+						broadcasts.forEach( ( broadcast, index ) => {
 
-						// Setting the content for the notification
-						$( '.broadcast-link' ).attr( 'href', broadcastLink );
-						$( '.broadcast-title' ).html( broadcastTitle + ': ' );
-						$( '.broadcast-description' ).html( broadcastDescription );
+							// There is a broadcast
+							broadcastTitle = broadcast.title.rendered;
+							broadcastLink = broadcast.link;
+							broadcastCategories = broadcast.categories;
+							broadcastDescription = $( broadcast.content.rendered ).text();
+							if ( 100 <= broadcastDescription.length ) {
+								broadcastDescription = broadcastDescription.substring( 0, 100 ) + '...';
+							}
 
-						// Setting the color for the banner
-						isInfo = -1 != $.inArray( 6, broadcastCategories ) ? true : false;
-						isWarning = -1 != $.inArray( 7, broadcastCategories ) ? true : false;
-						isEmergency = -1 != $.inArray( 8, broadcastCategories ) ? true : false;
+							// Setting the content for the notification
+							$( `#emergency-banner-${index} .broadcast-link` ).attr( 'href', broadcastLink );
+							$( `#emergency-banner-${index}  .broadcast-title` ).html( broadcastTitle + ': ' );
+							$( `#emergency-banner-${index}  .broadcast-description` ).html( broadcastDescription );
 
-						if ( isEmergency ) {
-							$( '.emergency-banner-wrapper' ).addClass( 'emergency' );
-						} else if ( isWarning ) {
-							$( '.emergency-banner-wrapper' ).addClass( 'warning' );
-						} else if ( isInfo ) {
-							$( '.emergency-banner-wrapper' ).addClass( 'info' );
-						}
+							// Setting the color for the banner
+							isInfo = -1 != $.inArray( 6, broadcastCategories ) ? true : false;
+							isWarning = -1 != $.inArray( 7, broadcastCategories ) ? true : false;
+							isEmergency = -1 != $.inArray( 8, broadcastCategories ) ? true : false;
 
-						// Displaying the emergency banner on the site
-						$( '.emergency-banner-wrapper' ).css( 'display', 'flex' );
-						$( '.header-wrapper' ).addClass( 'emergency-bumpdown' );
+							if ( isEmergency ) {
+								$( `#emergency-banner-${index}.emergency-banner-wrapper` ).addClass( 'emergency' );
+							} else if ( isWarning ) {
+								$( `#emergency-banner-${index}.emergency-banner-wrapper` ).addClass( 'warning' );
+							} else if ( isInfo ) {
+								$( `#emergency-banner-${index}.emergency-banner-wrapper` ).addClass( 'info' );
+							}
+
+							// Displaying the emergency banner on the site
+							$( '.emergency-banner-wrapper' ).css( 'display', 'flex' );
+						});
 					}
 				}
 			});
