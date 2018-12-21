@@ -1,8 +1,8 @@
 ( function( $ ) {
 	$( document ).ready( function() {
 		const site = WPURLS.siteurl;
-		const uwFox = 'https://uwosh.dev/uwfox';
-		const uwFDL = 'https://uwosh.dev/uwfdl';
+		const uwFox = 'https://wwwtest.uwosh.edu/uwfox';
+		const uwFDL = 'https://wwwtest.uwosh.edu/uwfdl';
 		const uwOshkoshCategory = 11;
 		const uwFDLCategory = 12;
 		const uwFoxCategory = 13;
