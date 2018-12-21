@@ -162,19 +162,38 @@ header #logo {
 }
 
 /* made some additions here dude */
-.emergency+.emergency+.header-wrapper {
-  margin-top: 150px;
+.emergency-banner-wrapper.disabled {
+  display: none;
 }
 
-.info+.emergency-banner-wrapper,
-.warning+.emergency-banner-wrapper {
+
+// Begin single notification styles
+.emergency+.disabled+.header-wrapper {
+  margin-top: 75px;
+}
+
+.info+.disabled+.header-wrapper,
+.warning+.disabled+.header-wrapper {
   margin-top: 45px;
 }
 
+// End single notification styles
+
+// Begin double emergency styles
 .emergency+.emergency-banner-wrapper {
   margin-top: 75px;
 }
 
+.warning+.emergency-banner-wrapper,
+.info+.emergency-banner-wrapper {
+  margin-top: 45px;
+}
+
+.emergency+.emergency+.header-wrapper {
+  margin-top: 150px;
+}
+
+// emergency + regular (warning or info)
 .emergency+.info+.header-wrapper,
 .info+.emergency+.header-wrapper,
 .emergency+.warning+.header-wrapper,
@@ -182,6 +201,7 @@ header #logo {
   margin-top: 120px;
 }
 
+// regular + regular (warning or info)
 .info+.warning+.header-wrapper,
 .warning+.info+.header-wrapper,
 .info+.info+.header-wrapper,
@@ -189,17 +209,10 @@ header #logo {
   margin-top: 90px;
 }
 
-.emergency+.header-wrapper {
-  margin-top: 75px;
-}
-
-.info+.header-wrapper,
-.warning+.header-wrapper {
-  margin-top: 45px;
-}
+// End double emergency styles
 
 .emergency-banner-wrapper {
-  display: none;
+  display: flex;
   background: $broadcast-info;
   color: white;
   height: 45px;

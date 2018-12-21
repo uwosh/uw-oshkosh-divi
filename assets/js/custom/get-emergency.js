@@ -46,7 +46,8 @@
 							}
 
 							// Displaying the emergency banner on the site
-							$( '.emergency-banner-wrapper' ).css( 'display', 'flex' );
+							// $( `#emergency-banner-${index}` ).css( 'display', 'flex' );
+							$( `#emergency-banner-${index}` ).removeClass( 'disabled' );
 						});
 					}
 				}

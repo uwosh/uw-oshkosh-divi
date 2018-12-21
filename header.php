@@ -116,7 +116,7 @@
 		$et_top_info_defined = $et_secondary_nav_items->top_info_defined;
 		?>
 
-		<div class="emergency-banner-wrapper" id="emergency-banner-0">
+		<div class="emergency-banner-wrapper disabled" id="emergency-banner-0">
 			<div class="emergency-banner-content">
 				<a class="broadcast-link" href="" target="_blank">
 					<i class="fa fa-exclamation-triangle broadcast-icon" aria-hidden="true"></i><!--
@@ -125,7 +125,7 @@
 				</a>
 			</div>
 		</div>
-		<div class="emergency-banner-wrapper" id="emergency-banner-1">
+		<div class="emergency-banner-wrapper disabled" id="emergency-banner-1">
 			<div class="emergency-banner-content">
 				<a class="broadcast-link" href="" target="_blank">
 					<i class="fa fa-exclamation-triangle broadcast-icon" aria-hidden="true"></i><!--
