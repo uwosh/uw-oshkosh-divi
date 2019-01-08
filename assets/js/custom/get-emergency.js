@@ -3,9 +3,9 @@
 		const site = WPURLS.siteurl;
 
 		const siteEnums = Object.freeze({
-			UW_OSHKOSH: 'https://wwwtest.uwosh.edu',
-			UW_FDL: 'https://wwwtest.uwosh.edu/uwfdl',
-			UW_FOX: 'https://wwwtest.uwosh.edu/uwfox'
+			UW_OSHKOSH: 'https://uwosh.edu',
+			UW_FDL: 'https://uwosh.edu/uwfdl',
+			UW_FOX: 'https://uwosh.edu/uwfox'
 		});
 
 		const categoryEnums = Object.freeze({
@@ -16,7 +16,7 @@
 
 		function fetchEmergencies( category ) {
 			$.ajax({
-				url: 'https://wwwtest.uwosh.edu/emergency/wp-json/wp/v2/posts?categories=' + category,
+				url: 'https://uwosh.edu/emergency/wp-json/wp/v2/posts?categories=' + category,
 				dataType: 'json',
 				success: function( response ) {
 					var broadcasts = response.slice( 0, 2 );
