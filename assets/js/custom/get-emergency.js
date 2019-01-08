@@ -1,11 +1,18 @@
 ( function( $ ) {
 	$( document ).ready( function() {
 		const site = WPURLS.siteurl;
-		const uwFox = 'https://wwwtest.uwosh.edu/uwfox';
-		const uwFDL = 'https://wwwtest.uwosh.edu/uwfdl';
-		const uwOshkoshCategory = 11;
-		const uwFDLCategory = 12;
-		const uwFoxCategory = 13;
+
+		const siteEnums = Object.freeze({
+			UW_OSHKOSH: 'https://wwwtest.uwosh.edu',
+			UW_FDL: 'https://wwwtest.uwosh.edu/uwfdl',
+			UW_FOX: 'https://wwwtest.uwosh.edu/uwfox'
+		});
+
+		const categoryEnums = Object.freeze({
+			UW_OSHKOSH: 11,
+			UW_FDL: 12,
+			UW_FOX: 13
+		});
 
 		function fetchEmergencies( category ) {
 			$.ajax({
@@ -54,18 +61,24 @@
 			});
 		}
 
-		if ( site === uwFox ) {
+		if ( site === siteEnums.UW_FOX ) {
 
 			// pull back emergencies for UW Fox Valley
-			fetchEmergencies( uwFoxCategory );
-		} else if ( site === uwFDL ) {
+			fetchEmergencies( categoryEnums.UW_FOX );
+		} else if ( site === siteEnums.UW_FDL ) {
 
 			// pull back emergencies for UW Fond Du Lac
-			fetchEmergencies( uwFDLCategory );
+			fetchEmergencies( categoryEnums.UW_FDL );
+		} else if ( site === siteEnums.UW_OSHKOSH ) {
+
+			// pull back emergencies for every category because we are on the home page
+			fetchEmergencies( categoryEnums.UW_FOX );
+			fetchEmergencies( categoryEnums.UW_FDL );
+			fetchEmergencies( categoryEnums.UW_OSHKOSH );
 		} else {
 
-			// pull back emergencies for UW Oshkosh
-			fetchEmergencies( uwOshkoshCategory );
+			// pull back emergencies for other UW Oshkosh site
+			fetchEmergencies( categoryEnums.UW_OSHKOSH );
 		}
 	});
 }( jQuery ) );
