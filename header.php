@@ -88,6 +88,36 @@
 
 	</script>
 
+	<!-- BEGIN AD CAMPAIGN TRACKER -->
+	<!-- Facebook Pixel Code -->
+	<script>
+	!function(f,b,e,v,n,t,s)
+	{if(f.fbq)return;n=f.fbq=function(){n.callMethod?
+	n.callMethod.apply(n,arguments):n.queue.push(arguments)};
+	if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';
+	n.queue=[];t=b.createElement(e);t.async=!0;
+	t.src=v;s=b.getElementsByTagName(e)[0];
+	s.parentNode.insertBefore(t,s)}(window, document,'script',
+	'https://connect.facebook.net/en_US/fbevents.js');
+	fbq('init', '867745950045547');
+	fbq('track', 'PageView');
+	</script>
+	<noscript><img height="1" width="1" style="display:none"
+	src="https://www.facebook.com/tr?id=867745950045547&ev=PageView&noscript=1"
+	/></noscript>
+	<!-- End Facebook Pixel Code -->
+
+	<!-- Global site tag (gtag.js) - Google Ads: 958523064 -->
+	<script async src="https://www.googletagmanager.com/gtag/js?id=AW-958523064"></script>
+	<script>
+	window.dataLayer = window.dataLayer || [];
+	function gtag(){dataLayer.push(arguments);}
+	gtag('js', new Date());
+
+	gtag('config', 'AW-958523064');
+	</script>
+	<!-- END AD CAMPAIGN TRACKER -->
+
 	<?php wp_head(); ?>
 </head>
 <body <?php body_class(); ?>>
@@ -116,7 +146,16 @@
 		$et_top_info_defined = $et_secondary_nav_items->top_info_defined;
 		?>
 
-		<div class="emergency-banner-wrapper">
+		<div class="emergency-banner-wrapper disabled" id="emergency-banner-0">
+			<div class="emergency-banner-content">
+				<a class="broadcast-link" href="" target="_blank">
+					<i class="fa fa-exclamation-triangle broadcast-icon" aria-hidden="true"></i><!--
+					--><span class="broadcast-title"></span><!--
+					--><span class="broadcast-description"></span>
+				</a>
+			</div>
+		</div>
+		<div class="emergency-banner-wrapper disabled" id="emergency-banner-1">
 			<div class="emergency-banner-content">
 				<a class="broadcast-link" href="" target="_blank">
 					<i class="fa fa-exclamation-triangle broadcast-icon" aria-hidden="true"></i><!--
