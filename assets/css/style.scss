@@ -22,8 +22,11 @@ $link: #0077ad;
 
 // Broadcast banner colors
 $broadcast-info: #0066cc;
+$broadcast-info-border: #4CA6FF;
 $broadcast-warning: #ff9900;
+$broadcast-warning-border: #FFB84C;
 $broadcast-emergency: #d91e18;
+$broadcast-emergency-border: #FF6D69;
 
 // Social colors
 $facebook: #3b5998;
@@ -159,19 +162,57 @@ header #logo {
 }
 
 /* made some additions here dude */
+.emergency-banner-wrapper.disabled {
+  display: none;
+}
 
-.emergency-bumpdown {
+
+// Begin single notification styles
+.emergency+.disabled+.header-wrapper {
+  margin-top: 75px;
+}
+
+.info+.disabled+.header-wrapper,
+.warning+.disabled+.header-wrapper {
   margin-top: 45px;
 }
 
-@media screen and (max-width: 782px) {
-  .emergency-bumpdown {
-    margin-top: 46px;
-  }
+// End single notification styles
+
+// Begin double emergency styles
+.emergency+.emergency-banner-wrapper {
+  margin-top: 75px;
 }
 
+.warning+.emergency-banner-wrapper,
+.info+.emergency-banner-wrapper {
+  margin-top: 45px;
+}
+
+.emergency+.emergency+.header-wrapper {
+  margin-top: 150px;
+}
+
+// emergency + regular (warning or info)
+.emergency+.info+.header-wrapper,
+.info+.emergency+.header-wrapper,
+.emergency+.warning+.header-wrapper,
+.warning+.emergency+.header-wrapper {
+  margin-top: 120px;
+}
+
+// regular + regular (warning or info)
+.info+.warning+.header-wrapper,
+.warning+.info+.header-wrapper,
+.info+.info+.header-wrapper,
+.warning+.warning+.header-wrapper {
+  margin-top: 90px;
+}
+
+// End double emergency styles
+
 .emergency-banner-wrapper {
-  display: none;
+  display: flex;
   background: $broadcast-info;
   color: white;
   height: 45px;
@@ -210,10 +251,12 @@ header #logo {
 
 .emergency-banner-wrapper.info {
   background: $broadcast-info;
+  border: 3px solid $broadcast-info-border;
 }
 
 .emergency-banner-wrapper.warning {
   background: $broadcast-warning;
+  border: 3px solid $broadcast-warning-border;
 }
 
 .emergency-banner-wrapper.warning a {
@@ -222,11 +265,8 @@ header #logo {
 
 .emergency-banner-wrapper.emergency {
   background: $broadcast-emergency;
+  border: 3px solid $broadcast-emergency-border;
   height: 75px;
-}
-
-.emergency-banner-wrapper.emergency+.emergency-bumpdown {
-  margin-top: 75px;
 }
 
 @media screen and (max-width: 782px) {
@@ -239,6 +279,15 @@ header #logo {
 
 .admin-bar .emergency-banner-wrapper {
   top: 32px;
+}
+
+.admin-bar .info+.emergency-banner-wrapper,
+.admin-bar .warning+.emergency-banner-wrapper {
+  margin-top: 45px;
+}
+
+.admin-bar .emergency+.emergency-banner-wrapper {
+  margin-top: 75px;
 }
 
 @media screen and (max-width: 782px) {
