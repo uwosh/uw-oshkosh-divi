@@ -72,9 +72,7 @@
 		} else if ( site === siteEnums.UW_OSHKOSH ) {
 
 			// pull back emergencies for every category because we are on the home page
-			fetchEmergencies( categoryEnums.UW_FOX );
-			fetchEmergencies( categoryEnums.UW_FDL );
-			fetchEmergencies( categoryEnums.UW_OSHKOSH );
+			fetchEmergencies( `${categoryEnums.UW_FOX},${categoryEnums.UW_FDL},${categoryEnums.UW_OSHKOSH}` );
 		} else {
 
 			// pull back emergencies for other UW Oshkosh site
