@@ -5,13 +5,11 @@ Description: UW-Oshkosh's Divi Child Theme
 Author: Joseph Kerkhof
 Author URI: http://twitter.com/musicaljoeker
 Template: Divi
-Version: 1.4.5
+Version: 1.5
 */
 
 // Font family
-$font-family: "Open Sans",
-Arial,
-sans-serif !important;
+$font-family: "Open Sans", Arial, sans-serif !important;
 
 // UWO colors
 $titan-yellow: #fec424;
@@ -22,11 +20,11 @@ $link: #0077ad;
 
 // Broadcast banner colors
 $broadcast-info: #0066cc;
-$broadcast-info-border: #4CA6FF;
+$broadcast-info-border: #4ca6ff;
 $broadcast-warning: #ff9900;
-$broadcast-warning-border: #FFB84C;
+$broadcast-warning-border: #ffb84c;
 $broadcast-emergency: #d91e18;
-$broadcast-emergency-border: #FF6D69;
+$broadcast-emergency-border: #ff6d69;
 
 // Social colors
 $facebook: #3b5998;
@@ -92,7 +90,6 @@ header #logo {
 }
 
 @media only screen and (min-width: 981px) {
-
   .et-fixed-header#top-header,
   .et-fixed-header#top-header #et-secondary-nav li ul {
     background-color: $titan-grey;
@@ -166,46 +163,45 @@ header #logo {
   display: none;
 }
 
-
 // Begin single notification styles
-.emergency+.disabled+.header-wrapper {
+.emergency + .disabled + .header-wrapper {
   margin-top: 75px;
 }
 
-.info+.disabled+.header-wrapper,
-.warning+.disabled+.header-wrapper {
+.info + .disabled + .header-wrapper,
+.warning + .disabled + .header-wrapper {
   margin-top: 45px;
 }
 
 // End single notification styles
 
 // Begin double emergency styles
-.emergency+.emergency-banner-wrapper {
+.emergency + .emergency-banner-wrapper {
   margin-top: 75px;
 }
 
-.warning+.emergency-banner-wrapper,
-.info+.emergency-banner-wrapper {
+.warning + .emergency-banner-wrapper,
+.info + .emergency-banner-wrapper {
   margin-top: 45px;
 }
 
-.emergency+.emergency+.header-wrapper {
+.emergency + .emergency + .header-wrapper {
   margin-top: 150px;
 }
 
 // emergency + regular (warning or info)
-.emergency+.info+.header-wrapper,
-.info+.emergency+.header-wrapper,
-.emergency+.warning+.header-wrapper,
-.warning+.emergency+.header-wrapper {
+.emergency + .info + .header-wrapper,
+.info + .emergency + .header-wrapper,
+.emergency + .warning + .header-wrapper,
+.warning + .emergency + .header-wrapper {
   margin-top: 120px;
 }
 
 // regular + regular (warning or info)
-.info+.warning+.header-wrapper,
-.warning+.info+.header-wrapper,
-.info+.info+.header-wrapper,
-.warning+.warning+.header-wrapper {
+.info + .warning + .header-wrapper,
+.warning + .info + .header-wrapper,
+.info + .info + .header-wrapper,
+.warning + .warning + .header-wrapper {
   margin-top: 90px;
 }
 
@@ -281,12 +277,12 @@ header #logo {
   top: 32px;
 }
 
-.admin-bar .info+.emergency-banner-wrapper,
-.admin-bar .warning+.emergency-banner-wrapper {
+.admin-bar .info + .emergency-banner-wrapper,
+.admin-bar .warning + .emergency-banner-wrapper {
   margin-top: 45px;
 }
 
-.admin-bar .emergency+.emergency-banner-wrapper {
+.admin-bar .emergency + .emergency-banner-wrapper {
   margin-top: 75px;
 }
 
@@ -439,7 +435,7 @@ form.gsc-search-box input {
   }
 }
 
-.et_pb_fullwidth_menu .fullwidth-menu-nav>ul {
+.et_pb_fullwidth_menu .fullwidth-menu-nav > ul {
   line-height: 48px;
   padding: 0 !important;
 }
@@ -449,7 +445,7 @@ form.gsc-search-box input {
   font-weight: 600;
 }
 
-.fullwidth-menu li>a {
+.fullwidth-menu li > a {
   padding-bottom: 0;
 }
 
@@ -730,7 +726,6 @@ form.gsc-search-box input {
 }
 
 @media only screen and (max-width: 640px) {
-
   #footer-column-1,
   #footer-column-2,
   #footer-column-3,
@@ -833,7 +828,7 @@ form.gsc-search-box input {
   padding: 20px 0 20px 0 !important;
 }
 
-#left-area nav>ul {
+#left-area nav > ul {
   line-height: 48px;
 }
 
@@ -860,24 +855,24 @@ p.footer-column-header,
 
 /* copyright text */
 
-#footer-copy>span {
-  color: #DBDBDB;
+#footer-copy > span {
+  color: #dbdbdb;
 }
 
 /* comments/reply buttons */
 
 a.comment-reply-link.et_pb_button,
 input#submit.submit.et_pb_button {
-  color: #0D5D92;
+  color: #0d5d92;
 }
 
 /* comment form fields text color*/
 
-#commentform input[type=email],
-#commentform input[type=text],
-#commentform input[type=url],
+#commentform input[type="email"],
+#commentform input[type="text"],
+#commentform input[type="url"],
 #commentform textarea {
-  color: #4F4F4F;
+  color: #4f4f4f;
 }
 
 /* End accessibility changes */
