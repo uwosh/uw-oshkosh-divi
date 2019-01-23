@@ -4,7 +4,7 @@ A child theme fitting [UW Oshkosh](http://uwosh.edu) branding standards for Word
 
 Development of this project is helped tremendously by the lovely people at BrowserStack. They allow me to test this project on multiple browsers and platforms. Seriously, go [check them out](https://www.browserstack.com/)!
 
-![browserstack logo](https://p3.zdusercontent.com/attachment/1015988/oRXH2kjJquNC4l95XxJOj7ASv?token=eyJhbGciOiJkaXIiLCJlbmMiOiJBMTI4Q0JDLUhTMjU2In0..juEEjqo3cLfqCd-FskkPng.svNmioknEN2-peMaEMSxhiMuTMyVfy1psLHB411jFkGR8oPbnypXZgeoNcxOCi0fN8Jx8gnb56Dh1VLoKJXXcOZYXQ4HVjtQJCUHyozvQxP6X2kEyVvOZDxt6CDiS_ym3bam5Lgh2xT2BWSdBi7RHnJXh_VP36fBQa6UBW_cxq7hrBG6BUaFOxWJsh4uC3I0cJpAlSBdo5O1B89pmWu0gT1dWkDzuKG4VjC8MtcJabGVPf7nrBOXH0VhuX2s4J8YFNn5oW1OJbX92vs6IHHk680LdAmDDQBml3G4MKrJIxk.ZQc4LuToizWs24mbwOCXmQ)
+![browserstack logo](https://p14.zdusercontent.com/attachment/1015988/tzIpYKGxdVA5yL9oqpZJXkvje?token=eyJhbGciOiJkaXIiLCJlbmMiOiJBMTI4Q0JDLUhTMjU2In0..mrpCPPkyDSRDqkCHM20tJA.jQ7rsbvp99OXWBx_OCYvqo6W5bfF4LYP0KH8m5ad-R8QMY40-8yjf8cgsCeCvLQIcRe8t0Apox5hw4vbiRaRUQcOIJee_yCHNkDphxV7-bNJlfyesANLhR54PcTmATw52gj9WxOSrbMm0DUhJLoksbwX9ecWMJnuFPYZt53woemaJwNx-Fbqga50TXIwQbB3wIGmKlI6H-VmF2UDEJnfhyX5oUGUuS8MUotloZ74J0X531ZmypLll-PoOuOrg2g3U_cDwcOrD9Su1pNFt2lOUvzyBzs8XgXWV01nP2RJwPc.b2VeNUJfeDWWmLGmq3hFag)
 
 ## Installation
 
