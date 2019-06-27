@@ -171,4 +171,31 @@ function change_menu_li_id($menu_item_item_id, $item, $args, $depth){
 }
 add_filter('nav_menu_item_id','change_menu_li_id', 10, 4);
 
+add_action( 'customize_register', 'lettermark_customizer_settings' );
+function lettermark_customizer_settings( $wp_customize ) {
+   
+  $wp_customize->add_section( 'lettermark' , array(
+    'title'      => 'Campus',
+    'priority'   => 1,
+) );
+
+$wp_customize->add_setting( 'lettermark_display' , array(
+    'default'     => 'osh',
+    'transport'   => 'refresh',
+) );
+
+$wp_customize->add_control( 'lettermark_display', array(
+'label' => 'Location',
+'description' => 'Changes the lettermark that appears in the header for each campus.',
+'section' => 'lettermark',
+'settings' => 'lettermark_display',
+'type' => 'radio',
+'choices' => array(
+  'osh' => 'Oshkosh',
+  'fox' => 'Fox Valley',
+  'fdl' => 'Fond Du Lac',
+),
+) );
+}
+
 ?>

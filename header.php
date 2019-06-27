@@ -127,7 +127,9 @@
 			return;
 		}
 
+		switch_to_blog(1);
 		$et_secondary_nav_items = et_divi_get_top_nav_items();
+		restore_current_blog();
 
 		$et_phone_number = $et_secondary_nav_items->phone_number;
 
@@ -226,7 +228,7 @@
 		<header id="main-header" class="<?php echo esc_attr( $primary_nav_class ); ?>">
 			<div class="container clearfix">
 				<?php
-				$logo = get_stylesheet_directory_uri() . '/assets/images/wordmark.png';
+				$logo = get_stylesheet_directory_uri() . '/assets/images/lettermark-' . get_theme_mod( 'lettermark_display', 'osh') . '.svg';
 				?>
 				<div class="image-title-wrapper">
 					<a href="https://uwosh.edu">
