@@ -5,14 +5,14 @@ Description: UW-Oshkosh's Divi Child Theme
 Author: Joseph Kerkhof, Cole Reinke
 Author URI: http://twitter.com/musicaljoeker
 Template: Divi
-Version: 1.6.0
+Version: 1.6.1
 */
 
 // Font family
 $font-family: "Open Sans", Arial, sans-serif !important;
 
 // UWO colors
-$titan-yellow: #fec424;
+$titan-yellow: #ffcc00;
 $titan-grey: #444;
 
 // Utility colors
@@ -77,7 +77,7 @@ header #logo {
 #main-header .et_mobile_menu,
 #main-header .nav li ul,
 .et-search-form {
-  background-color: $titan-yellow;
+  background-color: $titan-yellow!important;
 }
 
 #et-secondary-nav li ul,
